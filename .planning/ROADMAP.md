@@ -3,7 +3,9 @@
 ## Phases
 - [x] **Phase 1: Observability & Polling Foundation** - Deliver the monitored data pipeline, including inventory, so every LCR/cert emits measurable availability records before we layer integrity checks. (completed 2026-04-05)
 - [x] **Phase 2: Integrity & Alerting Core** - Validate, hash, and alert on every fetched LCR so only trusted data feeds calculations and every outage raises timely warnings before SLA breaches. (completed 2026-04-05)
-- [ ] **Phase 3: Reporting & Compliance Governance** - Present the data with compliance-ready dashboards, exports, and audit trails so teams can prove coverage and follow differentiated SLA insights.
+- [x] **Phase 3: Reporting & Compliance Governance** - Present the data with compliance-ready dashboards, exports, and audit trails so teams can prove coverage and follow differentiated SLA insights. (completed 2026-04-06)
+- [ ] **Phase 4: Runtime Inventory, Polling, and Persistence Wiring** - Replace placeholders with real inventory loading, wire scheduler to validation/alerting, and move evidence flow onto persistent runtime data so the monitoring pipeline actually runs end-to-end.
+- [ ] **Phase 5: Reporting E2E Wiring and Audit UX Completion** - Connect reporting, filters, exports, and audit views to the persisted runtime data so compliance evidence is queryable and exportable from the real flow.
 
 ## Research & Architecture
 - **Stack evidence:** Next.js 16 + Tailwind + TypeScript for dashboards, FastAPI + Celery/Beat for orchestration, TimescaleDB for hypertables, object storage for WORM archives, pyhanko-certvalidator 0.30.1 for signatures, and Healthchecks/Postmark (or SendGrid)/incident.io for observable alerts.
@@ -42,6 +44,29 @@
   1. The dashboard shows per-list status, SLA indicators, coverage history, and export actions (CSV/PDF) so compliance and engineering teams can interrogate availability at a glance (REP-01).
   2. Logs of alerts, coverage loss windows, and snapshot archives are queryable/downloadable for auditors, keeping the narrative of every SLA event intact (REP-02).
   3. Compliance views surface contextual metadata (SLO burn rates, policy tags) so coverage dips are tied back to the business impact, aligning with research differentiators while staying grounded in recorded data (REP-01 + REP-02).
+**Plans**: 03-01
+**UI hint**: yes
+
+### Phase 4: Runtime Inventory, Polling, and Persistence Wiring
+**Goal**: Replace the scaffolded inventory and in-memory event path with a real runtime pipeline that loads actual targets, validates LCRs during polling, emits alerts, and persists evidence for downstream consumers.
+**Depends on**: Phase 3
+**Requirements**: MON-01, CFG-01, INT-01, ALT-01
+**Gap Closure**: Closes milestone audit findings around empty inventory, missing validation wiring, missing alert generation, and non-persistent runtime flow.
+**Success Criteria** (what must be TRUE):
+  1. `loadTargets()` returns real configured targets instead of an empty placeholder set, so scheduler execution has runtime inputs (MON-01, CFG-01).
+  2. The scheduler invokes LCR validation, stores real metadata, and emits/persists alert events when polling or validation fails (INT-01, ALT-01).
+  3. Polling, alerting, and coverage evidence survive process restarts through a persistent read/write path instead of in-memory-only arrays (MON-01, ALT-01).
+**Plans**: TBD
+
+### Phase 5: Reporting E2E Wiring and Audit UX Completion
+**Goal**: Finish the reporting layer on top of the real persisted evidence by wiring dashboard filters, exports, and audit views to runtime data and closing the monitoring-to-reporting flow.
+**Depends on**: Phase 4
+**Requirements**: MON-02, ALT-02, REP-01, REP-02
+**Gap Closure**: Closes milestone audit findings around partial SLA/reporting coverage, placeholder filters, disconnected exports, and missing end-to-end audit evidence.
+**Success Criteria** (what must be TRUE):
+  1. Reporting consumes persisted poll, alert, coverage-gap, and snapshot data instead of local placeholder arrays (MON-02, REP-02).
+  2. Dashboard filters and export actions are functional from the UI and operate on the same runtime evidence shown to the user (REP-01, REP-02).
+  3. SLA metrics and coverage evidence shown in reporting reflect the real runtime flow closed by Phase 4, completing the monitoring → validation/alerting → reporting path (ALT-02, REP-01, REP-02).
 **Plans**: TBD
 **UI hint**: yes
 
@@ -51,4 +76,6 @@
 |-------|----------------|--------|-----------|
 | 1. Observability & Polling Foundation | 1/1 | Complete | 2026-04-05 |
 | 2. Integrity & Alerting Core | 1/1 | Complete | 2026-04-05 |
-| 3. Reporting & Compliance Governance | 0/0 | Not started | - |
+| 3. Reporting & Compliance Governance | 1/1 | Complete | 2026-04-06 |
+| 4. Runtime Inventory, Polling, and Persistence Wiring | 0/0 | Not started | - |
+| 5. Reporting E2E Wiring and Audit UX Completion | 0/0 | Not started | - |
