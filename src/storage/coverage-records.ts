@@ -7,6 +7,10 @@ export interface PollRow {
   occurredAt: Date;
   coverageLost: boolean;
   hash?: string | null;
+  issuer?: string | null;
+  thisUpdate?: string | null;
+  nextUpdate?: string | null;
+  statusLabel?: string | null;
 }
 
 export interface CoverageGap {
@@ -23,7 +27,13 @@ export async function recordPollResult(
   status: PollStatus,
   durationMs: number,
   hash: string | null,
-  coverageLost: boolean
+  coverageLost: boolean,
+  metadata?: {
+    issuer?: string | null;
+    thisUpdate?: string | null;
+    nextUpdate?: string | null;
+    statusLabel?: string | null;
+  }
 ): Promise<void> {
   polls.push({
     targetId,
@@ -32,6 +42,10 @@ export async function recordPollResult(
     occurredAt: new Date(),
     coverageLost,
     hash,
+    issuer: metadata?.issuer ?? null,
+    thisUpdate: metadata?.thisUpdate ?? null,
+    nextUpdate: metadata?.nextUpdate ?? null,
+    statusLabel: metadata?.statusLabel ?? null,
   });
 
   if (!coverageLost) {
@@ -93,7 +107,11 @@ export const SQL_SCHEMA = {
       duration_ms integer not null,
       occurred_at timestamptz not null,
       coverage_lost boolean not null,
-      hash text null
+      hash text null,
+      issuer text null,
+      this_update text null,
+      next_update text null,
+      status_label text null
     );
   `,
   coverageGaps: `
