@@ -1,0 +1,5 @@
+healthchecks:
+  heartbeat_url: "https://hc.example.com/ping/{{target_id}}"
+  tags:
+    - "lcr-monitor"
+  notes: "Template for per-target heartbeat; replace {{target_id}} at runtime."
