@@ -38,14 +38,14 @@
 ## Traceability
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MON-01 | Phase 1 | Pending |
-| MON-02 | Phase 1 | Pending |
-| INT-01 | Phase 1 | Pending |
-| CFG-01 | Phase 1 | Pending |
-| ALT-01 | Phase 2 | Pending |
-| ALT-02 | Phase 2 | Pending |
-| REP-01 | Phase 3 | Pending |
-| REP-02 | Phase 3 | Pending |
+| MON-01 | Phase 1: Observability & Polling Foundation | Pending |
+| MON-02 | Phase 1: Observability & Polling Foundation | Pending |
+| INT-01 | Phase 2: Integrity & Alerting Core | Pending |
+| CFG-01 | Phase 1: Observability & Polling Foundation | Pending |
+| ALT-01 | Phase 2: Integrity & Alerting Core | Pending |
+| ALT-02 | Phase 2: Integrity & Alerting Core | Pending |
+| REP-01 | Phase 3: Reporting & Compliance Governance | Pending |
+| REP-02 | Phase 3: Reporting & Compliance Governance | Pending |
 
 **Coverage:**
 - v1 requirements: 8 total
