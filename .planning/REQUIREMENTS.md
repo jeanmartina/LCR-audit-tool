@@ -6,12 +6,12 @@
 ## v1 Requirements
 
 ### Monitoring & Coverage
-- [ ] **MON-01**: O sistema poll dos a cada LCR/certificado no intervalo configurado (10 min padrão quando nada é especificado) e registra disponibilidade, tempo fora do ar e métricas de cobertura perdida até reaparecer uma lista válida.
-- [ ] **MON-02**: Cada janela sem nenhuma LCR válida gera um registro de “cobertura perdida” (start timestamp, duração, listas afetadas) para alimentar relatórios de SLA.
+- [x] **MON-01**: O sistema poll dos a cada LCR/certificado no intervalo configurado (10 min padrão quando nada é especificado) e registra disponibilidade, tempo fora do ar e métricas de cobertura perdida até reaparecer uma lista válida.
+- [x] **MON-02**: Cada janela sem nenhuma LCR válida gera um registro de “cobertura perdida” (start timestamp, duração, listas afetadas) para alimentar relatórios de SLA.
 
 ### Integrity & Storage
 - [ ] **INT-01**: Cada LCR baixada passa por validação de assinatura e hash (comparando com o hash da última LCR verificada) antes de ser persistida; os blobs históricos ficam disponíveis para futuras verificações.
-- [ ] **CFG-01**: Uma camada de inventário permite adicionar certificados individuais e listas TSL sociais, atribuir intervalo, timeout e regras de alerta específicas e editar metadados sem editar código.
+- [x] **CFG-01**: Uma camada de inventário permite adicionar certificados individuais e listas TSL sociais, atribuir intervalo, timeout e regras de alerta específicas e editar metadados sem editar código.
 
 ### Alerting & SLA
 - [ ] **ALT-01**: Alertas por e-mail disparam sempre que o status HTTP ≠ 200, o timeout configurado expira ou uma lista expira sem substituto; os alertas persistem até a cobertura voltar, respeitam overrides por lista, podem ser desativados por admin e usam cooldowns para evitar tempestades.
@@ -38,10 +38,10 @@
 ## Traceability
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MON-01 | Phase 1: Observability & Polling Foundation | Pending |
-| MON-02 | Phase 1: Observability & Polling Foundation | Pending |
+| MON-01 | Phase 1: Observability & Polling Foundation | Complete |
+| MON-02 | Phase 1: Observability & Polling Foundation | Complete |
 | INT-01 | Phase 2: Integrity & Alerting Core | Pending |
-| CFG-01 | Phase 1: Observability & Polling Foundation | Pending |
+| CFG-01 | Phase 1: Observability & Polling Foundation | Complete |
 | ALT-01 | Phase 2: Integrity & Alerting Core | Pending |
 | ALT-02 | Phase 2: Integrity & Alerting Core | Pending |
 | REP-01 | Phase 3: Reporting & Compliance Governance | Pending |
@@ -54,4 +54,4 @@
 
 ---
 *Requirements defined: 2026-04-05*
-*Last updated: 2026-04-05 after initial definition*
+*Last updated: 2026-04-05 after Phase 1 completion*

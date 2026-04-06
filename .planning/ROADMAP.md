@@ -1,7 +1,7 @@
 # ROADMAP
 
 ## Phases
-- [ ] **Phase 1: Observability & Polling Foundation** - Deliver the monitored data pipeline, including inventory, so every LCR/cert emits measurable availability records before we layer integrity checks.
+- [x] **Phase 1: Observability & Polling Foundation** - Deliver the monitored data pipeline, including inventory, so every LCR/cert emits measurable availability records before we layer integrity checks. (completed 2026-04-05)
 - [ ] **Phase 2: Integrity & Alerting Core** - Validate, hash, and alert on every fetched LCR so only trusted data feeds calculations and every outage raises timely warnings before SLA breaches.
 - [ ] **Phase 3: Reporting & Compliance Governance** - Present the data with compliance-ready dashboards, exports, and audit trails so teams can prove coverage and follow differentiated SLA insights.
 
@@ -22,7 +22,7 @@
   2. Continuous outages create coverage-lost records with start timestamp, duration, and affected lists so SLA reports and dashboards know exactly who lost coverage (MON-02).
   3. The inventory layer lets admins add/edit certificates and lists with interval, timeout, and alert metadata without touching code, feeding the scheduler with new targets on demand (CFG-01).
   4. Healthchecks/Celery heartbeats plus stored next-publish metadata surface impending expirations so silent CRL drops (Pitfall 1) are flagged before a coverage gap turns into an SLA incident.
-**Plans**: TBD
+**Plans**: 01-01
 
 ### Phase 2: Integrity & Alerting Core
 **Goal**: Build the verification and alerting pipeline (FastAPI + Celery + pyhanko) that admits only signed, hashed LCRs into storage and drives configurable email alerts until coverage recovers, with cooldowns and warning thresholds to avoid noisy incidents.
@@ -49,6 +49,6 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Observability & Polling Foundation | 0/0 | Not started | - |
+| 1. Observability & Polling Foundation | 1/1 | Complete | 2026-04-05 |
 | 2. Integrity & Alerting Core | 0/0 | Not started | - |
 | 3. Reporting & Compliance Governance | 0/0 | Not started | - |
