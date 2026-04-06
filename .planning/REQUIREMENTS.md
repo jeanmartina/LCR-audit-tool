@@ -10,12 +10,12 @@
 - [x] **MON-02**: Cada janela sem nenhuma LCR válida gera um registro de “cobertura perdida” (start timestamp, duração, listas afetadas) para alimentar relatórios de SLA.
 
 ### Integrity & Storage
-- [ ] **INT-01**: Cada LCR baixada passa por validação de assinatura e hash (comparando com o hash da última LCR verificada) antes de ser persistida; os blobs históricos ficam disponíveis para futuras verificações.
+- [x] **INT-01**: Cada LCR baixada passa por validação de assinatura e hash (comparando com o hash da última LCR verificada) antes de ser persistida; os blobs históricos ficam disponíveis para futuras verificações.
 - [x] **CFG-01**: Uma camada de inventário permite adicionar certificados individuais e listas TSL sociais, atribuir intervalo, timeout e regras de alerta específicas e editar metadados sem editar código.
 
 ### Alerting & SLA
-- [ ] **ALT-01**: Alertas por e-mail disparam sempre que o status HTTP ≠ 200, o timeout configurado expira ou uma lista expira sem substituto; os alertas persistem até a cobertura voltar, respeitam overrides por lista, podem ser desativados por admin e usam cooldowns para evitar tempestades.
-- [ ] **ALT-02**: Métricas SLA (disponibilidade %, MTTR, janelas de cobertura perdida) são calculadas e expostas para cada lista/agregação, com dados suficientes para enviar alertas de warning (por ex. 50% do orçamento) antes de um SLA completo ser violado.
+- [x] **ALT-01**: Alertas por e-mail disparam sempre que o status HTTP ≠ 200, o timeout configurado expira ou uma lista expira sem substituto; os alertas persistem até a cobertura voltar, respeitam overrides por lista, podem ser desativados por admin e usam cooldowns para evitar tempestades.
+- [x] **ALT-02**: Métricas SLA (disponibilidade %, MTTR, janelas de cobertura perdida) são calculadas e expostas para cada lista/agregação, com dados suficientes para enviar alertas de warning (por ex. 50% do orçamento) antes de um SLA completo ser violado.
 
 ### Reporting & Compliance
 - [ ] **REP-01**: Dashboard de compliance exibe tabelas coloridas, drill-downs e exportações (CSV/PDF) com status de cada lista, indicadores SLA e históricos de alertas para auditoria.
@@ -40,10 +40,10 @@
 |-------------|-------|--------|
 | MON-01 | Phase 1: Observability & Polling Foundation | Complete |
 | MON-02 | Phase 1: Observability & Polling Foundation | Complete |
-| INT-01 | Phase 2: Integrity & Alerting Core | Pending |
+| INT-01 | Phase 2: Integrity & Alerting Core | Complete |
 | CFG-01 | Phase 1: Observability & Polling Foundation | Complete |
-| ALT-01 | Phase 2: Integrity & Alerting Core | Pending |
-| ALT-02 | Phase 2: Integrity & Alerting Core | Pending |
+| ALT-01 | Phase 2: Integrity & Alerting Core | Complete |
+| ALT-02 | Phase 2: Integrity & Alerting Core | Complete |
 | REP-01 | Phase 3: Reporting & Compliance Governance | Pending |
 | REP-02 | Phase 3: Reporting & Compliance Governance | Pending |
 
@@ -54,4 +54,4 @@
 
 ---
 *Requirements defined: 2026-04-05*
-*Last updated: 2026-04-05 after Phase 1 completion*
+*Last updated: 2026-04-05 after Phase 2 completion*

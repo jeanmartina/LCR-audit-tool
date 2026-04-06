@@ -2,7 +2,7 @@
 
 ## Phases
 - [x] **Phase 1: Observability & Polling Foundation** - Deliver the monitored data pipeline, including inventory, so every LCR/cert emits measurable availability records before we layer integrity checks. (completed 2026-04-05)
-- [ ] **Phase 2: Integrity & Alerting Core** - Validate, hash, and alert on every fetched LCR so only trusted data feeds calculations and every outage raises timely warnings before SLA breaches.
+- [x] **Phase 2: Integrity & Alerting Core** - Validate, hash, and alert on every fetched LCR so only trusted data feeds calculations and every outage raises timely warnings before SLA breaches. (completed 2026-04-05)
 - [ ] **Phase 3: Reporting & Compliance Governance** - Present the data with compliance-ready dashboards, exports, and audit trails so teams can prove coverage and follow differentiated SLA insights.
 
 ## Research & Architecture
@@ -32,7 +32,7 @@
   1. Each downloaded LCR is validated with pyhanko against its issuer signature and compared with the previous hash before persisting to the archive, keeping the data auditably correct (INT-01).
   2. Alerts fire whenever HTTP ≠ 200, a timeout expires, or a list can’t find a substitute, and they persist until coverage returns while honoring per-list overrides, admin disables, and cooldown windows so we do not trigger renewal tsunamis (ALT-01).
   3. SLA metrics (availability %, MTTR, coverage gap frequency) are computed for every list and aggregates, feeding warning thresholds (e.g., 50% budget) so dashboards can surface proactive alerts instead of waiting for breaches (ALT-02).
-**Plans**: TBD
+**Plans**: 02-01
 
 ### Phase 3: Reporting & Compliance Governance
 **Goal**: Surface everything in a Next.js 16 dashboard (Tailwind/TypeScript) with tables, drill-downs, exports, and audit trails that prove coverage, tie dips to contracts, and support advanced SLA insights and cross-PKI tagging.
@@ -50,5 +50,5 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Observability & Polling Foundation | 1/1 | Complete | 2026-04-05 |
-| 2. Integrity & Alerting Core | 0/0 | Not started | - |
+| 2. Integrity & Alerting Core | 1/1 | Complete | 2026-04-05 |
 | 3. Reporting & Compliance Governance | 0/0 | Not started | - |
