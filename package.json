@@ -1,0 +1,23 @@
+{
+  "scripts": {
+    "build": "next build",
+    "typecheck": "tsc --noEmit",
+    "validate": "node scripts/validate-all.js",
+    "smoke:runtime": "node scripts/runtime-smoke.js",
+    "quality": "npm run build && npm run typecheck && npm run validate"
+  },
+  "dependencies": {
+    "next": "^16.2.2",
+    "pg": "^8.20.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^6.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3"
+  }
+}

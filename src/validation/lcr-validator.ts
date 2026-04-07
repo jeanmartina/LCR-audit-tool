@@ -16,3 +16,7 @@ export function validateLcr(signature: string | null, hash: string | null, issue
 
   return { valid: true };
 }
+
+export function toValidationStatusLabel(result: ValidationResult): string {
+  return result.valid ? "valid" : `invalid:${result.reason ?? "unknown"}`;
+}

@@ -1,5 +1,14 @@
+import { createHash } from "node:crypto";
+
+import { classifySeverity, markAlertDelivery, persistAlertEvent } from "../alerting/alert-policy";
 import { loadTargets, Target } from "../inventory/targets";
-import { recordPollResult } from "../storage/coverage-records";
+import {
+  findLatestValidHash,
+  recordPollResult,
+  recordSnapshotBlob,
+  recordValidationResult,
+} from "../storage/coverage-records";
+import { toValidationStatusLabel, validateLcr } from "../validation/lcr-validator";
 
 const lastCheckAtById = new Map<string, number>();
 
@@ -23,25 +32,91 @@ async function fetchWithTimeout(url: string, timeoutSeconds: number): Promise<Re
   }
 }
 
+function hashBody(body: string): string {
+  return createHash("sha256").update(body).digest("hex");
+}
+
+async function deliverAlert(alertId: string): Promise<void> {
+  try {
+    await markAlertDelivery(alertId, "sent");
+  } catch {
+    await markAlertDelivery(alertId, "failed");
+  }
+}
+
 export async function runScheduledPolls(): Promise<void> {
   const now = Date.now();
-  const targets = loadTargets().filter((t) => t.enabled);
+  const targets = (await loadTargets()).filter((t) => t.enabled);
 
   for (const target of targets.filter((t) => isDue(t, now))) {
     const start = Date.now();
     let status = 0;
     let coverageLost = false;
+    let body: string | null = null;
+    let signature: string | null = null;
+    let hash: string | null = null;
+    let statusLabel: string | null = null;
 
     try {
       const response = await fetchWithTimeout(target.url, target.timeoutSeconds);
       status = response.status;
       coverageLost = response.status !== 200;
+      signature = response.headers.get("x-signature");
+      if (!coverageLost) {
+        body = await response.text();
+        hash = hashBody(body);
+      }
     } catch {
       coverageLost = true;
     }
 
+    const latestValidHash = findLatestValidHash(target.id);
+    const validation = validateLcr(signature, hash, target.issuer ?? null);
+    statusLabel = toValidationStatusLabel(validation);
+    await recordValidationResult({
+      targetId: target.id,
+      hash,
+      issuer: target.issuer ?? null,
+      valid: validation.valid,
+      reason: validation.reason ?? null,
+    });
+
+    if (!validation.valid) {
+      coverageLost = true;
+    }
+
     const duration = Date.now() - start;
-    await recordPollResult(target.id, status, duration, null, coverageLost);
+    await recordPollResult(target.id, status, duration, hash, coverageLost, {
+      issuer: target.issuer ?? null,
+      thisUpdate: new Date().toISOString(),
+      nextUpdate: null,
+      statusLabel,
+    });
+
+    if (!validation.valid || hash !== latestValidHash) {
+      await recordSnapshotBlob({
+        targetId: target.id,
+        hash,
+        issuer: target.issuer ?? null,
+        thisUpdate: new Date().toISOString(),
+        nextUpdate: null,
+        statusLabel,
+        blob: body,
+        valid: validation.valid,
+      });
+    }
+
+    if (coverageLost) {
+      const severity =
+        classifySeverity(duration, 1, { warningBudget: 0.5, warningDurationMs: 10 * 60 * 1000 }, !validation.valid) ??
+        "critical";
+      const event = await persistAlertEvent(
+        target.id,
+        severity,
+        target.alertEmail ? [target.alertEmail] : []
+      );
+      await deliverAlert(event.id);
+    }
 
     if (!coverageLost) {
       const heartbeatUrl = buildHeartbeatUrl(target.id);
