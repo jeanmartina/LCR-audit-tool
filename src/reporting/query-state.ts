@@ -2,6 +2,8 @@ export interface SearchParamLike {
   [key: string]: string | string[] | undefined;
 }
 
+export type ReportMode = "certificate" | "crl";
+
 export type ReportTab =
   | "timeline"
   | "polls"
@@ -16,16 +18,24 @@ export type TimelineFilterEventType =
   | "validation"
   | "expiration"
   | "recovery"
-  | "coverage-gap";
+  | "coverage-gap"
+  | "predictive";
+
+export type PredictiveFilterType = "upcoming-expiration" | "publication-delayed";
 
 export type PeriodPreset = "24h" | "7d" | "30d" | "90d" | "custom";
 
 export interface ReportFilters {
+  mode?: ReportMode;
   source?: string;
   issuer?: string;
   criticality?: string;
   owner?: string;
   status?: string;
+  trustSource?: string;
+  pki?: string;
+  jurisdiction?: string;
+  predictiveType?: PredictiveFilterType;
   dateFrom?: Date;
   dateTo?: Date;
   httpStatus?: number;
@@ -44,34 +54,23 @@ const PERIOD_PRESET_MS: Record<Exclude<PeriodPreset, "custom">, number> = {
 };
 
 function takeFirst(value: string | string[] | undefined): string | undefined {
-  if (Array.isArray(value)) {
-    return value[0];
-  }
-  return value;
+  return Array.isArray(value) ? value[0] : value;
 }
 
 function parseDate(value: string | undefined): Date | undefined {
   if (!value) {
     return undefined;
   }
-
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return undefined;
-  }
-  return parsed;
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 }
 
 function parseInteger(value: string | undefined): number | undefined {
   if (!value) {
     return undefined;
   }
-
   const parsed = Number.parseInt(value, 10);
-  if (Number.isNaN(parsed)) {
-    return undefined;
-  }
-  return parsed;
+  return Number.isNaN(parsed) ? undefined : parsed;
 }
 
 export function getDefaultReportWindow(now: Date = new Date()): {
@@ -116,13 +115,23 @@ export function parseReportFilters(searchParams: SearchParamLike = {}): ReportFi
 
   const eventType = takeFirst(searchParams.eventType);
   const tab = takeFirst(searchParams.tab);
+  const mode = takeFirst(searchParams.mode);
+  const predictiveType = takeFirst(searchParams.predictiveType);
 
   return {
+    mode: mode === "crl" ? "crl" : "certificate",
     source: takeFirst(searchParams.source) || undefined,
     issuer: takeFirst(searchParams.issuer) || undefined,
     criticality: takeFirst(searchParams.criticality) || undefined,
     owner: takeFirst(searchParams.owner) || undefined,
     status: takeFirst(searchParams.status) || undefined,
+    trustSource: takeFirst(searchParams.trustSource) || undefined,
+    pki: takeFirst(searchParams.pki) || undefined,
+    jurisdiction: takeFirst(searchParams.jurisdiction) || undefined,
+    predictiveType:
+      predictiveType === "upcoming-expiration" || predictiveType === "publication-delayed"
+        ? predictiveType
+        : undefined,
     dateFrom: resolvedFrom,
     dateTo: resolvedTo,
     httpStatus: parseInteger(takeFirst(searchParams.httpStatus)),
@@ -133,7 +142,8 @@ export function parseReportFilters(searchParams: SearchParamLike = {}): ReportFi
       eventType === "validation" ||
       eventType === "expiration" ||
       eventType === "recovery" ||
-      eventType === "coverage-gap"
+      eventType === "coverage-gap" ||
+      eventType === "predictive"
         ? eventType
         : undefined,
     snapshotHash: takeFirst(searchParams.snapshotHash) || undefined,
@@ -156,11 +166,9 @@ export function serializeReportFilters(filters: ReportFilters): Record<string, s
       if (value === undefined || value === null || value === "") {
         return [];
       }
-
       if (value instanceof Date) {
         return [[key, value.toISOString()]];
       }
-
       return [[key, String(value)]];
     })
   );
@@ -170,17 +178,10 @@ export function toSearchParams(filters: ReportFilters): URLSearchParams {
   return new URLSearchParams(serializeReportFilters(filters));
 }
 
-export function withFilter(
-  filters: ReportFilters,
-  patch: Partial<ReportFilters>
-): string {
+export function withFilter(filters: ReportFilters, patch: Partial<ReportFilters>): string {
   return toSearchParams({ ...filters, ...patch }).toString();
 }
 
 export function formatDateInputValue(value: Date | undefined): string {
-  if (!value) {
-    return "";
-  }
-
-  return value.toISOString().slice(0, 10);
+  return value ? value.toISOString().slice(0, 10) : "";
 }

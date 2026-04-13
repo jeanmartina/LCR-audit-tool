@@ -1,82 +1,74 @@
 # Project State
 
 ## Project Reference
-See: .planning/PROJECT.md (updated 2026-04-07)
+See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** Never allow a trusted certificate to operate without valid revocation coverage
-**Current focus:** Close the v1.1 milestone audit gaps for provider authentication and packaged batch import
+**Current focus:** Define the next milestone after shipping v1.1
 
 ## Current Position
 
-Milestone: v1.1
-Phase: gap closure planned
-Plan: pending
-Status: Gap closure phases 13-14 created
-Last activity: 2026-04-07 — Planned milestone gap-closure phases for real provider auth and packaged zip import
+Milestone: none active
+Phase: n/a
+Plan: n/a
+Status: v1.1 archived and shipped
+Last activity: 2026-04-13 — Archived milestone v1.1 after Google public-host proof and final re-audit
 
-Progress: [█████████░] 90%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
+- Total plans completed: 15
 - Average duration: 43 min
-- Total execution time: 2.2 hours
+- Total execution time: 2.4 hours
 
-**Completed Milestone:**
+**Completed Milestones:**
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 1 | 1 | 1 | 45 min |
-| 2 | 1 | 1 | 40 min |
-| 3 | 1 | 1 | 45 min |
-| 4 | 1 | 1 | 55 min |
-| 5 | 1 | 1 | 50 min |
-| 6 | 1 | 1 | 25 min |
-| 7 | 1 | 1 | 35 min |
-| 8 | 1 | 1 | 45 min |
-| 9 | 1 | 1 | 45 min |
-| 10 | 1 | 1 | 50 min |
-| 11 | 1 | 1 | 45 min |
-| 12 | 1 | 1 | 45 min |
+| Milestone | Phases | Plans | Status |
+|-----------|--------|-------|--------|
+| v1.0 | 1-7 | 7 | Shipped |
+| v1.1 | 8-15 | 8 | Shipped |
 
 **Recent Trend:**
-- Last 10 plans: [03-01, 04-01, 05-01, 06-01, 07-01, 08-01, 09-01, 10-01, 11-01, 12-01]
+- Last 10 plans: [06-01, 07-01, 08-01, 09-01, 10-01, 11-01, 12-01, 13-01, 14-01, 15-01]
 - Trend: Stable
 
 ## Accumulated Context
 
 ### Decisions
-- [Phase 1]: Prioritize continuous coverage tracking and historical recording so audits can prove when LCRs were unavailable.
+- [Phase 1]: Prioritize continuous coverage tracking and historical recording so audits can prove when CRLs were unavailable.
 - [Phase 2]: Keep email alerts firing until coverage recovers while respecting overrides/cooldowns to avoid alert storms.
-- [Phase 3]: Reporting must provide compliance-ready tables, full evidence drill-down, dual PDF exports, and configurable evidence retention per target.
-- [Milestone Audit]: Phase 4 must close runtime wiring for inventory, validation, alerting, and persistence before reporting can be considered complete end-to-end.
-- [Phase 4]: Database-backed runtime store is now the source of truth, and alert events are persisted before delivery.
-- [Phase 6]: PDF routes must return real `application/pdf` artifacts, not mislabeled text payloads.
-- [Phase 7]: Local readiness requires one gate plus a reproducible live-Postgres smoke test.
-- [Phase 8]: Access is now invitation-only, group-scoped, and enforced from backend/read-model/export paths.
-- [Phase 10]: Reporting is now certificate-first by default, with a complementary CRL mode, predictive monitoring, structured tags, and user theme/preferences.
-- [Phase 11]: The active product surface is now localized for `en`, `pt-BR`, and `es`, with per-user locale preference and English-first active documentation/code conventions.
-- [Phase 12]: The product now ships with a local/staging compose topology, Caddy-managed HTTPS ingress, and English setup/operator documentation.
+- [Phase 3]: Reporting must provide compliance-ready tables, full evidence drill-down, and differentiated PDF exports.
+- [Phase 4]: Database-backed runtime store is the source of truth, and alert events are persisted before delivery.
+- [Phase 6]: PDF routes return real `application/pdf` artifacts, not mislabeled text payloads.
+- [Phase 7]: Local readiness uses one gate plus a reproducible live-Postgres smoke test.
+- [Phase 8]: Access is invitation-only, group-scoped, and enforced from backend/read-model/export paths.
+- [Phase 10]: Reporting is certificate-first by default, with a complementary CRL mode, predictive monitoring, structured tags, and user preferences.
+- [Phase 11]: The product surface is localized for `en`, `pt-BR`, and `es`, with per-user locale preference and English-first active documentation/code conventions.
+- [Phase 12]: The product ships with a compose topology, Caddy-managed HTTPS ingress, and English setup/operator documentation.
+- [Phase 13]: Provider auth uses real invite-gated OAuth/OIDC redirect and callback flows, while platform admins manually track verification status.
+- [Phase 14]: Packaged ZIP onboarding uses in-process extraction, supports PEM/DER certificate files, and records archive-level failures explicitly.
+- [Phase 15]: Google public-host proof closed the shipped v1.1 auth scope on the packaged Docker/Caddy deployment.
 
 ### Roadmap Evolution
 - v1.0 archived to `.planning/milestones/v1.0-ROADMAP.md`
-- v1.1 opened for certificate-first multi-user productization
-- v1.1 extended with Phases 13-14 to close audit gaps in provider auth and packaged batch import
+- v1.1 archived to `.planning/milestones/v1.1-ROADMAP.md`
+- backlog items 999.1-999.4 captured for admin bootstrap, redesign, onboarding UX, and form guidance
 
 ### Pending Todos
 
-- Plan Phase 13
-- Execute Phases 13-14
-- Re-run the v1.1 milestone audit
+- Start the next milestone with `$gsd-new-milestone`
+- Decide whether to address the settings redirect bug as immediate cleanup or carry it forward
+- Rotate the Google client secret used during the proof because it was exposed during testing
 
 ### Blockers/Concerns
 
-- Phase 8 provider auth is still scaffold-only and fails the milestone audit until Phase 13 lands.
-- Packaged `.zip` onboarding is not deployable until Phase 14 removes or satisfies the `unzip` runtime dependency.
+- No active delivery blocker is open for shipped scope.
+- The main near-term risk is leaving the next milestone undefined while backlog and deferred auth-provider proof remain outstanding.
 
 ## Session Continuity
 
-Last session: 2026-04-07 01:00
-Stopped at: Gap closure phases 13-14 created; next step is Phase 13 planning
+Last session: 2026-04-13 23:59
+Stopped at: v1.1 archived and ready for next-milestone definition
 Resume file: .planning/ROADMAP.md

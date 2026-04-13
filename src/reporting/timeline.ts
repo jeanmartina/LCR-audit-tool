@@ -6,7 +6,8 @@ export type TimelineEventType =
   | "validation"
   | "expiration"
   | "recovery"
-  | "coverage-gap";
+  | "coverage-gap"
+  | "predictive";
 
 export interface TimelineEvent {
   type: TimelineEventType;
@@ -15,41 +16,41 @@ export interface TimelineEvent {
   detail: string;
 }
 
-export function buildAuditTimeline(
-  targetId: string,
+export async function buildAuditTimeline(
+  certificateId: string,
   filters: ReportFilters = {}
 ): Promise<TimelineEvent[]> {
-  return buildDetailEvidence(targetId, filters).then((detail) => {
+  return buildDetailEvidence(certificateId, filters).then((detail) => {
     if (!detail) {
       return [];
     }
 
     const pollEvents: TimelineEvent[] = detail.pollHistory.map((poll) => ({
-      type: poll.coverageLost ? "poll" : "recovery",
+      type: poll.coverageLost ? "recovery" : "poll",
       at: poll.occurredAt,
-      title: poll.coverageLost ? "Poll failed" : "Poll succeeded",
-      detail: `HTTP ${poll.httpStatus} in ${poll.durationMs}ms${poll.timedOut ? " (timeout)" : ""}`,
+      title: `${poll.targetLabel} HTTP ${poll.httpStatus}`,
+      detail: `Coverage lost=${String(poll.coverageLost)}; duration ${poll.durationMs}ms; hash ${poll.hash ?? "-"}`,
     }));
 
     const alertEvents: TimelineEvent[] = detail.alertHistory.map((alert) => ({
       type: "alert",
       at: alert.sentAt,
       title: `${alert.severity} alert sent`,
-      detail: `Recipients: ${alert.recipients.join(", ") || "none"}`,
+      detail: `${alert.targetLabel}; recipients ${alert.recipients.join(", ") || "none"}; delivery ${alert.deliveryState}`,
     }));
 
     const validationEvents: TimelineEvent[] = detail.validationFailures.map((failure) => ({
       type: "validation",
       at: failure.occurredAt,
-      title: "Validation failure",
-      detail: failure.reason,
+      title: `${failure.targetLabel} validation failure`,
+      detail: `Reason ${failure.reason}; hash ${failure.hash ?? "-"}`,
     }));
 
     const coverageEvents: TimelineEvent[] = detail.coverageWindows.map((window) => ({
       type: "coverage-gap",
       at: window.startTs,
-      title: "Coverage gap opened",
-      detail: `Ended: ${window.endTs?.toISOString() ?? "open"}; duration ${window.durationMs}ms`,
+      title: `${window.targetLabel} coverage gap opened`,
+      detail: `Ended ${window.endTs?.toISOString() ?? "open"}; duration ${window.durationMs}ms`,
     }));
 
     const expirationEvents: TimelineEvent[] = detail.snapshots
@@ -57,9 +58,16 @@ export function buildAuditTimeline(
       .map((snapshot) => ({
         type: "expiration",
         at: new Date(snapshot.nextUpdate as string),
-        title: "LCR expiration",
+        title: `${snapshot.targetLabel} CRL expiration`,
         detail: `Hash ${snapshot.hash ?? "unknown"}`,
       }));
+
+    const predictiveEvents: TimelineEvent[] = detail.predictiveEvents.map((event) => ({
+      type: "predictive",
+      at: event.resolvedAt ?? event.createdAt,
+      title: `${event.severity} ${event.predictiveType}`,
+      detail: event.message,
+    }));
 
     return [
       ...pollEvents,
@@ -67,6 +75,7 @@ export function buildAuditTimeline(
       ...validationEvents,
       ...coverageEvents,
       ...expirationEvents,
+      ...predictiveEvents,
     ]
       .filter((event) => !filters.eventType || event.type === filters.eventType)
       .sort((left, right) => left.at.getTime() - right.at.getTime());

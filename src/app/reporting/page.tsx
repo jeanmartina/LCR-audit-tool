@@ -1,44 +1,29 @@
 import type { ReactElement } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { assertAuthenticated } from "../../auth/authorization";
+import { getPrincipalTranslator } from "../../i18n";
 import {
   buildDashboardFilterOptions,
   buildDashboardRows,
   buildDashboardSummary,
-  DashboardRow,
+  type DashboardRow,
 } from "../../reporting/read-models";
 import {
   formatDateInputValue,
   parseReportFilters,
-  PeriodPreset,
-  ReportFilters,
-  SearchParamLike,
+  type PeriodPreset,
+  type ReportFilters,
+  type SearchParamLike,
   withFilter,
 } from "../../reporting/query-state";
 
-const PAGE_STYLES = {
-  panel: {
-    background: "#1e293b",
-    borderRadius: "16px",
-    border: "1px solid #334155",
-    padding: "16px",
-  } as const,
-  label: {
-    color: "#94a3b8",
-    fontSize: "12px",
-    marginBottom: "6px",
-  } as const,
-  chip: {
-    display: "inline-block",
-    padding: "6px 10px",
-    borderRadius: "999px",
-    border: "1px solid #475569",
-    color: "#cbd5e1",
-    textDecoration: "none",
-    fontSize: "13px",
-    marginRight: "8px",
-    marginBottom: "8px",
-  } as const,
-};
+const PANEL = {
+  background: "var(--panel-bg)",
+  borderRadius: "16px",
+  border: "1px solid var(--panel-border)",
+  padding: "16px",
+} as const;
 
 function formatDate(value: Date | null): string {
   return value ? value.toISOString() : "-";
@@ -55,6 +40,7 @@ function getStatusColor(status: DashboardRow["currentStatus"]): string {
 }
 
 function renderChipGroup(
+  t: (key: string) => string,
   filters: ReportFilters,
   key: keyof ReportFilters,
   label: string,
@@ -62,41 +48,55 @@ function renderChipGroup(
 ): ReactElement {
   return (
     <div>
-      <div style={PAGE_STYLES.label}>{label}</div>
-      <Link href={`/reporting?${withFilter(filters, { [key]: undefined })}`} style={PAGE_STYLES.chip}>
-        todos
+      <div style={{ color: "var(--muted-color)", fontSize: "12px", marginBottom: "6px" }}>{label}</div>
+      <Link href={`/reporting?${withFilter(filters, { [key]: undefined })}`} style={{ marginRight: "8px", color: "var(--link-color)" }}>
+        {t("common.filters.all").toLowerCase()}
       </Link>
       {values.map((value) => (
         <Link
           key={value}
           href={`/reporting?${withFilter(filters, { [key]: value })}`}
           style={{
-            ...PAGE_STYLES.chip,
+            marginRight: "8px",
+            color: filters[key] === value ? "#fff" : "var(--link-color)",
             background: filters[key] === value ? "#2563eb" : "transparent",
-            borderColor: filters[key] === value ? "#2563eb" : "#475569",
+            padding: "6px 10px",
+            borderRadius: "999px",
+            border: "1px solid var(--panel-border)",
+            textDecoration: "none",
+            display: "inline-block",
+            marginBottom: "8px",
           }}
         >
-          {value}
+          {key === "status" ? t(`common.status.${value}`) : value}
         </Link>
       ))}
     </div>
   );
 }
 
-function renderPresetLinks(filters: ReportFilters): ReactElement {
+function renderPresetLinks(
+  t: (key: string) => string,
+  filters: ReportFilters
+): ReactElement {
   const presets: PeriodPreset[] = ["24h", "7d", "30d", "90d", "custom"];
-
   return (
     <div>
-      <div style={PAGE_STYLES.label}>periodo</div>
+      <div style={{ color: "var(--muted-color)", fontSize: "12px", marginBottom: "6px" }}>{t("reporting.filter.period")}</div>
       {presets.map((preset) => (
         <Link
           key={preset}
           href={`/reporting?${withFilter(filters, preset === "custom" ? { preset } : { preset, dateFrom: undefined, dateTo: undefined })}`}
           style={{
-            ...PAGE_STYLES.chip,
+            marginRight: "8px",
+            color: filters.preset === preset ? "#fff" : "var(--link-color)",
             background: filters.preset === preset ? "#2563eb" : "transparent",
-            borderColor: filters.preset === preset ? "#2563eb" : "#475569",
+            padding: "6px 10px",
+            borderRadius: "999px",
+            border: "1px solid var(--panel-border)",
+            textDecoration: "none",
+            display: "inline-block",
+            marginBottom: "8px",
           }}
         >
           {preset}
@@ -106,60 +106,35 @@ function renderPresetLinks(filters: ReportFilters): ReactElement {
   );
 }
 
-function renderCustomDateForm(filters: ReportFilters): ReactElement {
+function renderCustomDateForm(
+  t: (key: string) => string,
+  filters: ReportFilters
+): ReactElement {
   return (
-    <form action="/reporting" method="get" style={{ ...PAGE_STYLES.panel, display: "grid", gap: "12px" }}>
+    <form action="/reporting" method="get" style={{ ...PANEL, display: "grid", gap: "12px" }}>
       <input type="hidden" name="preset" value="custom" />
-      {filters.source ? <input type="hidden" name="source" value={filters.source} /> : null}
-      {filters.issuer ? <input type="hidden" name="issuer" value={filters.issuer} /> : null}
-      {filters.criticality ? <input type="hidden" name="criticality" value={filters.criticality} /> : null}
-      {filters.owner ? <input type="hidden" name="owner" value={filters.owner} /> : null}
-      {filters.status ? <input type="hidden" name="status" value={filters.status} /> : null}
+      <input type="hidden" name="mode" value={filters.mode ?? "certificate"} />
       <div style={{ display: "grid", gap: "8px", gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
         <label>
-          <div style={PAGE_STYLES.label}>de</div>
-          <input
-            type="date"
-            name="dateFrom"
-            defaultValue={formatDateInputValue(filters.dateFrom)}
-            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #475569", background: "#0f172a", color: "#e2e8f0" }}
-          />
+          <div style={{ color: "var(--muted-color)", fontSize: "12px" }}>{t("reporting.filter.from")}</div>
+          <input type="date" name="dateFrom" defaultValue={formatDateInputValue(filters.dateFrom)} style={{ width: "100%", padding: "10px" }} />
         </label>
         <label>
-          <div style={PAGE_STYLES.label}>ate</div>
-          <input
-            type="date"
-            name="dateTo"
-            defaultValue={formatDateInputValue(filters.dateTo)}
-            style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #475569", background: "#0f172a", color: "#e2e8f0" }}
-          />
+          <div style={{ color: "var(--muted-color)", fontSize: "12px" }}>{t("reporting.filter.to")}</div>
+          <input type="date" name="dateTo" defaultValue={formatDateInputValue(filters.dateTo)} style={{ width: "100%", padding: "10px" }} />
         </label>
       </div>
-      <button type="submit" style={{ padding: "10px 14px", borderRadius: "10px", border: 0, background: "#2563eb", color: "#eff6ff" }}>
-        aplicar periodo custom
+      <button type="submit" style={{ padding: "10px 14px" }}>
+        {t("reporting.filter.applyCustomPeriod")}
       </button>
     </form>
   );
 }
 
-function renderExportLinks(filters: ReportFilters): ReactElement {
-  const query = withFilter(filters, {});
-  return (
-    <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-      <a href={`/reporting/export/dashboard.csv?${query}`} style={{ ...PAGE_STYLES.chip, marginBottom: 0 }}>
-        exportar CSV filtrado
-      </a>
-      <a href={`/reporting/export/executive.pdf?${query}`} style={{ ...PAGE_STYLES.chip, marginBottom: 0 }}>
-        PDF executivo
-      </a>
-    </div>
-  );
-}
-
 function renderSummaryCard(label: string, value: string | number): ReactElement {
   return (
-    <article style={PAGE_STYLES.panel}>
-      <div style={PAGE_STYLES.label}>{label}</div>
+    <article style={PANEL}>
+      <div style={{ color: "var(--muted-color)", fontSize: "12px" }}>{label}</div>
       <strong style={{ fontSize: "28px" }}>{value}</strong>
     </article>
   );
@@ -170,66 +145,103 @@ export default async function ReportingPage({
 }: {
   searchParams?: Promise<SearchParamLike>;
 }): Promise<ReactElement> {
+  let principal;
+  try {
+    principal = await assertAuthenticated();
+  } catch {
+    redirect("/auth");
+  }
+
   const filters = parseReportFilters((await searchParams) ?? {});
   const [rows, summary, options] = await Promise.all([
-    buildDashboardRows(filters),
-    buildDashboardSummary(filters),
-    buildDashboardFilterOptions(),
+    buildDashboardRows(filters, principal),
+    buildDashboardSummary(filters, principal),
+    buildDashboardFilterOptions(principal),
   ]);
+  const { t } = await getPrincipalTranslator(principal);
+  const query = withFilter(filters, {});
 
   return (
     <main style={{ padding: "32px", display: "grid", gap: "24px" }}>
       <header style={{ display: "grid", gap: "12px" }}>
-        <p style={{ margin: 0, color: "#94a3b8" }}>Reporting & Compliance Governance</p>
-        <h1 style={{ margin: 0, fontSize: "32px" }}>Dashboard de disponibilidade e auditoria</h1>
-        <p style={{ margin: 0, maxWidth: "960px", color: "#cbd5e1" }}>
-          O dashboard usa o mesmo contrato de filtros da exportacao e da auditoria. SLA, janelas de cobertura e alertas refletem o periodo selecionado.
+        <p style={{ margin: 0, color: "var(--muted-color)" }}>{t("reporting.kicker")}</p>
+        <h1 style={{ margin: 0, fontSize: "32px" }}>{t("reporting.title")}</h1>
+        <p style={{ margin: 0, maxWidth: "960px", color: "var(--muted-color)" }}>
+          {t("reporting.description")}
         </p>
-        {renderExportLinks(filters)}
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <a href={`/reporting/export/dashboard.csv?${query}`} style={{ color: "var(--link-color)" }}>
+            {t("common.actions.exportCsv")}
+          </a>
+          <a href={`/reporting/export/executive.pdf?${query}`} style={{ color: "var(--link-color)" }}>
+            {t("reporting.exportExecutivePdf")}
+          </a>
+          <Link href="/settings" style={{ color: "var(--link-color)" }}>
+            {t("reporting.settings")}
+          </Link>
+        </div>
       </header>
 
       <section style={{ display: "grid", gap: "12px", gridTemplateColumns: "repeat(6, minmax(0, 1fr))" }}>
-        {renderSummaryCard("alvos no periodo", summary.totalTargets)}
-        {renderSummaryCard("healthy", summary.healthyTargets)}
-        {renderSummaryCard("degraded", summary.degradedTargets)}
-        {renderSummaryCard("offline", summary.offlineTargets)}
-        {renderSummaryCard("SLA medio", `${summary.averageSlaPercent.toFixed(2)}%`)}
-        {renderSummaryCard("alertas abertos", summary.openAlerts)}
+        {renderSummaryCard(t("reporting.summary.rows"), summary.totalRows)}
+        {renderSummaryCard(t("reporting.summary.healthy"), summary.healthyRows)}
+        {renderSummaryCard(t("reporting.summary.degraded"), summary.degradedRows)}
+        {renderSummaryCard(t("reporting.summary.offline"), summary.offlineRows)}
+        {renderSummaryCard(t("reporting.summary.averageSla"), `${summary.averageSlaPercent.toFixed(2)}%`)}
+        {renderSummaryCard(t("reporting.summary.openAlerts"), summary.openAlerts)}
       </section>
 
       <section style={{ display: "grid", gap: "16px", gridTemplateColumns: "2fr 1fr" }}>
-        <div style={{ ...PAGE_STYLES.panel, display: "grid", gap: "16px" }}>
-          <div style={{ display: "grid", gap: "16px", gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
-            {renderChipGroup(filters, "source", "origem", options.sources)}
-            {renderChipGroup(filters, "issuer", "emissor", options.issuers)}
-            {renderChipGroup(filters, "criticality", "criticidade", options.criticalities)}
-            {renderChipGroup(filters, "owner", "responsavel", options.owners)}
-            {renderChipGroup(filters, "status", "status", options.statuses)}
-            {renderPresetLinks(filters)}
+        <div style={{ ...PANEL, display: "grid", gap: "16px" }}>
+          <div>
+            <div style={{ color: "var(--muted-color)", fontSize: "12px", marginBottom: "6px" }}>{t("reporting.mode")}</div>
+            <Link
+              href={`/reporting?${withFilter(filters, { mode: "certificate" })}`}
+              style={{ marginRight: "8px", color: filters.mode !== "crl" ? "#fff" : "var(--link-color)", background: filters.mode !== "crl" ? "#2563eb" : "transparent", padding: "6px 10px", borderRadius: "999px", border: "1px solid var(--panel-border)", textDecoration: "none" }}
+            >
+              {t("reporting.mode.certificate")}
+            </Link>
+            <Link
+              href={`/reporting?${withFilter(filters, { mode: "crl" })}`}
+              style={{ color: filters.mode === "crl" ? "#fff" : "var(--link-color)", background: filters.mode === "crl" ? "#2563eb" : "transparent", padding: "6px 10px", borderRadius: "999px", border: "1px solid var(--panel-border)", textDecoration: "none" }}
+            >
+              {t("reporting.mode.crl")}
+            </Link>
+          </div>
+          <div style={{ display: "grid", gap: "16px", gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+            {renderChipGroup(t, filters, "source", t("reporting.filter.source"), options.sources)}
+            {renderChipGroup(t, filters, "issuer", t("reporting.filter.issuer"), options.issuers)}
+            {renderChipGroup(t, filters, "criticality", t("reporting.filter.criticality"), options.criticalities)}
+            {renderChipGroup(t, filters, "status", t("reporting.filter.status"), options.statuses)}
+            {renderChipGroup(t, filters, "trustSource", t("reporting.filter.trustSource"), options.trustSources)}
+            {renderChipGroup(t, filters, "pki", t("reporting.filter.pki"), options.pkis)}
+            {renderChipGroup(t, filters, "jurisdiction", t("reporting.filter.jurisdiction"), options.jurisdictions)}
+            {renderPresetLinks(t, filters)}
           </div>
         </div>
-        {renderCustomDateForm(filters)}
+        {renderCustomDateForm(t, filters)}
       </section>
 
-      <section style={{ overflowX: "auto", border: "1px solid #334155", borderRadius: "16px" }}>
+      <section style={{ overflowX: "auto", border: "1px solid var(--panel-border)", borderRadius: "16px" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead style={{ background: "#1e293b" }}>
+          <thead style={{ background: "var(--panel-bg)" }}>
             <tr>
               {[
-                "Target",
-                "Tipo",
-                "Origem",
-                "Emissor",
-                "Criticidade",
-                "Status",
-                "Ultima indisponibilidade",
-                "SLA (%)",
-                "Error budget",
-                "Proximo vencimento",
-                "Alertas abertos",
-                "Ultimos alertas",
+                filters.mode === "crl" ? t("reporting.table.crl") : t("reporting.table.certificate"),
+                t("reporting.table.source"),
+                t("reporting.table.issuer"),
+                t("reporting.table.criticality"),
+                t("reporting.table.status"),
+                t("reporting.table.predictive"),
+                t("reporting.table.latestUnavailability"),
+                t("reporting.table.slaPercent"),
+                t("reporting.table.nextExpiration"),
+                t("reporting.table.openAlerts"),
+                t("reporting.table.trustSource"),
+                t("reporting.table.pki"),
+                t("reporting.table.jurisdiction"),
               ].map((label) => (
-                <th key={label} style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid #334155" }}>
+                <th key={label} style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>
                   {label}
                 </th>
               ))}
@@ -237,32 +249,34 @@ export default async function ReportingPage({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.targetId} style={{ background: "#0f172a" }}>
-                <td style={{ padding: "12px", borderBottom: "1px solid #1e293b" }}>
-                  <Link href={`/reporting/${row.targetId}?${withFilter(filters, { tab: "timeline" })}`} style={{ color: "#93c5fd" }}>
-                    {row.slug}
-                  </Link>
+              <tr key={`${row.rowType}-${row.id}`}>
+                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>
+                  {row.rowType === "certificate" ? (
+                    <Link href={`/reporting/${row.id}?${withFilter(filters, { tab: "timeline", mode: "certificate" })}`} style={{ color: "var(--link-color)" }}>
+                      {row.name}
+                    </Link>
+                  ) : (
+                    row.name
+                  )}
                 </td>
-                <td style={{ padding: "12px", borderBottom: "1px solid #1e293b" }}>{row.type}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid #1e293b" }}>{row.source}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid #1e293b" }}>{row.issuer ?? "-"}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid #1e293b" }}>{row.criticality}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid #1e293b", color: getStatusColor(row.currentStatus) }}>{row.currentStatus}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid #1e293b" }}>{formatDate(row.latestUnavailabilityAt)}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid #1e293b" }}>{row.slaPercent.toFixed(2)}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid #1e293b" }}>{(row.errorBudgetUsed * 100).toFixed(2)}%</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid #1e293b" }}>{row.nextExpiration ?? "-"}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid #1e293b" }}>{row.openAlerts}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid #1e293b" }}>{row.recentAlerts}</td>
+                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.source}</td>
+                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.issuer ?? "-"}</td>
+                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.criticality}</td>
+                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)", color: getStatusColor(row.currentStatus) }}>{t(`common.status.${row.currentStatus}`)}</td>
+                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>
+                  {row.predictiveSeverity
+                    ? `${row.predictiveSeverity} / ${t(`settings.predictiveType.${row.predictiveType}`)}`
+                    : "-"}
+                </td>
+                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{formatDate(row.latestUnavailabilityAt)}</td>
+                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.slaPercent.toFixed(2)}</td>
+                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.nextExpiration ?? "-"}</td>
+                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.openAlerts}</td>
+                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.structuredTags.trustSource ?? "-"}</td>
+                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.structuredTags.pki ?? "-"}</td>
+                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.structuredTags.jurisdiction ?? "-"}</td>
               </tr>
             ))}
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={12} style={{ padding: "24px", textAlign: "center", color: "#94a3b8" }}>
-                  Nenhum alvo corresponde aos filtros atuais.
-                </td>
-              </tr>
-            ) : null}
           </tbody>
         </table>
       </section>

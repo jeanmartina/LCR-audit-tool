@@ -1,11 +1,19 @@
-function renderFilters(filtersApplied) {
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function renderFilters(filtersApplied, labels) {
   const entries = Object.entries(filtersApplied || {});
   if (entries.length === 0) {
-    return "<p>No filters applied</p>";
+    return `<p>${labels.noFilters}</p>`;
   }
 
   return `<ul>${entries
-    .map(([key, value]) => `<li><strong>${key}:</strong> ${value}</li>`)
+    .map(([key, value]) => `<li><strong>${escapeHtml(labels.filterLabels?.[key] ?? key)}:</strong> ${escapeHtml(value)}</li>`)
     .join("")}</ul>`;
 }
 
@@ -23,31 +31,32 @@ function renderExecutiveReportHtml(input) {
     generatedAt,
     filtersApplied,
     summary,
+    labels,
   } = input;
 
   return `
     <html>
       <body>
-        <h1>Executive availability report</h1>
-        <p>Generated at: ${generatedAt}</p>
-        <p>Report scope: dashboard executive summary</p>
-        <p>Period: ${summary.dateRange.from} -> ${summary.dateRange.to}</p>
-        ${renderSection("Filters applied", renderFilters(filtersApplied))}
+        <h1>${labels.title}</h1>
+        <p>${labels.generatedAt}: ${generatedAt}</p>
+        <p>${labels.scope}</p>
+        <p>${labels.period}: ${summary.dateRange.from} -> ${summary.dateRange.to}</p>
+        ${renderSection(labels.sections.filters, renderFilters(filtersApplied, labels))}
         ${renderSection(
-          "Availability summary",
+          labels.sections.summary,
           `<ul>
-            <li>Targets: ${summary.totalTargets}</li>
-            <li>Healthy: ${summary.healthyTargets}</li>
-            <li>Degraded: ${summary.degradedTargets}</li>
-            <li>Offline: ${summary.offlineTargets}</li>
+            <li>${labels.metrics.targets}: ${summary.totalTargets}</li>
+            <li>${labels.metrics.healthy}: ${summary.healthyTargets}</li>
+            <li>${labels.metrics.degraded}: ${summary.degradedTargets}</li>
+            <li>${labels.metrics.offline}: ${summary.offlineTargets}</li>
           </ul>`
         )}
         ${renderSection(
-          "SLA and alert posture",
+          labels.sections.posture,
           `<ul>
-            <li>Average SLA: ${summary.averageSlaPercent}</li>
-            <li>Open alerts: ${summary.openAlerts}</li>
-            <li>Upcoming expirations: ${summary.upcomingExpirations}</li>
+            <li>${labels.metrics.averageSla}: ${summary.averageSlaPercent}</li>
+            <li>${labels.metrics.openAlerts}: ${summary.openAlerts}</li>
+            <li>${labels.metrics.upcomingExpirations}: ${summary.upcomingExpirations}</li>
           </ul>`
         )}
       </body>
@@ -66,34 +75,35 @@ function renderOperationalReportHtml(input) {
     validationFailures,
     snapshots,
     timeline,
+    labels,
   } = input;
 
   return `
     <html>
       <body>
-        <h1>Operational evidence report</h1>
-        <p>Generated at: ${generatedAt}</p>
-        <p>Target: ${target}</p>
-        <p>Report scope: target operational evidence</p>
-        ${renderSection("Filters applied", renderFilters(filtersApplied))}
+        <h1>${labels.title}</h1>
+        <p>${labels.generatedAt}: ${generatedAt}</p>
+        <p>${labels.target}: ${escapeHtml(target)}</p>
+        <p>${labels.scope}</p>
+        ${renderSection(labels.sections.filters, renderFilters(filtersApplied, labels))}
         ${renderSection(
-          "Target summary",
+          labels.sections.summary,
           `<ul>
-            <li>Status: ${summary.currentStatus}</li>
-            <li>Latest incident: ${summary.latestIncidentAt}</li>
-            <li>SLA: ${summary.slaPercent}</li>
-            <li>Next expiration: ${summary.nextExpiration}</li>
-            <li>Open alerts: ${summary.openAlerts}</li>
+            <li>${labels.metrics.status}: ${summary.currentStatus}</li>
+            <li>${labels.metrics.latestIncident}: ${summary.latestIncidentAt}</li>
+            <li>${labels.metrics.sla}: ${summary.slaPercent}</li>
+            <li>${labels.metrics.nextExpiration}: ${summary.nextExpiration}</li>
+            <li>${labels.metrics.openAlerts}: ${summary.openAlerts}</li>
           </ul>`
         )}
-        ${renderSection("Timeline", `<ul>${timeline.map((item) => `<li>${item}</li>`).join("")}</ul>`)}
-        ${renderSection("Coverage gaps", `<ul>${coverageWindows.map((item) => `<li>${item}</li>`).join("")}</ul>`)}
-        ${renderSection("Alerts", `<ul>${alertHistory.map((item) => `<li>${item}</li>`).join("")}</ul>`)}
+        ${renderSection(labels.sections.timeline, `<ul>${timeline.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`)}
+        ${renderSection(labels.sections.coverage, `<ul>${coverageWindows.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`)}
+        ${renderSection(labels.sections.alerts, `<ul>${alertHistory.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`)}
         ${renderSection(
-          "Validation failures",
-          `<ul>${validationFailures.map((item) => `<li>${item}</li>`).join("")}</ul>`
+          labels.sections.validation,
+          `<ul>${validationFailures.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
         )}
-        ${renderSection("Snapshots", `<ul>${snapshots.map((item) => `<li>${item}</li>`).join("")}</ul>`)}
+        ${renderSection(labels.sections.snapshots, `<ul>${snapshots.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`)}
       </body>
     </html>
   `;

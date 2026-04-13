@@ -1,147 +1,199 @@
+import { AuthenticatedPrincipal } from "../auth/authorization";
+import { getPrincipalTranslator } from "../i18n";
 import { buildDashboardRows, buildDetailEvidence, ReportFilters } from "../reporting/read-models";
-import { serializeReportFilters } from "../reporting/query-state";
 
 export interface CsvExportResult {
   fileName: string;
-  generatedAt: string;
-  filtersApplied: Record<string, string>;
   content: string;
 }
 
-function toCsv(headers: string[], rows: Array<Array<string | number | null>>): string {
-  const encoded = [headers, ...rows].map((row) =>
-    row
-      .map((value) => `"${String(value ?? "").replaceAll("\"", "\"\"")}"`)
-      .join(",")
-  );
-  return encoded.join("\n");
+function toCsv(rows: Array<Array<string | number | null>>): string {
+  return rows
+    .map((columns) =>
+      columns
+        .map((value) => `"${String(value ?? "").replaceAll("\"", "\"\"")}"`)
+        .join(",")
+    )
+    .join("\n");
 }
 
-export async function exportDashboardCsv(filters: ReportFilters = {}): Promise<CsvExportResult> {
-  const rows = await buildDashboardRows(filters);
+export async function exportDashboardCsv(
+  filters: ReportFilters = {},
+  principal?: AuthenticatedPrincipal
+): Promise<CsvExportResult> {
+  const { t } = await getPrincipalTranslator(principal);
+  const rows = await buildDashboardRows(filters, principal);
+  const header = [
+    t("exports.csv.dashboard.rowType"),
+    t("exports.csv.dashboard.id"),
+    t("exports.csv.dashboard.name"),
+    t("exports.csv.dashboard.source"),
+    t("exports.csv.dashboard.issuer"),
+    t("exports.csv.dashboard.owner"),
+    t("exports.csv.dashboard.criticality"),
+    t("exports.csv.dashboard.currentStatus"),
+    t("exports.csv.dashboard.latestUnavailabilityAt"),
+    t("exports.csv.dashboard.slaPercent"),
+    t("exports.csv.dashboard.errorBudgetUsed"),
+    t("exports.csv.dashboard.nextExpiration"),
+    t("exports.csv.dashboard.openAlerts"),
+    t("exports.csv.dashboard.recentAlerts"),
+    t("exports.csv.dashboard.predictiveSeverity"),
+    t("exports.csv.dashboard.predictiveType"),
+    t("exports.csv.dashboard.trustSource"),
+    t("exports.csv.dashboard.pki"),
+    t("exports.csv.dashboard.jurisdiction"),
+    t("exports.csv.dashboard.linkedCertificateCount"),
+    t("exports.csv.dashboard.linkedCrlCount"),
+  ];
+
   return {
-    fileName: "dashboard.csv",
-    generatedAt: new Date().toISOString(),
-    filtersApplied: serializeReportFilters(filters),
-    content: toCsv(
-      [
-        "targetId",
-        "slug",
-        "type",
-        "source",
-        "issuer",
-        "owner",
-        "criticality",
-        "currentStatus",
-        "latestUnavailabilityAt",
-        "slaPercent",
-        "nextExpiration",
-        "openAlerts",
-        "recentAlerts",
-      ],
-      rows.map((row) => [
-        row.targetId,
-        row.slug,
-        row.type,
+    fileName: `${filters.mode ?? "certificate"}-dashboard.csv`,
+    content: toCsv([
+      header,
+      ...rows.map((row) => [
+        row.rowType,
+        row.id,
+        row.name,
         row.source,
         row.issuer,
         row.owner,
         row.criticality,
-        row.currentStatus,
+        t(`common.status.${row.currentStatus}`),
         row.latestUnavailabilityAt?.toISOString() ?? null,
         row.slaPercent.toFixed(2),
+        row.errorBudgetUsed.toFixed(4),
         row.nextExpiration,
         row.openAlerts,
         row.recentAlerts,
-      ])
-    ),
+        row.predictiveSeverity,
+        row.predictiveType ? t(`settings.predictiveType.${row.predictiveType}`) : null,
+        row.structuredTags.trustSource,
+        row.structuredTags.pki,
+        row.structuredTags.jurisdiction,
+        row.linkedCertificateCount,
+        row.linkedCrlCount,
+      ]),
+    ]),
   };
 }
 
 export async function exportTargetEvidenceCsv(
-  targetId: string,
-  filters: ReportFilters = {}
+  certificateId: string,
+  filters: ReportFilters = {},
+  principal?: AuthenticatedPrincipal
 ): Promise<CsvExportResult> {
-  const detail = await buildDetailEvidence(targetId, filters);
-  const rows = detail?.pollHistory ?? [];
+  const { t } = await getPrincipalTranslator(principal);
+  const detail = await buildDetailEvidence(certificateId, filters, principal);
   return {
-    fileName: `${targetId}-evidence.csv`,
-    generatedAt: new Date().toISOString(),
-    filtersApplied: serializeReportFilters(filters),
-    content: toCsv(
-      ["occurredAt", "httpStatus", "timedOut", "durationMs", "coverageLost", "hash"],
-      rows.map((row) => [
-        row.occurredAt.toISOString(),
-        row.httpStatus,
-        String(row.timedOut),
-        row.durationMs,
-        String(row.coverageLost),
-        row.hash,
-      ])
-    ),
+    fileName: `${certificateId}-polls.csv`,
+    content: toCsv([
+      [
+        t("exports.csv.polls.targetLabel"),
+        t("exports.csv.polls.occurredAt"),
+        t("exports.csv.polls.httpStatus"),
+        t("exports.csv.polls.timedOut"),
+        t("exports.csv.polls.durationMs"),
+        t("exports.csv.polls.coverageLost"),
+        t("exports.csv.polls.hash"),
+      ],
+      ...(detail?.pollHistory ?? []).map((poll) => [
+        poll.targetLabel,
+        poll.occurredAt.toISOString(),
+        poll.httpStatus,
+        String(poll.timedOut),
+        poll.durationMs,
+        String(poll.coverageLost),
+        poll.hash,
+      ]),
+    ]),
   };
 }
 
 export async function exportCoverageGapsCsv(
-  targetId: string,
-  filters: ReportFilters = {}
+  certificateId: string,
+  filters: ReportFilters = {},
+  principal?: AuthenticatedPrincipal
 ): Promise<CsvExportResult> {
-  const detail = await buildDetailEvidence(targetId, filters);
+  const { t } = await getPrincipalTranslator(principal);
+  const detail = await buildDetailEvidence(certificateId, filters, principal);
   return {
-    fileName: `${targetId}-coverage-gaps.csv`,
-    generatedAt: new Date().toISOString(),
-    filtersApplied: serializeReportFilters(filters),
-    content: toCsv(
-      ["startTs", "endTs", "durationMs"],
-      (detail?.coverageWindows ?? []).map((gap) => [
+    fileName: `${certificateId}-coverage-gaps.csv`,
+    content: toCsv([
+      [
+        t("exports.csv.polls.targetLabel"),
+        t("exports.csv.coverage.startTs"),
+        t("exports.csv.coverage.endTs"),
+        t("exports.csv.coverage.durationMs"),
+      ],
+      ...(detail?.coverageWindows ?? []).map((gap) => [
+        gap.targetLabel,
         gap.startTs.toISOString(),
         gap.endTs?.toISOString() ?? null,
         gap.durationMs,
-      ])
-    ),
+      ]),
+    ]),
   };
 }
 
 export async function exportAlertHistoryCsv(
-  targetId: string,
-  filters: ReportFilters = {}
+  certificateId: string,
+  filters: ReportFilters = {},
+  principal?: AuthenticatedPrincipal
 ): Promise<CsvExportResult> {
-  const detail = await buildDetailEvidence(targetId, filters);
+  const { t } = await getPrincipalTranslator(principal);
+  const detail = await buildDetailEvidence(certificateId, filters, principal);
   return {
-    fileName: `${targetId}-alerts.csv`,
-    generatedAt: new Date().toISOString(),
-    filtersApplied: serializeReportFilters(filters),
-    content: toCsv(
-      ["sentAt", "severity", "recipients", "resolvedAt"],
-      (detail?.alertHistory ?? []).map((alert) => [
+    fileName: `${certificateId}-alerts.csv`,
+    content: toCsv([
+      [
+        t("exports.csv.polls.targetLabel"),
+        t("exports.csv.alerts.sentAt"),
+        t("exports.csv.alerts.severity"),
+        t("exports.csv.alerts.recipients"),
+        t("exports.csv.alerts.deliveryState"),
+        t("exports.csv.alerts.resolvedAt"),
+      ],
+      ...(detail?.alertHistory ?? []).map((alert) => [
+        alert.targetLabel,
         alert.sentAt.toISOString(),
         alert.severity,
         alert.recipients.join(";"),
+        alert.deliveryState,
         alert.resolvedAt?.toISOString() ?? null,
-      ])
-    ),
+      ]),
+    ]),
   };
 }
 
 export async function exportSnapshotsCsv(
-  targetId: string,
-  filters: ReportFilters = {}
+  certificateId: string,
+  filters: ReportFilters = {},
+  principal?: AuthenticatedPrincipal
 ): Promise<CsvExportResult> {
-  const detail = await buildDetailEvidence(targetId, filters);
+  const { t } = await getPrincipalTranslator(principal);
+  const detail = await buildDetailEvidence(certificateId, filters, principal);
   return {
-    fileName: `${targetId}-snapshots.csv`,
-    generatedAt: new Date().toISOString(),
-    filtersApplied: serializeReportFilters(filters),
-    content: toCsv(
-      ["occurredAt", "hash", "issuer", "thisUpdate", "nextUpdate", "statusLabel"],
-      (detail?.snapshots ?? []).map((snapshot) => [
+    fileName: `${certificateId}-snapshots.csv`,
+    content: toCsv([
+      [
+        t("exports.csv.polls.targetLabel"),
+        t("exports.csv.polls.occurredAt"),
+        t("exports.csv.polls.hash"),
+        t("exports.csv.snapshots.issuer"),
+        t("exports.csv.snapshots.thisUpdate"),
+        t("exports.csv.snapshots.nextUpdate"),
+        t("exports.csv.snapshots.statusLabel"),
+      ],
+      ...(detail?.snapshots ?? []).map((snapshot) => [
+        snapshot.targetLabel,
         snapshot.occurredAt.toISOString(),
         snapshot.hash,
         snapshot.issuer,
         snapshot.thisUpdate,
         snapshot.nextUpdate,
         snapshot.statusLabel,
-      ])
-    ),
+      ]),
+    ]),
   };
 }

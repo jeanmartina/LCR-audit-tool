@@ -1,3 +1,5 @@
+import { AuthenticatedPrincipal } from "../auth/authorization";
+import { getPrincipalTranslator } from "../i18n";
 import { buildDashboardSummary, buildDetailEvidence, ReportFilters } from "../reporting/read-models";
 import { buildAuditTimeline } from "../reporting/timeline";
 import { serializeReportFilters } from "../reporting/query-state";
@@ -15,19 +17,23 @@ export interface PdfExportResult {
 }
 
 export async function buildOperationalPdf(
-  targetId: string,
-  filters: ReportFilters = {}
+  certificateId: string,
+  filters: ReportFilters = {},
+  principal?: AuthenticatedPrincipal
 ): Promise<PdfExportResult> {
-  const detail = await buildDetailEvidence(targetId, filters);
-  const timeline = await buildAuditTimeline(targetId, filters);
+  const { t } = await getPrincipalTranslator(principal);
+  const detail = await buildDetailEvidence(certificateId, filters, principal);
+  const timeline = await buildAuditTimeline(certificateId, filters);
   const generatedAt = new Date().toISOString();
   const filtersApplied = serializeReportFilters(filters);
   const html = renderOperationalReportHtml({
     generatedAt,
     filtersApplied,
-    target: detail?.target.slug ?? targetId,
+    target: detail?.certificate.displayName ?? certificateId,
     summary: {
-      currentStatus: detail?.summary.currentStatus ?? "unknown",
+      currentStatus: detail?.summary.currentStatus
+        ? t(`common.status.${detail.summary.currentStatus}`)
+        : "unknown",
       latestIncidentAt: detail?.summary.latestIncidentAt?.toISOString() ?? "-",
       slaPercent: detail?.summary.slaPercent.toFixed(2) ?? "0.00",
       nextExpiration: detail?.summary.nextExpiration ?? "-",
@@ -36,25 +42,63 @@ export async function buildOperationalPdf(
     timeline: timeline.map((event) => `${event.at.toISOString()} - ${event.type} - ${event.title} - ${event.detail}`),
     coverageWindows: (detail?.coverageWindows ?? []).map(
       (window) =>
-        `${window.startTs.toISOString()} -> ${window.endTs?.toISOString() ?? "open"} (${window.durationMs}ms)`
+        `${window.targetLabel}: ${window.startTs.toISOString()} -> ${window.endTs?.toISOString() ?? "open"} (${window.durationMs}ms)`
     ),
     alertHistory: (detail?.alertHistory ?? []).map(
-      (alert) => `${alert.sentAt.toISOString()} - ${alert.severity} - ${alert.recipients.join(", ")}`
+      (alert) => `${alert.targetLabel}: ${alert.sentAt.toISOString()} - ${alert.severity} - ${alert.recipients.join(", ")}`
     ),
     validationFailures: (detail?.validationFailures ?? []).map(
-      (failure) => `${failure.occurredAt.toISOString()} - ${failure.reason} - ${failure.hash ?? "-"}`
+      (failure) => `${failure.targetLabel}: ${failure.occurredAt.toISOString()} - ${failure.reason} - ${failure.hash ?? "-"}`
     ),
     snapshots: (detail?.snapshots ?? []).map(
       (snapshot) =>
-        `${snapshot.occurredAt.toISOString()} - ${snapshot.hash ?? "-"} - ${snapshot.statusLabel ?? "-"}`
+        `${snapshot.targetLabel}: ${snapshot.occurredAt.toISOString()} - ${snapshot.hash ?? "-"} - ${snapshot.statusLabel ?? "-"}`
     ),
+    labels: {
+      title: t("exports.pdf.operational.title"),
+      generatedAt: t("exports.pdf.operational.generatedAt"),
+      target: t("exports.pdf.operational.target"),
+      scope: t("exports.pdf.operational.scope"),
+      noFilters: t("exports.pdf.noFilters"),
+      filterLabels: {
+        mode: t("reporting.mode"),
+        source: t("reporting.filter.source"),
+        issuer: t("reporting.filter.issuer"),
+        criticality: t("reporting.filter.criticality"),
+        status: t("reporting.filter.status"),
+        trustSource: t("reporting.filter.trustSource"),
+        pki: t("reporting.filter.pki"),
+        jurisdiction: t("reporting.filter.jurisdiction"),
+        dateFrom: t("reporting.filter.from"),
+        dateTo: t("reporting.filter.to"),
+        severity: t("reporting.filter.severity"),
+        eventType: t("reporting.filter.eventType"),
+        snapshotHash: t("reporting.filter.snapshotHash"),
+      },
+      sections: {
+        filters: t("exports.pdf.section.filters"),
+        summary: t("exports.pdf.section.targetSummary"),
+        timeline: t("exports.pdf.section.timeline"),
+        coverage: t("exports.pdf.section.coverage"),
+        alerts: t("exports.pdf.section.alerts"),
+        validation: t("exports.pdf.section.validation"),
+        snapshots: t("exports.pdf.section.snapshots"),
+      },
+      metrics: {
+        status: t("exports.pdf.target.status"),
+        latestIncident: t("exports.pdf.target.latestIncident"),
+        sla: t("exports.pdf.target.sla"),
+        nextExpiration: t("exports.pdf.target.nextExpiration"),
+        openAlerts: t("exports.pdf.target.openAlerts"),
+      },
+    },
   });
   const bytes = createPdfBytesFromHtml(html);
   const text = stripHtmlToText(html);
 
   return {
     variant: "operational",
-    fileName: `${targetId}-operational.pdf`,
+    fileName: `${certificateId}-operational.pdf`,
     generatedAt,
     filtersApplied,
     html,
@@ -63,18 +107,22 @@ export async function buildOperationalPdf(
   };
 }
 
-export async function buildExecutivePdf(filters: ReportFilters = {}): Promise<PdfExportResult> {
-  const summary = await buildDashboardSummary(filters);
+export async function buildExecutivePdf(
+  filters: ReportFilters = {},
+  principal?: AuthenticatedPrincipal
+): Promise<PdfExportResult> {
+  const { t } = await getPrincipalTranslator(principal);
+  const summary = await buildDashboardSummary(filters, principal);
   const generatedAt = new Date().toISOString();
   const filtersApplied = serializeReportFilters(filters);
   const html = renderExecutiveReportHtml({
     generatedAt,
     filtersApplied,
     summary: {
-      totalTargets: summary.totalTargets,
-      healthyTargets: summary.healthyTargets,
-      degradedTargets: summary.degradedTargets,
-      offlineTargets: summary.offlineTargets,
+      totalTargets: summary.totalRows,
+      healthyTargets: summary.healthyRows,
+      degradedTargets: summary.degradedRows,
+      offlineTargets: summary.offlineRows,
       averageSlaPercent: summary.averageSlaPercent.toFixed(2),
       openAlerts: summary.openAlerts,
       upcomingExpirations: summary.upcomingExpirations,
@@ -83,13 +131,47 @@ export async function buildExecutivePdf(filters: ReportFilters = {}): Promise<Pd
         to: summary.dateRange.to.toISOString(),
       },
     },
+    labels: {
+      title: t("exports.pdf.executive.title"),
+      generatedAt: t("exports.pdf.executive.generatedAt"),
+      scope: t("exports.pdf.executive.scope"),
+      period: t("exports.pdf.executive.period"),
+      noFilters: t("exports.pdf.noFilters"),
+      filterLabels: {
+        mode: t("reporting.mode"),
+        source: t("reporting.filter.source"),
+        issuer: t("reporting.filter.issuer"),
+        criticality: t("reporting.filter.criticality"),
+        status: t("reporting.filter.status"),
+        trustSource: t("reporting.filter.trustSource"),
+        pki: t("reporting.filter.pki"),
+        jurisdiction: t("reporting.filter.jurisdiction"),
+        dateFrom: t("reporting.filter.from"),
+        dateTo: t("reporting.filter.to"),
+        preset: t("reporting.filter.period"),
+      },
+      sections: {
+        filters: t("exports.pdf.section.filters"),
+        summary: t("exports.pdf.section.summary"),
+        posture: t("exports.pdf.section.posture"),
+      },
+      metrics: {
+        targets: t("exports.pdf.summary.targets"),
+        healthy: t("exports.pdf.summary.healthy"),
+        degraded: t("exports.pdf.summary.degraded"),
+        offline: t("exports.pdf.summary.offline"),
+        averageSla: t("exports.pdf.summary.averageSla"),
+        openAlerts: t("exports.pdf.summary.openAlerts"),
+        upcomingExpirations: t("exports.pdf.summary.upcomingExpirations"),
+      },
+    },
   });
   const bytes = createPdfBytesFromHtml(html);
   const text = stripHtmlToText(html);
 
   return {
     variant: "executive",
-    fileName: "executive-report.pdf",
+    fileName: `${summary.mode}-executive-report.pdf`,
     generatedAt,
     filtersApplied,
     html,

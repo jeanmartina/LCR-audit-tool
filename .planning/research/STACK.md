@@ -1,52 +1,101 @@
-# Technology Stack: LCR Availability Dashboard
+# v1.1 Research: Stack
 
-**Project:** LCR Availability Dashboard
-**Researched:** 2026-04-05
-**Overall confidence:** MEDIUM
+## Scope
 
-## Recommended Stack
+This research only covers capabilities that are new for milestone `v1.1`:
+- certificate-first onboarding and batch import
+- invitation-based authentication and group-scoped authorization
+- social login and enterprise SSO/OIDC
+- UI internationalization
+- Docker packaging with HTTPS termination through Caddy
 
-### Frontend & Visualization
-- `Next.js 16` with the App Router and Server Actions keeps routing, metadata, and edge-ready rendering in one framework so the dashboard ships quickly and stays predictable for compliance viewers. citeturn4search0turn4search4
-- React’s component model, Virtual DOM, and rich ecosystem shine for high-frequency dashboards where cards, tables, and charts must refresh without full reloads. citeturn2search0
-- The default 2026 TypeScript + Tailwind combination lets us type-check contracts and style utility-first layouts while keeping the CSS surface small. citeturn4search1
+## Recommendations
 
-### API, Polling & Task Orchestration
-- `FastAPI` supplies the REST/GraphQL endpoints while `Celery` workers (with Celery Beat or APScheduler schedules) pull each EU trust-list at its configured cadence (10 minutes default), retry on failure, and hand verified metrics and hashes downstream. citeturn5search7
-- Each polling task posts a heartbeat to Healthchecks so missing pings trigger alerts instead of letting fetchers fail silently. citeturn1search0
+### Authentication and authorization
+- Use **Auth.js** with the Next.js App Router integration as the authentication layer.
+- Start with:
+  - Credentials login for local email/password
+  - Google provider
+  - Microsoft Entra ID provider
+  - Generic OIDC provider
+- Persist users, sessions, accounts, invites, groups, memberships, and role bindings in Postgres.
+- Keep **platform role** separate from **group role**:
+  - global: `platform-admin`
+  - group-scoped: `viewer`, `operator`, `group-admin`
+- Model target access through **group-target shares**, not target ownership by a single group.
 
-### Cryptographic Validation
-- `pyhanko-certvalidator` 0.30.1 does signature verification, issuer chain resolution, and hash extraction for every downloaded LCR before we persist it or compare it to previous snapshots. citeturn5search5
+Why:
+- Auth.js already fits the current Next.js stack and supports credentials + OAuth/OIDC providers.
+- The project needs mixed auth modes now, not just one IdP.
+- Group membership and invitation logic are application-specific, so they should live in the app database rather than being delegated entirely to the IdP.
 
-### Storage & Historical Archive
-- `TimescaleDB` hypertables capture availability, outage windows, and SLA statistics with automatic chunking, compression, and continuous aggregates so the dashboard can query decades of data without blowing up storage or query time. citeturn4view0
-- Raw LCR blobs land in S3-compatible object storage with Object Lock/WORM semantics and stored cryptographic hashes so tampering is detectable and regulatory audits get a tamper-proof trail. citeturn2search10
+### Data model additions
+Add these core entities:
+- `users`
+- `accounts` / `sessions` / `verification_tokens` (or equivalent auth tables)
+- `groups`
+- `group_memberships`
+- `group_invites`
+- `target_group_shares`
+- `group_defaults`
+- `user_preferences` (at minimum locale)
+- `certificate_import_jobs`
+- `certificate_sources`
+- `derived_crl_targets`
+- `audit_log` / `change_history`
 
-### Alerts & Observability
-- Healthchecks provides the heartbeat/period/grace model that turns every scheduled fetch into a dead-man switch, plus email/webhook/Slack integrations for our alert pipeline. citeturn1search0
-- Route the alert payloads through a transactional email service like Postmark or SendGrid so compliance teams get deliverability, analytics, and retry guarantees. citeturn8search5
-- Escalate high-severity incidents into a Slack-native incident manager so cross-functional responders collaborate where the team already works. citeturn6search11
+Why:
+- The new milestone is not only auth; it also introduces multi-group sharing, per-group defaults, imports, and user-configurable language.
 
-## Avoid
-- Relying on raw cron + `MAILTO` is risky because silent failures (dead cron jobs, hung processes, missing network) can persist undetected for a long time; always wrap scheduled tasks with heartbeat monitoring. citeturn1search0
-- Over-engineering the front end with exotic frameworks; keep the “boring but reliable” React/Next.js stack so maintenance stays simple and we can ship features quickly. citeturn4search0
-- Storing historic LCR snapshots in mutable stores without cryptographic hashing and WORM controls, because log-auditing requirements demand tamper-evident archives. citeturn2search10
+### Internationalization
+- Use an App Router-friendly i18n layer such as **next-intl**.
+- Keep translation messages in versioned locale files.
+- Support these initial locales:
+  - `en`
+  - `pt-BR`
+  - `es`
+- Store the preferred locale per user and apply it after login; before login, fall back to a sane browser/default locale.
 
-## Installation
+Why:
+- The app already uses the App Router. The i18n layer needs to work in server components and route handlers, not only in client UI.
+- Per-user language preference is a product requirement, so locale cannot live only in URL state.
 
-```bash
-pip install fastapi[all] uvicorn celery redis pyhanko-certvalidator
-npm install next@16 react react-dom typescript tailwindcss
-```
+### Certificate ingestion
+- Keep the user-facing source of truth as **certificate uploads**, not CRL URLs.
+- Support:
+  - single certificate upload
+  - `.zip` batch upload
+- Parse uploaded certificates server-side, extract CRL distribution points, deduplicate them, and create/update derived targets.
+- Preserve the raw import artifact metadata for auditability.
 
-## Sources
-- Amplifi Labs “Modern Web App Tech Stack for 2026” and AppStack Builder’s praise of Next.js 16 for SaaS/SEO teams. citeturn4search0turn4search4
-- TailyUI’s “Default Modern TypeScript Stack” for 2026 front ends. citeturn4search1
-- Sparkle Web’s guide on why React is still the dashboard standard in 2026. citeturn2search0
-- FastAPI scheduling guide comparing BackgroundTasks, APScheduler, and Celery. citeturn5search7
-- PyPI entry for pyhanko-certvalidator 0.30.1 (March 2026 release). citeturn5search5
-- TimescaleDB overview describing hypertables, compression, and continuous aggregates. citeturn4view0
-- Tencent Cloud’s log auditing requirements on WORM storage and hashing. citeturn2search10
-- Healthchecks documentation on heartbeat monitoring, integrations, and alert states. citeturn1search0
-- Aegis Software’s comparison of top transactional email services. citeturn8search5
-- incident.io’s Slack-friendly incident management guide. citeturn6search11
+Why:
+- Manual CRL URL entry is explicitly out for this milestone.
+- The system should derive monitorable CRL endpoints from the certificate material to reduce operator error.
+
+### Packaging and HTTPS
+- Package the stack with:
+  - `web`
+  - `worker`
+  - `postgres`
+  - `caddy`
+- Terminate TLS in **Caddy**.
+- Use Caddy's automatic certificate management to satisfy OAuth/OIDC callback URL requirements.
+- Treat callback base URL / public origin as first-class config.
+
+Why:
+- OAuth providers require stable redirect URIs and production-like HTTPS.
+- The polling/worker path should not be coupled to the web process.
+
+## Non-goals for v1.1
+- No OCSP monitoring yet
+- No CPS/CP/DPC URL monitoring yet
+- No horizontal worker elasticity yet
+- No multi-region probe execution yet
+- No TSL ETSI TS 119 612 ingestion yet
+- No advanced executive SLO/burn-rate expansion from `DIF-03`
+
+## Source Notes
+- Auth.js official docs: provider-based auth for Next.js and RBAC patterns
+- next-intl official learning/docs: App Router i18n patterns
+- Caddy official docs: automatic HTTPS and Docker-friendly reverse proxy setup
+- Google and Microsoft identity docs: redirect URI / OAuth code-flow constraints
