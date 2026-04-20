@@ -22,5 +22,5 @@ export async function POST(
     predictiveWindowDays: Number.parseInt(String(formData.get("predictiveWindowDays") || "3"), 10),
   });
 
-  return Response.redirect(new URL("/settings?saved=group", request.url), 303);
+  return new Response(null, { status: 303, headers: { Location: "/settings?saved=group" } });
 }

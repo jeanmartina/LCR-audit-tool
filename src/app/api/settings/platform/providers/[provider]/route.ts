@@ -29,5 +29,5 @@ export async function POST(
     notes: String(formData.get("notes") ?? "").trim() || null,
   });
 
-  return Response.redirect(new URL("/settings?saved=provider", request.url), 303);
+  return new Response(null, { status: 303, headers: { Location: "/settings?saved=provider" } });
 }

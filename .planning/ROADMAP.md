@@ -20,7 +20,7 @@
   2. Technical fields show concise hints, examples, and validation feedback near the field.
   3. Empty states and post-action states guide users to the next useful action.
   4. Existing high-friction settings/admin screens use the new primitives where they are touched.
-**Plans**: `16-01` planned
+**Plans**: `16-01` complete
 
 #### Phase 17: First-Run Bootstrap and Certificate/ZIP Onboarding UX
 **Goal**: Remove bootstrap and certificate onboarding friction by replacing database/manual setup and raw upload screens with guided web flows.
@@ -82,8 +82,8 @@
 ## Current Status
 
 - Active milestone: `v1.2`
-- Current stage: requirements approved; roadmap drafted
-- Next recommended step: `$gsd-plan-phase 16`
+- Current stage: Phase 16 complete; Phase 17 ready to plan
+- Next recommended step: `$gsd-plan-phase 17`
 
 ## Backlog
 

@@ -30,5 +30,5 @@ export async function POST(request: Request): Promise<Response> {
     ) as Array<"upcoming-expiration" | "publication-delayed">,
   });
 
-  return Response.redirect(new URL("/settings?saved=profile", request.url), 303);
+  return new Response(null, { status: 303, headers: { Location: "/settings?saved=profile" } });
 }

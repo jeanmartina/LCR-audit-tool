@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 ## Current Position
 
 Milestone: v1.2
-Phase: 16 ready to execute
-Plan: 16-01
-Status: Phase 16 planned; ready for execution
-Last activity: 2026-04-20 — Planned Phase 16 product visual system and guided form UX
+Phase: 17 ready to plan
+Plan: none
+Status: Phase 16 complete; Phase 17 ready for planning
+Last activity: 2026-04-20 — Executed Phase 16 product visual system and guided form UX
 
-Progress: [███░░░░░░░] 32%
+Progress: [████░░░░░░] 38%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
+- Total plans completed: 16
 - Average duration: 43 min
 - Total execution time: 2.4 hours
 
@@ -31,7 +31,7 @@ Progress: [███░░░░░░░] 32%
 | v1.1 | 8-15 | 8 | Shipped |
 
 **Recent Trend:**
-- Last 10 plans: [06-01, 07-01, 08-01, 09-01, 10-01, 11-01, 12-01, 13-01, 14-01, 15-01]
+- Last 10 plans: [07-01, 08-01, 09-01, 10-01, 11-01, 12-01, 13-01, 14-01, 15-01, 16-01]
 - Trend: Stable
 
 ## Accumulated Context
@@ -51,6 +51,7 @@ Progress: [███░░░░░░░] 32%
 - [Phase 14]: Packaged ZIP onboarding uses in-process extraction, supports PEM/DER certificate files, and records archive-level failures explicitly.
 - [Phase 15]: Google public-host proof closed the shipped v1.1 auth scope on the packaged Docker/Caddy deployment.
 - [Milestone v1.2]: Trust-list ingestion, executive summaries, and operator UX are the top priorities, with UX backlog ordering fixed as redesign -> easier onboarding -> first-run admin bootstrap -> field guidance.
+- [Phase 16]: Use shared UI primitives and field-level hints as the baseline for subsequent v1.2 screens; settings redirects must stay public-origin safe via relative `Location` headers.
 
 ### Roadmap Evolution
 - v1.0 archived to `.planning/milestones/v1.0-ROADMAP.md`
@@ -59,8 +60,7 @@ Progress: [███░░░░░░░] 32%
 
 ### Pending Todos
 
-- Execute Phase 16 with `$gsd-execute-phase 16`
-- Decide whether to address the settings redirect bug as immediate cleanup or carry it forward
+- Plan Phase 17 with `$gsd-plan-phase 17`
 - Rotate the Google client secret used during the proof because it was exposed during testing
 
 ### Blockers/Concerns

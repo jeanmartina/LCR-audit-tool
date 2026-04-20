@@ -22,6 +22,7 @@ const commands = [
   ["node", ["scripts/validate-onboarding-admin.js", "ui"]],
   ["node", ["scripts/validate-batch-runtime.js", "runtime"]],
   ["node", ["scripts/validate-batch-runtime.js", "proof"]],
+  ["node", ["scripts/validate-ui-guidance.js"]],
   ["node", ["scripts/validate-i18n.js", "foundation"]],
   ["node", ["scripts/validate-i18n.js", "ui"]],
   ["node", ["scripts/validate-i18n.js", "exports"]],

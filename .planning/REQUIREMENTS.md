@@ -25,13 +25,13 @@
 
 ### Operator UX and Visual Design
 
-- [ ] **UX-01**: Product UI uses a coherent visual system with clearer hierarchy, spacing, typography, panels, states, and action placement.
+- [x] **UX-01**: Product UI uses a coherent visual system with clearer hierarchy, spacing, typography, panels, states, and action placement.
 - [ ] **UX-02**: Certificate onboarding provides a guided flow for single certificate upload with clear preview, derived CRLs, effective defaults, and save outcome.
 - [ ] **UX-03**: ZIP onboarding provides a guided flow with upload validation, import progress/result summary, partial-failure details, and next steps.
 - [ ] **UX-04**: Trust-list onboarding uses the same guided source-onboarding model as certificate and ZIP onboarding.
 - [ ] **UX-05**: First system access presents a first-run web flow to create the initial platform admin instead of requiring direct database insertion.
-- [ ] **UX-06**: Editable forms include concise field-level hints, examples, and validation feedback for technical fields such as trust source, PKI, jurisdiction, callback origin, predictive windows, and source URLs.
-- [ ] **UX-07**: Empty states and post-action states guide operators to the next useful action after setup, onboarding, import, sync, or error outcomes.
+- [x] **UX-06**: Editable forms include concise field-level hints, examples, and validation feedback for technical fields such as trust source, PKI, jurisdiction, callback origin, predictive windows, and source URLs.
+- [x] **UX-07**: Empty states and post-action states guide operators to the next useful action after setup, onboarding, import, sync, or error outcomes.
 
 ### Operations and Safety
 
@@ -89,13 +89,13 @@
 | EXEC-03 | Phase 21 | Pending |
 | EXEC-04 | Phase 21 | Pending |
 | EXEC-05 | Phase 21 | Pending |
-| UX-01 | Phase 16 | Pending |
+| UX-01 | Phase 16 | Complete |
 | UX-02 | Phase 17 | Pending |
 | UX-03 | Phase 17 | Pending |
 | UX-04 | Phase 20 | Pending |
 | UX-05 | Phase 17 | Pending |
-| UX-06 | Phase 16 | Pending |
-| UX-07 | Phase 16 | Pending |
+| UX-06 | Phase 16 | Complete |
+| UX-07 | Phase 16 | Complete |
 | OPS-04 | Phase 18 | Pending |
 | OPS-05 | Phase 18 | Pending |
 | OPS-06 | Phase 20 | Pending |

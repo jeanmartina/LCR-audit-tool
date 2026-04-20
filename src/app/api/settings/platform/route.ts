@@ -14,5 +14,5 @@ export async function POST(request: Request): Promise<Response> {
     predictiveWindowDays: Number.parseInt(String(formData.get("predictiveWindowDays") || "3"), 10),
   });
 
-  return Response.redirect(new URL("/settings?saved=platform", request.url), 303);
+  return new Response(null, { status: 303, headers: { Location: "/settings?saved=platform" } });
 }
