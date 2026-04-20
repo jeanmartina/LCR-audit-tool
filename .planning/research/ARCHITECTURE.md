@@ -1,108 +1,103 @@
-# v1.1 Research: Architecture
+# v1.2 Research: ARCHITECTURE
 
-## Existing Base
+**Research date:** 2026-04-13
+**Milestone focus:** ETSI trust-list ingestion, executive summaries, and simpler operator UX
 
-The shipped `v1.0` already has:
-- Next.js App Router UI
-- Postgres-backed runtime store
-- worker/polling concepts in code
-- reporting and export routes
-- local quality and smoke commands
+## Recommended architectural direction
 
-## Recommended v1.1 Build Order
+### 1. Trust-list ingestion as a first-class source type
 
-### Phase A: identity and tenancy foundation
-Build first:
-- auth tables and login/session plumbing
-- groups, memberships, invites, roles
-- authorization helpers usable from pages, APIs, exports, and worker code
+Add a new inventory source type alongside the existing certificate import modes:
+- manual certificate upload
+- ZIP certificate upload
+- trust-list URL source
 
-Reason:
-- target admin, dashboard scoping, and import ownership all depend on the access model.
+This keeps one inventory system with multiple source types rather than splitting the product into separate ingest subsystems.
 
-### Phase B: certificate-first administration
-Build second:
-- admin UI for certificate uploads and management
-- certificate parsing/import jobs
-- derived CRL target creation/update
-- defaults + overrides model
-- change history
+### 2. LOTL / TSL sync pipeline
 
-Reason:
-- this is the primary productization gap left by v1.0.
+Recommended stages:
+1. register trust-list source URL and operator metadata
+2. fetch LOTL / TSL document
+3. validate XML signature and structural metadata
+4. record source snapshot (digest, sequence number, issue date, next update)
+5. detect change vs previous snapshot
+6. extract affected certificates / services
+7. feed extracted certificates into the existing certificate-admin import pipeline
+8. write import and sync audit events
+9. project resulting monitored assets into reporting
 
-### Phase C: deployment/runtime packaging
-Build third:
-- separate web and worker services
-- Docker packaging
-- Caddy proxy with HTTPS
-- callback/public-origin config and docs
+### 3. Extend, do not replace, current certificate import
 
-Reason:
-- auth providers and practical deployment depend on real HTTPS and stable service topology.
+The current certificate pipeline already knows how to:
+- normalize PEM / DER
+- fingerprint certificates
+- derive CRL URLs
+- create batch import runs
+- project runtime targets
 
-### Phase D: internationalization pass
-Can run in parallel with admin/auth UI work once the main routes stabilize:
-- message catalogs
-- locale selection persistence
-- route/layout/message plumbing
-- README/docs refresh in English
+That should remain the central path. Trust-list ingestion should supply certificate payloads into that pipeline and add source metadata around it.
 
-Reason:
-- i18n touches many screens, but it is cleaner once the main v1.1 surfaces exist.
+### 4. New persisted entities likely needed
 
-## Data/ownership model
+- trust-list sources
+- trust-list snapshots
+- trust-list sync runs
+- trust-list extracted certificate mappings
+- source-to-certificate provenance records
 
-Recommended relationships:
-- `user` many-to-many `group` through `group_membership`
-- `target` many-to-many `group` through `target_group_share`
-- `certificate_source` one-to-many `derived_crl_target`
-- `group_defaults` scoped to group
-- `target_override` stored directly on target/share depending on whether the override is global or group-specific
+Core fields to persist:
+- source URL
+- source type (`lotl`, `tsl`)
+- territory / scheme information
+- sequence number
+- issue date
+- next update
+- digest / canonical identity
+- sync status and failure reason
+- last successful sync timestamp
 
-Key design question already answered by product scope:
-- targets are shareable across groups, therefore group visibility cannot be encoded only as `target.group_id`
+### 5. Executive reporting path
 
-## Authorization boundaries
+Do not build executive summaries as a second analytics engine.
+Build them as:
+- summary read models over existing monitoring evidence
+- role-safe, group-scoped executive views
+- executive-focused PDF/export variants if needed
 
-Authorization must apply consistently to:
-- dashboard reads
-- drill-down reads
-- CSV/PDF exports
-- target admin writes
-- invite/member management
-- import history and upload artifacts
+A good split is:
+- operator reporting = investigation and action
+- executive reporting = current risk, trend, and exposure summary
 
-Recommended implementation shape:
-- central permission helpers that accept `(user, group, action)`
-- route/page guards call those helpers
-- reporting selectors accept authorized group scope rather than relying on UI filtering alone
+### 6. UX architecture direction
 
-## Authentication integration notes
+Use progressive disclosure:
+- step-based first-run admin bootstrap
+- guided onboarding wizard for certificate / ZIP / trust-list source creation
+- advanced settings collapsed behind an explicit reveal
+- inline help and examples attached to the field itself
 
-- Credentials auth should coexist with OAuth/OIDC accounts on the same user identity.
-- Invitation acceptance should be the moment when the user is bound to group membership.
-- The system should avoid unrestricted just-in-time tenant creation.
-- Callback/public-origin configuration should be explicit and environment-driven.
+Avoid mixing:
+- platform setup
+- group defaults
+- source onboarding
+- advanced monitoring overrides
 
-## Packaging shape
+into the same initial screen.
 
-Recommended services:
-- `web`: Next.js app
-- `worker`: polling/import/background jobs
-- `postgres`: primary relational store
-- `caddy`: HTTPS termination and reverse proxy
+## Suggested build order
 
-Optional future split, not required now:
-- separate import worker
-- separate scheduler and execution workers
+1. trust-list source persistence and sync metadata
+2. trust-list fetch / validation / change-detection pipeline
+3. certificate extraction into existing import pipeline
+4. operator sync visibility and failure states
+5. executive summary read models
+6. redesign + onboarding flow consolidation
+7. first-run bootstrap and field guidance pass
 
-## Future-safe hooks
+## Sources
 
-Even though multi-region workers are out of scope for `v1.1`, new evidence models should leave room for future fields like:
-- `worker_id`
-- `probe_region`
-- `probe_country`
-- `jurisdiction`
-
-That avoids painful schema churn when distributed monitoring is added later.
+- EU LOTL / trusted lists overview: https://ec.europa.eu/digital-building-blocks/sites/display/DIGITAL/Trusted+Lists
+- DSS trusted lists and validation docs: https://ec.europa.eu/digital-building-blocks/DSS/webapp-demo/doc/dss-documentation.html#_trusted_lists
+- Microsoft dashboard design tips: https://learn.microsoft.com/power-bi/create-reports/service-dashboards-design-tips
+- GOV.UK progressive disclosure patterns: https://design-system.service.gov.uk/

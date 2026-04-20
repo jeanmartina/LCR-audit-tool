@@ -17,14 +17,27 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 - **Internationalization:** canonical English dictionaries with `pt-BR` and `es` translations, locale-aware auth/reporting/settings/admin surfaces, and localized CSV/PDF exports
 - **Packaging and operations:** Docker packaging for `web` and `worker`, compose topology for `web + worker + postgres + caddy`, HTTPS ingress through Caddy, README/operator docs, and a public-host Google proof runbook
 
+## Current Milestone: v1.2 Trust Lists, Executive Visibility, and Operator UX
+
+**Goal:** add trust-list ingestion and simpler executive visibility while materially improving the operator/admin experience.
+
+**Target features:**
+- ETSI TS 119 612 trust-list import by URL
+- automatic certificate re-import when a tracked trust list changes
+- simpler executive dashboards and summary views
+- visual redesign of the product UI
+- easier certificate and ZIP onboarding flows
+- first-run platform-admin bootstrap in the web UI
+- field-level hints and contextual guidance in forms
+
 ## Requirements
 
 ### Validated
 
-- ✓ **LCR-01**: Continuous monitoring of each LCR/certificate with availability, downtime, and recovery lag — `v1.0`
+- ✓ **LCR-01**: Continuous monitoring of each CRL/certificate with availability, downtime, and recovery lag — `v1.0`
 - ✓ **LCR-02**: Per-target configurable interval with a 10-minute global default — `v1.0`
 - ✓ **LCR-03**: Email alerts with default/override recipients, repeated until recovery, and admin disablement — `v1.0`
-- ✓ **LCR-04**: Signature/hash validation and historical storage of verified LCRs — `v1.0`
+- ✓ **LCR-04**: Signature/hash validation and historical storage of verified CRLs — `v1.0`
 - ✓ **LCR-05**: Unavailability based on HTTP != 200, timeout, and expiration without replacement — `v1.0`
 - ✓ **LCR-06**: Coverage-gap window recording for SLA auditability — `v1.0`
 - ✓ **LCR-07**: SLA metrics and time-window reporting — `v1.0`
@@ -77,13 +90,12 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 - [External notification integrations] — alerts are email-only for now; SMS/push are out of scope.
 - [Dedicated mobile app] — access is through the web dashboard and table-driven operator flows.
 
-## Next Milestone Goals
+## Research Focus for v1.2
 
-- deliver real Microsoft Entra ID and generic OIDC proof on the packaged HTTPS deployment
-- add trust-list ingestion and automatic certificate re-import from trust-list updates
-- expand monitoring beyond CRLs into OCSP and referenced policy-document availability
-- improve operator UX with first-run admin bootstrap, simpler certificate/ZIP onboarding, and stronger form guidance
-- raise the product’s visual quality with a deliberate redesign pass
+- identify the safest trust-list ingestion model for ETSI TS 119 612 in the current TypeScript/Postgres runtime
+- determine the simplest executive summary surfaces that still help leadership understand coverage risk
+- redesign the operator/admin UX around low-friction onboarding, first-run setup, and field-level guidance
+- avoid adding complexity that would make the product harder to operate than the current certificate-first workflow
 
 <details>
 <summary>v1.1 shipped milestone snapshot</summary>
@@ -95,13 +107,13 @@ v1.1 turned the v1.0 technical core into an operable multi-user product with inv
 <details>
 <summary>v1.0 original definition snapshot</summary>
 
-The original scope started from a compliance/engineering dashboard with background polling, a 10-minute default cadence, recurring email alerts, historical LCR retention, and a focus on lost-coverage windows.
+The original scope started from a compliance/engineering dashboard with background polling, a 10-minute default cadence, recurring email alerts, historical CRL retention, and a focus on lost-coverage windows.
 
 </details>
 
 ## Context
 - The primary audience is compliance and engineering teams responsible for trust-list availability and revocation coverage.
-- The domain must handle European TSL-driven ecosystems and standalone certificates while always validating signature/hash and preserving downloaded LCR history for future document-verification use cases.
+- The domain must handle European TSL-driven ecosystems and standalone certificates while always validating signature/hash and preserving downloaded CRL history for future document-verification use cases.
 - The stack now spans Postgres-backed monitoring, multi-user access control, localized user-facing surfaces, and Docker/Caddy deployment.
 - The product has proven the Google invite-gated flow on a real public HTTPS host; Entra ID and generic OIDC still require the same level of proof.
 - Operator/admin UX still needs significant polish for first-run bootstrap, onboarding guidance, and overall visual quality.
@@ -114,12 +126,12 @@ The original scope started from a compliance/engineering dashboard with backgrou
 - **Alerts**: email alerts repeat until recovery, support per-target overrides, and can be disabled by administrators.
 - **Coverage gaps**: the system records time windows with no valid CRL coverage and exposes them for SLA auditability.
 - **Granular configuration**: each certificate/derived target can carry individual interval, timeout, recipient, and alert-frequency settings.
-- **Onboarding source**: new assets originate from uploaded certificates; manual CRL URL onboarding remains out of scope as a primary flow.
+- **Onboarding source**: new assets originate from uploaded certificates today; trust-list ingestion must extend rather than break the certificate-first model.
 - **Authorization model**: targets can be shared across groups; permissions combine global role and per-group role.
 - **Invitation-only access**: users enter through invites, not public sign-up.
 - **Internationalization**: every new interface must be translatable and initially support English, Portuguese, and Spanish.
 - **Documentation language**: default code and technical documentation remain in English.
-- **External provider scope for shipped v1.1**: Google is proven; Entra ID and generic OIDC are deferred to the next milestone.
+- **External provider scope**: Google is proven; Entra ID and generic OIDC are deferred until they are explicitly prioritized.
 
 ## Key Decisions
 | Decision | Rationale | Outcome |
@@ -155,4 +167,4 @@ This document evolves with each phase and milestone transition.
 4. Update context with the current operational state and any active risk signals.
 
 ---
-*Last updated: 2026-04-13 after v1.1 milestone completion*
+*Last updated: 2026-04-20 after v1.2 requirements and roadmap definition*

@@ -7,48 +7,106 @@
 
 ## Active Milestone
 
-- None. Start the next milestone with `$gsd-new-milestone`.
+### Milestone v1.2: Trust Lists, Executive Visibility, and Operator UX
+
+**Goal:** extend the shipped multi-user product with ETSI trust-list ingestion, simpler executive reporting, and a substantially easier operator experience.
+
+#### Phase 16: Product Visual System and Guided Form UX
+**Goal**: Establish a coherent visual system and reusable guidance patterns so every subsequent v1.2 screen is easier to understand and operate.
+**Depends on**: Phase 15
+**Requirements**: UX-01, UX-06, UX-07
+**Success Criteria** (what must be TRUE):
+  1. Shared UI primitives define consistent layout, typography, panels, actions, states, and form help patterns.
+  2. Technical fields show concise hints, examples, and validation feedback near the field.
+  3. Empty states and post-action states guide users to the next useful action.
+  4. Existing high-friction settings/admin screens use the new primitives where they are touched.
+**Plans**: 0 plans
+
+#### Phase 17: First-Run Bootstrap and Certificate/ZIP Onboarding UX
+**Goal**: Remove bootstrap and certificate onboarding friction by replacing database/manual setup and raw upload screens with guided web flows.
+**Depends on**: Phase 16
+**Requirements**: UX-02, UX-03, UX-05
+**Success Criteria** (what must be TRUE):
+  1. A fresh deployment can create the initial platform admin from the web UI.
+  2. Single-certificate onboarding previews derived CRLs, effective defaults, and save outcome before/after commit.
+  3. ZIP onboarding shows upload validation, import progress/result summary, partial failures, and next steps.
+  4. Operators no longer need direct SQL or unclear technical screens for the first useful setup path.
+**Plans**: 0 plans
+
+#### Phase 18: Trust-List Source Model and Safe Sync Foundation
+**Goal**: Add ETSI trust-list sources as first-class inventory sources with persisted sync metadata, validation gates, and auditable sync runs.
+**Depends on**: Phase 17
+**Requirements**: TSL-01, TSL-02, TSL-03, OPS-04, OPS-05
+**Success Criteria** (what must be TRUE):
+  1. Platform admins can register a trust-list URL source.
+  2. The runtime fetches and parses supported LOTL/TSL metadata into persisted snapshots.
+  3. Trust-list integrity is validated before extracted data can affect inventory.
+  4. Sync runs record success/failure state, digest/sequence metadata, and failure reasons.
+  5. The packaged Docker runtime can execute trust-list sync without undeclared host dependencies.
+**Plans**: 0 plans
+
+#### Phase 19: Trust-List Certificate Projection and Reimport
+**Goal**: Project validated trust-list certificates into the existing certificate-first pipeline while preserving provenance and avoiding duplicate unchanged assets.
+**Depends on**: Phase 18
+**Requirements**: TSL-04, TSL-05, TSL-07
+**Success Criteria** (what must be TRUE):
+  1. Supported trust-list certificates import through the same certificate pipeline used by single/ZIP onboarding.
+  2. Change detection reimports affected certificates without duplicating unchanged monitored assets.
+  3. Trust-list-derived certificates and targets retain provenance back to source URL, snapshot, and import run.
+  4. Reporting/admin surfaces can distinguish trust-list-derived assets from manually uploaded assets without creating a separate inventory model.
+**Plans**: 0 plans
+
+#### Phase 20: Operator Trust-List Onboarding and Sync Visibility
+**Goal**: Make trust-list onboarding and ongoing sync understandable to operators through guided source creation, sync status, and recovery guidance.
+**Depends on**: Phase 19
+**Requirements**: TSL-06, UX-04, OPS-06
+**Success Criteria** (what must be TRUE):
+  1. Trust-list onboarding uses the same guided source-onboarding model as certificate and ZIP onboarding.
+  2. Operators can see sync status, last successful sync, next expected update, failure reason, and change summary.
+  3. Documentation explains trust-list setup, sync behavior, failure handling, and operator recovery steps.
+  4. Trust-list failures are visible and actionable instead of silent background errors.
+**Plans**: 0 plans
+
+#### Phase 21: Simple Executive Summary Dashboard and Export
+**Goal**: Add a management-facing view that explains current coverage risk without requiring operator-level investigation.
+**Depends on**: Phase 20
+**Requirements**: EXEC-01, EXEC-02, EXEC-03, EXEC-04, EXEC-05
+**Success Criteria** (what must be TRUE):
+  1. Authorized users can open an executive summary for their allowed groups.
+  2. Summary cards show healthy, degraded, unavailable, and at-risk counts.
+  3. Top risks and upcoming expiration/publication risks link to operational evidence.
+  4. A short trend view shows recent coverage health and incidents.
+  5. The summary can be exported or printed as a concise management-facing report.
+**Plans**: 0 plans
 
 ## Current Status
 
-- No active milestone is open.
-- Last completed milestone: `v1.1` on 2026-04-13
-- Next recommended step: define the next milestone scope with `$gsd-new-milestone`
+- Active milestone: `v1.2`
+- Current stage: requirements approved; roadmap drafted
+- Next recommended step: `$gsd-plan-phase 16`
 
 ## Backlog
 
 ### Phase 999.1: First-Run Platform Admin Bootstrap in the Web UI (BACKLOG)
 
-**Goal:** [Captured for future planning]
-**Requirements:** TBD
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (promote with /gsd-review-backlog when ready)
+**Goal:** Promoted into active v1.2 scope as UX-05 / Phase 17.
+**Requirements:** UX-05
+**Plans:** Promoted
 
 ### Phase 999.2: Product Visual Redesign and UI Quality Pass (BACKLOG)
 
-**Goal:** [Captured for future planning]
-**Requirements:** TBD
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (promote with /gsd-review-backlog when ready)
+**Goal:** Promoted into active v1.2 scope as UX-01 / Phase 16.
+**Requirements:** UX-01
+**Plans:** Promoted
 
 ### Phase 999.3: Operator-Friendly Certificate and ZIP Onboarding UX (BACKLOG)
 
-**Goal:** [Captured for future planning]
-**Requirements:** TBD
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (promote with /gsd-review-backlog when ready)
+**Goal:** Promoted into active v1.2 scope as UX-02 and UX-03 / Phase 17.
+**Requirements:** UX-02, UX-03
+**Plans:** Promoted
 
 ### Phase 999.4: Field-Level Guidance, Hints, and Form Help UX (BACKLOG)
 
-**Goal:** [Captured for future planning]
-**Requirements:** TBD
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (promote with /gsd-review-backlog when ready)
+**Goal:** Promoted into active v1.2 scope as UX-06 / Phase 16.
+**Requirements:** UX-06
+**Plans:** Promoted

@@ -1,94 +1,87 @@
-# v1.1 Research: Features
+# v1.2 Research: FEATURES
 
-## Scope
+**Research date:** 2026-04-13
+**Milestone focus:** ETSI trust-list ingestion, executive summaries, and simpler operator UX
 
-This research covers only milestone `v1.1` features beyond shipped `v1.0` functionality.
+## Trust-list ingestion
 
-## Table Stakes
+### Table stakes
 
-### 1. Invitation-only access
-Users should only enter the system through an invite flow.
+- add a trust-list source by URL
+- fetch and parse LOTL / TSL metadata safely
+- extract certificates and service metadata from supported trust lists
+- re-import affected certificates when the tracked trust list changes
+- preserve operator visibility into source status, last sync, next update, and sync failures
 
-Expected behavior:
-- `platform-admin` creates groups and invites initial `group-admin` users
-- `group-admin` invites group members
-- an invited user can accept the invitation using:
-  - local credentials
-  - Google
-  - Microsoft Entra ID
-  - generic OIDC
-- one user account may belong to multiple groups with different roles
+### Differentiators
 
-### 2. Group-scoped authorization
-The system should scope visibility and mutation rights by group.
+- unify trust-list ingestion with the existing certificate-first admin model instead of creating a separate product island
+- make the resulting assets traceable back to their trust-list source, sequence number, and import run
+- expose safe re-sync behavior and change summaries instead of opaque background ingestion
 
-Expected behavior:
-- dashboard data is filtered to the groups the user can access
-- exports and audit views follow the same authorization boundary
-- the same target may be visible to more than one group through an explicit share
-- `platform-admin` may operate across all groups without needing a second account
+### Anti-features
 
-### 3. Target administration UI
-Operators need a real UI for administration rather than SQL.
+- forcing operators to understand raw XML structure to use the feature
+- creating a second admin UI unrelated to certificate onboarding
+- silently mutating monitored inventory without an audit trail
 
-Expected behavior:
-- create/edit/disable certificate-derived monitoring targets
-- show derived CRL targets generated from uploaded certificates
-- surface defaults inherited from platform/group and allow target overrides
-- preview alert routing and operational settings before saving
-- keep change history for auditability
-- allow cloning and tags
+## Executive visibility
 
-### 4. Certificate-first onboarding
-New monitoring should start from certificates.
+### Table stakes
 
-Expected behavior:
-- upload one certificate or a `.zip` package
-- parse all certificates in the package
-- extract CRL distribution points
-- create/update monitorable targets from those derived CRLs
-- reject or flag invalid/unsupported certificate material with clear errors
+- high-level coverage summary at a glance
+- trend or snapshot of healthy / degraded / down assets
+- most critical active issues
+- upcoming expiration / publication risk summary
+- easy PDF or screen-friendly executive summary
 
-### 5. Internationalized UI
-The app should support translated interface copy.
+### Differentiators
 
-Expected behavior:
-- all new UI strings move into translation catalogs
-- the user can choose preferred language in profile/settings
-- supported languages in v1.1:
-  - English
-  - Portuguese
-  - Spanish
-- language preference persists per user
+- tie executive summaries to the same evidence trail as operator reporting
+- keep the surface simple: fewer charts, stronger status narrative, and clearer risk blocks
+- separate executive questions from operator questions explicitly
 
-### 6. Deployable stack
-The product should be runnable as a practical environment, not just a dev repo.
+### Anti-features
 
-Expected behavior:
-- Docker packaging for app, worker, Postgres, and reverse proxy
-- HTTPS through Caddy
-- callback-compatible public origin configuration for OAuth/OIDC
-- environment-driven configuration for secrets, domains, and providers
+- crowded analytics surfaces with every metric from the operator dashboard
+- BI-style controls that require training
+- exposing raw CRL mechanics where leadership only needs business risk and status
 
-## Differentiators Worth Keeping in v1.1
-- certificate-derived CRL monitoring instead of manual CRL URL entry
-- group-shared targets instead of forcing duplication
-- mixed auth support (local + social + enterprise OIDC) in the same milestone
-- user-configurable locale from day one
+## UX and operator workflow
 
-## Explicitly Deferred
-- monitoring OCSP endpoints
-- monitoring CPS/CP/DPC URLs
-- TSL ingestion via ETSI TS 119 612
-- automatic re-import on TSL refresh
-- multi-region probe execution
-- worker elasticity/horizontal autoscaling
-- richer executive SLO/burn-rate work from `DIF-03`
+### Table stakes
 
-## Product Risks
-- The admin UX can bloat if target management, certificate ingestion, invites, and defaults all land in one screen.
-- Sharing targets across groups means the product must distinguish:
-  - shared target data
-  - group-specific permissions
-  - possibly group-specific defaults/notifications
-- OAuth/OIDC support adds deployment constraints early, especially around public HTTPS and callback correctness.
+- clearer first-run setup
+- simpler certificate and ZIP onboarding
+- field hints and examples on editable forms
+- clearer group defaults and onboarding consequences
+- stronger empty states and next-step guidance
+
+### Differentiators
+
+- one coherent onboarding path from first admin setup to first monitored artifact
+- minimal-step flows with progressive disclosure for advanced settings
+- predictable information hierarchy for admins vs operators vs viewers
+
+### Anti-features
+
+- dumping all configuration on one screen
+- using untranslated or overly technical field names in primary flows
+- making operators switch between multiple disconnected surfaces to finish one task
+
+## Priority order from user guidance
+
+1. visual redesign
+2. easier certificate / ZIP onboarding
+3. first-run platform-admin bootstrap in the web UI
+4. field-level hints and contextual guidance
+5. trust-list ingestion and re-import
+6. executive dashboards / summaries
+
+## Sources
+
+- EU trusted lists overview: https://ec.europa.eu/digital-building-blocks/sites/display/DIGITAL/Trusted+Lists
+- GOV.UK file upload: https://design-system.service.gov.uk/components/file-upload/
+- GOV.UK text input: https://design-system.service.gov.uk/components/text-input/
+- Material text fields: https://m3.material.io/components/text-fields/overview
+- Microsoft Power BI dashboard design guidance: https://learn.microsoft.com/power-bi/create-reports/service-dashboards-design-tips

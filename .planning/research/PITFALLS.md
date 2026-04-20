@@ -1,108 +1,109 @@
-# v1.1 Research: Pitfalls
+# v1.2 Research: PITFALLS
 
-## 1. Mixing auth and authorization responsibilities
+**Research date:** 2026-04-13
+**Milestone focus:** ETSI trust-list ingestion, executive summaries, and simpler operator UX
 
-Risk:
-- treating OAuth login as if it already defines application authorization
+## Trust-list ingestion pitfalls
 
-Why it fails:
-- providers authenticate identity, but this product still needs app-owned groups, invites, and roles
-
-Prevention:
-- keep groups/memberships/roles in the app database
-- let OAuth/OIDC map identities to existing invited users instead of becoming the source of truth for authorization
-
-## 2. Modeling group scope directly on targets
+### Treating trust lists as plain XML imports
 
 Risk:
-- adding a single `group_id` to targets even though targets must be shareable across groups
-
-Why it fails:
-- it blocks sharing, duplicative views, and clean membership logic
+- parsing XML without signature validation or update semantics creates false trust in the source
 
 Prevention:
-- use a share/join model for target visibility across groups
+- validate signature and preserve sequence/update metadata before certificate extraction
+- record sync failure states explicitly instead of partially accepting untrusted data
 
-## 3. Letting UI filters enforce security
+### Creating a second onboarding model
 
 Risk:
-- reading all data first and filtering by group in the page layer
-
-Why it fails:
-- exports, background jobs, or alternate routes can bypass that UI filtering
+- trust-list assets behave differently from certificate-import assets, multiplying operator confusion
 
 Prevention:
-- enforce authorization in shared query/read paths and route guards
+- keep one certificate inventory model and add provenance/source metadata on top
+- reuse the existing certificate import/run abstraction where possible
 
-## 4. Keeping i18n as a late string-replacement pass
+### Over-importing everything on every sync
 
 Risk:
-- adding translations only after the UI is already hardcoded everywhere
-
-Why it fails:
-- retrofitting i18n into App Router/server component code is expensive and error-prone
+- full re-imports every cycle create noisy audit trails, wasted work, and confusing asset churn
 
 Prevention:
-- move all new UI copy to message catalogs from the start of the milestone
-- define one locale strategy early
+- use sequence number / digest / snapshot comparison to identify real changes first
+- design re-import around changed source snapshots, not blind periodic rebuilds
 
-## 5. Forgetting HTTPS constraints for OAuth/OIDC
+## Executive dashboard pitfalls
+
+### Building operator dashboards with executive labels
 
 Risk:
-- designing auth flows as if plain local URLs are enough for production-ready provider support
-
-Why it fails:
-- callback URLs and public origins become the blocker late in the milestone
+- leadership still gets too much detail and cannot quickly answer “Are we safe?”
 
 Prevention:
-- make HTTPS/public-origin configuration part of the milestone requirements, not deployment afterthought
-- package Caddy and callback configuration as core deliverables
+- keep executive summaries small: current status, top risks, trend, and required attention
+- move investigation detail behind links to the operator surface
 
-## 6. Import UX without auditability
+### Too many charts
 
 Risk:
-- importing certificate bundles without tracking what was uploaded, what was parsed, and what derived targets were created
-
-Why it fails:
-- operators cannot understand or trust what the system did
+- visual noise and false precision make the product harder to trust
 
 Prevention:
-- persist import jobs, results, errors, and derived-target lineage
-- show import history in the admin UI
+- prefer fewer cards, concise tables, and one or two trend visuals with clear interpretation
 
-## 7. Overloading a single admin screen
+## UX pitfalls
+
+### Redesign without workflow simplification
 
 Risk:
-- putting certificate upload, target editing, tags, alert routing, sharing, defaults, and history into one giant page
-
-Why it fails:
-- the product becomes hard to use and harder to authorize correctly
+- the product looks newer but still requires too many steps and too much domain knowledge
 
 Prevention:
-- separate flows:
-  - import/onboard
-  - inspect/manage
-  - share/access
-  - defaults/settings
+- evaluate redesign success by task completion friction, not just appearance
+- redesign onboarding paths before polishing isolated screens
 
-## 8. Tying worker execution to the web process
+### Hint text that turns into documentation dumps
 
 Risk:
-- keeping polling/import background execution inside the web runtime for convenience
-
-Why it fails:
-- it harms reliability and complicates scaling later
+- users ignore large help blocks; forms become harder to scan
 
 Prevention:
-- keep worker/scheduler as a separate service already in `v1.1`
+- keep help text short, example-oriented, and adjacent to the field
+- use progressive disclosure for deeper guidance
 
-## 9. Locale stored only in browser state
+### First-run bootstrap mixed with normal admin settings
 
 Risk:
-- language resets per device/session and becomes inconsistent across users and invites
-
-Why it fails:
-- the requirement says locale must be configurable per user
+- setup becomes confusing because initial-system concerns and ongoing-operations concerns are different tasks
 
 Prevention:
-- persist locale in a user preference record and apply it after authentication
+- treat first-run bootstrap as a dedicated guided flow with a clear finish line
+
+## Milestone risk
+
+v1.2 spans:
+- new ingestion source type
+- executive read models
+- substantial UX redesign
+
+That is enough scope to drift. Requirements should protect against trying to ship:
+- Entra/OIDC live proof
+- OCSP
+- trust-list ingestion
+- redesign
+- onboarding simplification
+- executive analytics
+
+all at the same depth in one milestone.
+
+Recommended discipline:
+- make trust-list ingestion + operator UX the core delivery
+- keep executive summaries intentionally simple in v1.2
+- defer deep executive analytics / burn-rate sophistication until the trust-list model is stable
+
+## Sources
+
+- ETSI TS 119 612 entry: https://standards.iteh.ai/catalog/standards/etsi/a3a0a50d-2b1d-4707-b772-7f8bb5d2a09d/etsi-ts-119-612-v1-2-1-2018-10
+- EU trusted lists overview: https://ec.europa.eu/digital-building-blocks/sites/display/DIGITAL/Trusted+Lists
+- GOV.UK text input guidance: https://design-system.service.gov.uk/components/text-input/
+- Microsoft dashboard design tips: https://learn.microsoft.com/power-bi/create-reports/service-dashboards-design-tips

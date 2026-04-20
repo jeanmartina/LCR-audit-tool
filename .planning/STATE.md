@@ -4,17 +4,17 @@
 See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** Never allow a trusted certificate to operate without valid revocation coverage
-**Current focus:** Define the next milestone after shipping v1.1
+**Current focus:** Deep research for milestone v1.2 trust-list ingestion, executive summaries, and operator UX
 
 ## Current Position
 
-Milestone: none active
-Phase: n/a
-Plan: n/a
-Status: v1.1 archived and shipped
-Last activity: 2026-04-13 — Archived milestone v1.1 after Google public-host proof and final re-audit
+Milestone: v1.2
+Phase: 16 ready to plan
+Plan: —
+Status: v1.2 roadmap drafted; Phase 16 is next
+Last activity: 2026-04-20 — Mapped v1.2 requirements to phases 16-21
 
-Progress: [██████████] 100%
+Progress: [███░░░░░░░] 30%
 
 ## Performance Metrics
 
@@ -50,25 +50,26 @@ Progress: [██████████] 100%
 - [Phase 13]: Provider auth uses real invite-gated OAuth/OIDC redirect and callback flows, while platform admins manually track verification status.
 - [Phase 14]: Packaged ZIP onboarding uses in-process extraction, supports PEM/DER certificate files, and records archive-level failures explicitly.
 - [Phase 15]: Google public-host proof closed the shipped v1.1 auth scope on the packaged Docker/Caddy deployment.
+- [Milestone v1.2]: Trust-list ingestion, executive summaries, and operator UX are the top priorities, with UX backlog ordering fixed as redesign -> easier onboarding -> first-run admin bootstrap -> field guidance.
 
 ### Roadmap Evolution
 - v1.0 archived to `.planning/milestones/v1.0-ROADMAP.md`
 - v1.1 archived to `.planning/milestones/v1.1-ROADMAP.md`
-- backlog items 999.1-999.4 captured for admin bootstrap, redesign, onboarding UX, and form guidance
+- v1.2 opened for deep research before requirements and roadmap definition
 
 ### Pending Todos
 
-- Start the next milestone with `$gsd-new-milestone`
+- Plan Phase 16 with `$gsd-plan-phase 16`
 - Decide whether to address the settings redirect bug as immediate cleanup or carry it forward
 - Rotate the Google client secret used during the proof because it was exposed during testing
 
 ### Blockers/Concerns
 
-- No active delivery blocker is open for shipped scope.
-- The main near-term risk is leaving the next milestone undefined while backlog and deferred auth-provider proof remain outstanding.
+- No delivery blocker is active yet, but v1.2 scope spans both domain ingestion and substantial UX work, so requirements discipline matters.
+- Trust-list ingestion should extend the existing certificate-first model instead of introducing a second inconsistent operator workflow.
 
 ## Session Continuity
 
 Last session: 2026-04-13 23:59
-Stopped at: v1.1 archived and ready for next-milestone definition
-Resume file: .planning/ROADMAP.md
+Stopped at: v1.2 research in progress
+Resume file: .planning/research/SUMMARY.md
