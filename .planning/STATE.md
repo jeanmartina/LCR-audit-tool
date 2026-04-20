@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 ## Current Position
 
 Milestone: v1.2
-Phase: 16 ready to plan
-Plan: —
-Status: v1.2 roadmap drafted; Phase 16 is next
-Last activity: 2026-04-20 — Mapped v1.2 requirements to phases 16-21
+Phase: 16 ready to execute
+Plan: 16-01
+Status: Phase 16 planned; ready for execution
+Last activity: 2026-04-20 — Planned Phase 16 product visual system and guided form UX
 
-Progress: [███░░░░░░░] 30%
+Progress: [███░░░░░░░] 32%
 
 ## Performance Metrics
 
@@ -59,7 +59,7 @@ Progress: [███░░░░░░░] 30%
 
 ### Pending Todos
 
-- Plan Phase 16 with `$gsd-plan-phase 16`
+- Execute Phase 16 with `$gsd-execute-phase 16`
 - Decide whether to address the settings redirect bug as immediate cleanup or carry it forward
 - Rotate the Google client secret used during the proof because it was exposed during testing
 
