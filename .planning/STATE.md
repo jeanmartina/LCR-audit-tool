@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 ## Current Position
 
 Milestone: v1.2
-Phase: 17 ready to plan
-Plan: none
-Status: Phase 16 complete; Phase 17 ready for planning
-Last activity: 2026-04-20 — Executed Phase 16 product visual system and guided form UX
+Phase: 17 planned
+Plan: 17-01 ready
+Status: Phase 17 planned; ready for execution
+Last activity: 2026-04-20 — Planned Phase 17 first-run bootstrap and certificate/ZIP onboarding UX
 
 Progress: [████░░░░░░] 38%
 
@@ -60,12 +60,13 @@ Progress: [████░░░░░░] 38%
 
 ### Pending Todos
 
-- Plan Phase 17 with `$gsd-plan-phase 17`
+- Execute Phase 17 with `$gsd-execute-phase 17`
 - Rotate the Google client secret used during the proof because it was exposed during testing
 
 ### Blockers/Concerns
 
 - No delivery blocker is active yet, but v1.2 scope spans both domain ingestion and substantial UX work, so requirements discipline matters.
+- Phase 17 includes a narrow public setup exception; execution must ensure `/setup` closes permanently after the first platform admin exists.
 - Trust-list ingestion should extend the existing certificate-first model instead of introducing a second inconsistent operator workflow.
 
 ## Session Continuity
