@@ -186,6 +186,17 @@ export default async function SettingsPage({
             </form>
           </Panel>
 
+          <Panel title={t("settings.trustLists.title")} description={t("settings.trustLists.description")}>
+            <div style={stackStyle("10px")}>
+              <p style={{ margin: 0, color: "var(--muted-color)", lineHeight: 1.5 }}>
+                {t("settings.trustLists.body")}
+              </p>
+              <a href="/admin/trust-lists" style={{ color: "var(--link-color)", width: "fit-content" }}>
+                {t("settings.trustLists.open")}
+              </a>
+            </div>
+          </Panel>
+
           <Panel title={t("settings.providers.title")} description={t("settings.providers.description")}>
             {providerStatuses.length > 0 ? (
               <div style={stackStyle()}>

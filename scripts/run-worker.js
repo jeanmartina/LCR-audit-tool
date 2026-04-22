@@ -4,31 +4,40 @@ const ts = require("typescript");
 
 const LOOP_INTERVAL_MS = Number(process.env.WORKER_LOOP_INTERVAL_MS ?? 60000);
 
-function loadSchedulerModule() {
-  const sourcePath = path.join(process.cwd(), "src/polling/scheduler.ts");
-  const outputDir = path.join(process.cwd(), ".tmp", "worker");
-  const outputPath = path.join(outputDir, "scheduler.cjs");
-  const source = fs.readFileSync(sourcePath, "utf8");
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2022,
-      esModuleInterop: true,
-    },
-    fileName: sourcePath,
-  });
+function registerTypeScriptRuntime() {
+  require.extensions[".ts"] = function compileTypeScript(module, filename) {
+    const source = fs.readFileSync(filename, "utf8");
+    const compiled = ts.transpileModule(source, {
+      compilerOptions: {
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2022,
+        esModuleInterop: true,
+        moduleResolution: ts.ModuleResolutionKind.NodeJs,
+      },
+      fileName: filename,
+    });
+    module._compile(compiled.outputText, filename);
+  };
+}
 
-  fs.mkdirSync(outputDir, { recursive: true });
-  fs.writeFileSync(outputPath, compiled.outputText);
-  return require(outputPath);
+function loadWorkerModules() {
+  registerTypeScriptRuntime();
+  return {
+    scheduler: require(path.join(process.cwd(), "src/polling/scheduler.ts")),
+    trustLists: require(path.join(process.cwd(), "src/trust-lists/sync.ts")),
+  };
 }
 
 async function main() {
-  const scheduler = loadSchedulerModule();
+  const { scheduler, trustLists } = loadWorkerModules();
   const runScheduledPolls = scheduler.runScheduledPolls;
+  const syncEnabledTrustListSources = trustLists.syncEnabledTrustListSources;
 
   if (typeof runScheduledPolls !== "function") {
     throw new Error("runScheduledPolls export is required");
+  }
+  if (typeof syncEnabledTrustListSources !== "function") {
+    throw new Error("syncEnabledTrustListSources export is required");
   }
 
   let stopped = false;
@@ -45,6 +54,13 @@ async function main() {
     } catch (error) {
       const message = error instanceof Error ? error.stack ?? error.message : String(error);
       console.error(`[worker] poll cycle failed: ${message}`);
+    }
+
+    try {
+      await syncEnabledTrustListSources();
+    } catch (error) {
+      const message = error instanceof Error ? error.stack ?? error.message : String(error);
+      console.error(`[worker] trust-list sync cycle failed: ${message}`);
     }
 
     if (stopped) {
