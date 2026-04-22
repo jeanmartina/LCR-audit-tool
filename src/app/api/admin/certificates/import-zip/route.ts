@@ -37,7 +37,14 @@ export async function POST(request: Request): Promise<Response> {
       }
     );
 
-    return Response.json(summary, { status: 200 });
+    if (request.headers.get("accept")?.includes("application/json")) {
+      return Response.json(summary, { status: 200 });
+    }
+
+    return new Response(null, {
+      status: 303,
+      headers: { Location: `/admin/certificates/import-runs/${summary.runId}` },
+    });
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "certificate-zip-import-failed" },

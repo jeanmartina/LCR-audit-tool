@@ -9,17 +9,17 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 ## Current Position
 
 Milestone: v1.2
-Phase: 17 planned
-Plan: 17-01 ready
-Status: Phase 17 planned; ready for execution
-Last activity: 2026-04-20 — Planned Phase 17 first-run bootstrap and certificate/ZIP onboarding UX
+Phase: 18 ready to plan
+Plan: none
+Status: Phase 17 complete; Phase 18 ready for planning
+Last activity: 2026-04-21 — Executed Phase 17 first-run bootstrap and certificate/ZIP onboarding UX
 
-Progress: [████░░░░░░] 38%
+Progress: [█████░░░░░] 43%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
+- Total plans completed: 17
 - Average duration: 43 min
 - Total execution time: 2.4 hours
 
@@ -31,7 +31,7 @@ Progress: [████░░░░░░] 38%
 | v1.1 | 8-15 | 8 | Shipped |
 
 **Recent Trend:**
-- Last 10 plans: [07-01, 08-01, 09-01, 10-01, 11-01, 12-01, 13-01, 14-01, 15-01, 16-01]
+- Last 10 plans: [08-01, 09-01, 10-01, 11-01, 12-01, 13-01, 14-01, 15-01, 16-01, 17-01]
 - Trend: Stable
 
 ## Accumulated Context
@@ -52,6 +52,7 @@ Progress: [████░░░░░░] 38%
 - [Phase 15]: Google public-host proof closed the shipped v1.1 auth scope on the packaged Docker/Caddy deployment.
 - [Milestone v1.2]: Trust-list ingestion, executive summaries, and operator UX are the top priorities, with UX backlog ordering fixed as redesign -> easier onboarding -> first-run admin bootstrap -> field guidance.
 - [Phase 16]: Use shared UI primitives and field-level hints as the baseline for subsequent v1.2 screens; settings redirects must stay public-origin safe via relative `Location` headers.
+- [Phase 17]: First-run admin bootstrap is a narrow public exception that closes after the first platform admin; certificate preview is advisory and pure, while commit routes remain server-authoritative.
 
 ### Roadmap Evolution
 - v1.0 archived to `.planning/milestones/v1.0-ROADMAP.md`
@@ -60,13 +61,12 @@ Progress: [████░░░░░░] 38%
 
 ### Pending Todos
 
-- Execute Phase 17 with `$gsd-execute-phase 17`
+- Plan Phase 18 with `$gsd-plan-phase 18`
 - Rotate the Google client secret used during the proof because it was exposed during testing
 
 ### Blockers/Concerns
 
 - No delivery blocker is active yet, but v1.2 scope spans both domain ingestion and substantial UX work, so requirements discipline matters.
-- Phase 17 includes a narrow public setup exception; execution must ensure `/setup` closes permanently after the first platform admin exists.
 - Trust-list ingestion should extend the existing certificate-first model instead of introducing a second inconsistent operator workflow.
 
 ## Session Continuity

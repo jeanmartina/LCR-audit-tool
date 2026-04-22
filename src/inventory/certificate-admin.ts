@@ -19,11 +19,14 @@ import {
   upsertCertificateRecord,
   createCertificateTemplate,
   findCertificateById,
+  findCertificateImportRun,
   upsertTargetGroupShare,
   type CertificateRecord,
   type CertificateGroupOverrideRecord,
   type CertificateChangeEventRecord,
   type CertificateTemplateRecord,
+  type CertificateImportRunRecord,
+  type CertificateImportItemRecord,
 } from "../storage/runtime-store";
 import {
   getDefaultRetentionPolicy,
@@ -79,6 +82,26 @@ export interface CertificateAdminDetail {
     retentionCoverageGapsDays: number;
     enabled: boolean;
   }>;
+}
+
+export interface CertificateImportPreview {
+  fingerprint: string;
+  derivedUrls: string[];
+  trackedUrls: string[];
+  ignoredUrls: string[];
+  effectiveDefaults: Array<{
+    groupId: string;
+    intervalSeconds: number;
+    timeoutSeconds: number;
+    criticality: "low" | "medium" | "high";
+    alertEmail: string | null;
+    extraRecipients: string[];
+    retentionPollsDays: number;
+    retentionAlertsDays: number;
+    retentionCoverageGapsDays: number;
+    enabled: boolean;
+  }>;
+  warnings: string[];
 }
 
 export interface ImportRunSummary {
@@ -185,6 +208,35 @@ function canManageGroup(principal: AuthenticatedPrincipal, groupId: string): boo
         (item.role === "operator" || item.role === "group-admin")
     )
   );
+}
+
+export async function previewCertificateImport(
+  actor: AuthenticatedPrincipal,
+  input: CertificateInput
+): Promise<CertificateImportPreview> {
+  for (const groupId of input.groupIds) {
+    if (!canManageGroup(actor, groupId)) {
+      throw new Error("forbidden");
+    }
+  }
+
+  const fingerprint = extractCertificateFingerprint(input.pemText);
+  const derivedUrls = extractDerivedCrlUrls(input.pemText);
+  const ignoredSet = new Set(input.ignoredUrls);
+  const ignoredUrls = derivedUrls.filter((url) => ignoredSet.has(url));
+  const trackedUrls = derivedUrls.filter((url) => !ignoredSet.has(url));
+
+  return {
+    fingerprint,
+    derivedUrls,
+    trackedUrls,
+    ignoredUrls,
+    effectiveDefaults: input.groupIds.map((groupId) => {
+      const override = input.groupOverrides.find((item) => item.groupId === groupId);
+      return { groupId, ...resolveOverrideEffectiveValues(override) };
+    }),
+    warnings: derivedUrls.length ? [] : ["no-crl-urls-found"],
+  };
 }
 
 export async function importCertificate(
@@ -416,6 +468,20 @@ export async function importCertificateZip(
     ...summary,
     items: await listCertificateImportItems(run.id),
   };
+}
+
+export async function getCertificateImportRunDetail(
+  actor: AuthenticatedPrincipal,
+  runId: string
+): Promise<{ run: CertificateImportRunRecord; items: CertificateImportItemRecord[] } | null> {
+  const run = await findCertificateImportRun(runId);
+  if (!run) {
+    return null;
+  }
+  if (!actor.isPlatformAdmin && run.actorUserId !== actor.userId) {
+    throw new Error("forbidden");
+  }
+  return { run, items: await listCertificateImportItems(runId) };
 }
 
 export async function listVisibleCertificates(

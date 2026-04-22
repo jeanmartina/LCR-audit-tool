@@ -31,7 +31,7 @@
   2. Single-certificate onboarding previews derived CRLs, effective defaults, and save outcome before/after commit.
   3. ZIP onboarding shows upload validation, import progress/result summary, partial failures, and next steps.
   4. Operators no longer need direct SQL or unclear technical screens for the first useful setup path.
-**Plans**: `17-01` ready
+**Plans**: `17-01` complete
 
 #### Phase 18: Trust-List Source Model and Safe Sync Foundation
 **Goal**: Add ETSI trust-list sources as first-class inventory sources with persisted sync metadata, validation gates, and auditable sync runs.
@@ -82,8 +82,8 @@
 ## Current Status
 
 - Active milestone: `v1.2`
-- Current stage: Phase 17 planned; ready to execute
-- Next recommended step: `$gsd-execute-phase 17`
+- Current stage: Phase 17 complete; Phase 18 ready to plan
+- Next recommended step: `$gsd-plan-phase 18`
 
 ## Backlog
 

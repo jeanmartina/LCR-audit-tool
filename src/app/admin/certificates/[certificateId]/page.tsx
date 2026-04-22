@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { assertAuthenticated } from "../../../../auth/authorization";
 import { getPrincipalTranslator } from "../../../../i18n";
 import { getCertificateAdminDetail } from "../../../../inventory/certificate-admin";
+import { Notice } from "../../../../components/ui/primitives";
 
 const BOX_STYLE = {
   background: "#1e293b",
@@ -14,10 +15,13 @@ const BOX_STYLE = {
 
 export default async function CertificateDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ certificateId: string }>;
+  searchParams?: Promise<{ imported?: string }>;
 }): Promise<ReactElement> {
   const { certificateId } = await params;
+  const query = (await searchParams) ?? {};
   let principal;
   try {
     principal = await assertAuthenticated();
@@ -51,6 +55,12 @@ export default async function CertificateDetailPage({
           })}
         </p>
       </header>
+
+      {query.imported === "single" ? (
+        <Notice tone="success" title={t("admin.certificates.importedSingle.title")}>
+          {t("admin.certificates.importedSingle.body")}
+        </Notice>
+      ) : null}
 
       <section style={{ display: "grid", gap: "12px", gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
         <article style={BOX_STYLE}>

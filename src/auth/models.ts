@@ -19,6 +19,7 @@ import {
   type UserRecord,
 } from "../storage/runtime-store";
 import { GroupRole, PlatformRole } from "./config";
+import { hashPassword } from "./session";
 
 export interface UserIdentity {
   user: UserRecord;
@@ -45,6 +46,56 @@ export async function ensureUser(input: {
     platformRole: input.platformRole ?? null,
     preferredLocale: input.preferredLocale ?? "en",
   });
+}
+
+
+export async function hasPlatformAdmin(): Promise<boolean> {
+  const users = await loadUsers();
+  return users.some((item) => item.platformRole === "platform-admin");
+}
+
+export async function createFirstPlatformAdmin(input: {
+  email: string;
+  displayName: string | null;
+  password: string;
+  preferredLocale?: string;
+}): Promise<UserRecord> {
+  const normalizedEmail = input.email.trim().toLowerCase();
+  if (await hasPlatformAdmin()) {
+    throw new Error("bootstrap-already-complete");
+  }
+
+  const existing = await findUserByEmail(normalizedEmail);
+  if (await hasPlatformAdmin()) {
+    throw new Error("bootstrap-already-complete");
+  }
+
+  const passwordHash = hashPassword(input.password);
+  const user = existing
+    ? await updateUserRecord(existing.id, {
+        email: normalizedEmail,
+        displayName: input.displayName,
+        passwordHash,
+        platformRole: "platform-admin",
+        preferredLocale: input.preferredLocale ?? existing.preferredLocale,
+      })
+    : await createUserRecord({
+        email: normalizedEmail,
+        displayName: input.displayName,
+        passwordHash,
+        platformRole: "platform-admin",
+        preferredLocale: input.preferredLocale ?? "en",
+      });
+
+  await createAuditEventRecord({
+    actorUserId: user.id,
+    targetUserId: user.id,
+    targetEmail: user.email,
+    eventType: "platform-admin.bootstrap.created",
+    details: { method: "first-run-web" },
+  });
+
+  return user;
 }
 
 export async function linkAuthAccount(input: {

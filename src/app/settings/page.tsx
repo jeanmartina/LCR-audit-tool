@@ -59,6 +59,7 @@ export default async function SettingsPage({
   const params = searchParams ? await searchParams : {};
   const saved = typeof params.saved === "string" ? params.saved : null;
   const savedNoticeKey = getSavedNoticeKey(saved);
+  const firstRunComplete = params.firstRun === "complete";
 
   return (
     <PageShell>
@@ -73,6 +74,12 @@ export default async function SettingsPage({
       {savedNoticeKey ? (
         <Notice tone="success" title={t("settings.saved.title")}>
           {t(savedNoticeKey)}
+        </Notice>
+      ) : null}
+
+      {firstRunComplete ? (
+        <Notice tone="success" title={t("setup.complete.createdTitle")}>
+          {t("setup.complete.createdBody")}
         </Notice>
       ) : null}
 

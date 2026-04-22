@@ -2826,6 +2826,38 @@ export async function createCertificateImportRun(input: {
   return record;
 }
 
+export async function findCertificateImportRun(runId: string): Promise<CertificateImportRunRecord | null> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<{
+      id: string;
+      mode: CertificateImportRunRecord["mode"];
+      actor_user_id: string;
+      status: CertificateImportRunRecord["status"];
+      summary: Record<string, unknown> | string;
+      started_at: Date;
+      completed_at: Date | null;
+    }>(
+      `select id, mode, actor_user_id, status, summary, started_at, completed_at from certificate_import_runs where id = $1`,
+      [runId]
+    );
+    const row = result.rows[0];
+    if (!row) {
+      return null;
+    }
+    return {
+      id: row.id,
+      mode: row.mode,
+      actorUserId: row.actor_user_id,
+      status: row.status,
+      summary: typeof row.summary === "string" ? JSON.parse(row.summary) : row.summary,
+      startedAt: new Date(row.started_at),
+      completedAt: row.completed_at ? new Date(row.completed_at) : null,
+    };
+  }
+  return cache.certificateImportRuns.find((item) => item.id === runId) ?? null;
+}
+
 export async function completeCertificateImportRun(
   runId: string,
   summary: Record<string, unknown>,

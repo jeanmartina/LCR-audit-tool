@@ -43,10 +43,10 @@ export async function POST(request: Request): Promise<Response> {
       file.name
     );
 
-    return Response.redirect(
-      new URL(`/admin/certificates/${result.certificateId}`, request.url),
-      303
-    );
+    return new Response(null, {
+      status: 303,
+      headers: { Location: `/admin/certificates/${result.certificateId}?imported=single` },
+    });
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "certificate-import-failed" },
