@@ -44,7 +44,7 @@
   4. Validated extracted certificates can enter the existing certificate-first import pipeline for configured groups.
   5. Sync runs record success/failure state, digest/sequence metadata, and failure reasons.
   6. The packaged Docker runtime can execute trust-list sync without undeclared host dependencies.
-**Plans**: `18-01`, `18-02` ready
+**Plans**: `18-01`, `18-02` complete
 
 #### Phase 19: Trust-List Certificate Projection and Reimport
 **Goal**: Project validated trust-list certificates into the existing certificate-first pipeline while preserving provenance and avoiding duplicate unchanged assets.
@@ -71,7 +71,7 @@
 #### Phase 21: Simple Executive Summary Dashboard and Export
 **Goal**: Add a management-facing view that explains current coverage risk without requiring operator-level investigation.
 **Depends on**: Phase 20
-**Requirements**: EXEC-01, EXEC-02, EXEC-03, EXEC-04, EXEC-05
+**Requirements**: EXEC-01, EXEC-02, EXEC-03, EXEC-04, EXEC-05, OPS-05 (executive summary packaging)
 **Success Criteria** (what must be TRUE):
   1. Authorized users can open an executive summary for their allowed groups.
   2. Summary cards show healthy, degraded, unavailable, and at-risk counts.
@@ -83,8 +83,8 @@
 ## Current Status
 
 - Active milestone: `v1.2`
-- Current stage: Phase 18 planned; ready to execute
-- Next recommended step: `$gsd-execute-phase 18`
+- Current stage: Phase 18 complete; Phase 19 ready to plan
+- Next recommended step: `$gsd-plan-phase 19`
 
 ## Backlog
 
@@ -92,7 +92,7 @@
 
 **Goal:** Promoted into active v1.2 scope as UX-05 / Phase 17.
 **Requirements:** UX-05
-**Plans:** 1/2 plans executed
+**Plans:** Promoted
 
 ### Phase 999.2: Product Visual Redesign and UI Quality Pass (BACKLOG)
 
