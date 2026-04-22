@@ -113,6 +113,8 @@ export interface ImportRunSummary {
   items: Awaited<ReturnType<typeof listCertificateImportItems>>;
 }
 
+export const TRUST_LIST_CERTIFICATE_SOURCE_TYPE = "trust-list" as const;
+
 function makeDeterministicId(prefix: string, value: string): string {
   return `${prefix}-${createHash("sha256").update(value).digest("hex").slice(0, 16)}`;
 }

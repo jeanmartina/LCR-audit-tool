@@ -210,7 +210,7 @@ export interface CertificateRecord {
   pki: string | null;
   jurisdiction: string | null;
   status: "active" | "disabled";
-  sourceType: "single" | "zip" | "template";
+  sourceType: "single" | "zip" | "template" | "trust-list";
   createdByUserId: string;
   templateId: string | null;
   createdAt: Date;
@@ -323,6 +323,62 @@ export interface CertificateTemplateRecord {
   createdAt: Date;
 }
 
+export interface TrustListSourceRecord {
+  id: string;
+  label: string;
+  url: string;
+  enabled: boolean;
+  groupIds: string[];
+  createdByUserId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TrustListSnapshotRecord {
+  id: string;
+  sourceId: string;
+  digestSha256: string;
+  sequenceNumber: string | null;
+  territory: string | null;
+  issueDate: string | null;
+  nextUpdate: string | null;
+  acceptedAt: Date;
+  xmlSizeBytes: number;
+  certificateCount: number;
+}
+
+export interface TrustListSyncRunRecord {
+  id: string;
+  sourceId: string;
+  status: "running" | "succeeded" | "failed";
+  startedAt: Date;
+  finishedAt: Date | null;
+  digestSha256: string | null;
+  sequenceNumber: string | null;
+  territory: string | null;
+  issueDate: string | null;
+  nextUpdate: string | null;
+  snapshotId: string | null;
+  failureReason: string | null;
+  importedCount: number;
+  skippedCount: number;
+  failedCount: number;
+}
+
+export interface TrustListExtractedCertificateRecord {
+  id: string;
+  sourceId: string;
+  snapshotId: string;
+  runId: string;
+  fingerprint: string | null;
+  subjectSummary: string | null;
+  pem: string;
+  importedCertificateId: string | null;
+  importStatus: "imported" | "updated" | "skipped" | "failed";
+  failureReason: string | null;
+  createdAt: Date;
+}
+
 const cache = {
   targets: [] as TargetRecord[],
   polls: [] as PersistedPollEvent[],
@@ -354,6 +410,10 @@ const cache = {
   platformSettings: [] as PlatformSettingsRecord[],
   providerVerificationStatuses: [] as ProviderVerificationStatusRecord[],
   predictiveEvents: [] as PredictiveEventRecord[],
+  trustListSources: [] as TrustListSourceRecord[],
+  trustListSnapshots: [] as TrustListSnapshotRecord[],
+  trustListSyncRuns: [] as TrustListSyncRunRecord[],
+  trustListExtractedCertificates: [] as TrustListExtractedCertificateRecord[],
 };
 
 let pool: Pool | null = null;
@@ -549,6 +609,58 @@ type PredictiveEventRow = {
   message: string;
   created_at: Date;
   resolved_at: Date | null;
+};
+type TrustListSourceRow = {
+  id: string;
+  label: string;
+  url: string;
+  enabled: boolean;
+  group_ids: string[] | string;
+  created_by_user_id: string;
+  created_at: Date;
+  updated_at: Date;
+};
+type TrustListSnapshotRow = {
+  id: string;
+  source_id: string;
+  digest_sha256: string;
+  sequence_number: string | null;
+  territory: string | null;
+  issue_date: string | null;
+  next_update: string | null;
+  accepted_at: Date;
+  xml_size_bytes: number;
+  certificate_count: number;
+};
+type TrustListSyncRunRow = {
+  id: string;
+  source_id: string;
+  status: "running" | "succeeded" | "failed";
+  started_at: Date;
+  finished_at: Date | null;
+  digest_sha256: string | null;
+  sequence_number: string | null;
+  territory: string | null;
+  issue_date: string | null;
+  next_update: string | null;
+  snapshot_id: string | null;
+  failure_reason: string | null;
+  imported_count: number;
+  skipped_count: number;
+  failed_count: number;
+};
+type TrustListExtractedCertificateRow = {
+  id: string;
+  source_id: string;
+  snapshot_id: string;
+  run_id: string;
+  fingerprint: string | null;
+  subject_summary: string | null;
+  pem: string;
+  imported_certificate_id: string | null;
+  import_status: "imported" | "updated" | "skipped" | "failed";
+  failure_reason: string | null;
+  created_at: Date;
 };
 
 function hasDatabase(): boolean {
@@ -914,6 +1026,63 @@ export const RUNTIME_SQL_SCHEMA = {
       resolved_at timestamptz null
     );
   `,
+  trustLists: `
+    create table if not exists trust_list_sources (
+      id text primary key,
+      label text not null,
+      url text not null,
+      enabled boolean not null,
+      group_ids text[] not null,
+      created_by_user_id text not null,
+      created_at timestamptz not null,
+      updated_at timestamptz not null
+    );
+
+    create table if not exists trust_list_snapshots (
+      id text primary key,
+      source_id text not null,
+      digest_sha256 text not null,
+      sequence_number text null,
+      territory text null,
+      issue_date text null,
+      next_update text null,
+      accepted_at timestamptz not null,
+      xml_size_bytes integer not null,
+      certificate_count integer not null
+    );
+
+    create table if not exists trust_list_sync_runs (
+      id text primary key,
+      source_id text not null,
+      status text not null,
+      started_at timestamptz not null,
+      finished_at timestamptz null,
+      digest_sha256 text null,
+      sequence_number text null,
+      territory text null,
+      issue_date text null,
+      next_update text null,
+      snapshot_id text null,
+      failure_reason text null,
+      imported_count integer not null default 0,
+      skipped_count integer not null default 0,
+      failed_count integer not null default 0
+    );
+
+    create table if not exists trust_list_extracted_certificates (
+      id text primary key,
+      source_id text not null,
+      snapshot_id text not null,
+      run_id text not null,
+      fingerprint text null,
+      subject_summary text null,
+      pem text not null,
+      imported_certificate_id text null,
+      import_status text not null,
+      failure_reason text null,
+      created_at timestamptz not null
+    );
+  `,
 };
 
 export async function initializeRuntimeStoreSchema(): Promise<void> {
@@ -929,6 +1098,7 @@ export async function initializeRuntimeStoreSchema(): Promise<void> {
     await client.query(RUNTIME_SQL_SCHEMA.access);
     await client.query(RUNTIME_SQL_SCHEMA.certificateAdmin);
     await client.query(RUNTIME_SQL_SCHEMA.predictive);
+    await client.query(RUNTIME_SQL_SCHEMA.trustLists);
     await client.query(
       `alter table auth_users add column if not exists preferred_theme text null`
     );
@@ -967,13 +1137,79 @@ async function ensureRuntimeSchema(): Promise<void> {
   await schemaReady;
 }
 
+function mapTrustListSourceRow(row: TrustListSourceRow): TrustListSourceRecord {
+  return {
+    id: row.id,
+    label: row.label,
+    url: row.url,
+    enabled: row.enabled,
+    groupIds: Array.isArray(row.group_ids) ? row.group_ids : JSON.parse(row.group_ids),
+    createdByUserId: row.created_by_user_id,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+  };
+}
+
+function mapTrustListSnapshotRow(row: TrustListSnapshotRow): TrustListSnapshotRecord {
+  return {
+    id: row.id,
+    sourceId: row.source_id,
+    digestSha256: row.digest_sha256,
+    sequenceNumber: row.sequence_number,
+    territory: row.territory,
+    issueDate: row.issue_date,
+    nextUpdate: row.next_update,
+    acceptedAt: new Date(row.accepted_at),
+    xmlSizeBytes: row.xml_size_bytes,
+    certificateCount: row.certificate_count,
+  };
+}
+
+function mapTrustListSyncRunRow(row: TrustListSyncRunRow): TrustListSyncRunRecord {
+  return {
+    id: row.id,
+    sourceId: row.source_id,
+    status: row.status,
+    startedAt: new Date(row.started_at),
+    finishedAt: row.finished_at ? new Date(row.finished_at) : null,
+    digestSha256: row.digest_sha256,
+    sequenceNumber: row.sequence_number,
+    territory: row.territory,
+    issueDate: row.issue_date,
+    nextUpdate: row.next_update,
+    snapshotId: row.snapshot_id,
+    failureReason: row.failure_reason,
+    importedCount: row.imported_count,
+    skippedCount: row.skipped_count,
+    failedCount: row.failed_count,
+  };
+}
+
+function mapTrustListExtractedCertificateRow(
+  row: TrustListExtractedCertificateRow
+): TrustListExtractedCertificateRecord {
+  return {
+    id: row.id,
+    sourceId: row.source_id,
+    snapshotId: row.snapshot_id,
+    runId: row.run_id,
+    fingerprint: row.fingerprint,
+    subjectSummary: row.subject_summary,
+    pem: row.pem,
+    importedCertificateId: row.imported_certificate_id,
+    importStatus: row.import_status,
+    failureReason: row.failure_reason,
+    createdAt: new Date(row.created_at),
+  };
+}
+
 export async function reloadRuntimeStoreCache(): Promise<void> {
   if (!hasDatabase()) {
     return;
   }
 
   const currentPool = getPool();
-  const [targets, polls, coverageGaps, validations, alerts, snapshots, users, userSettings, authAccounts, authTransactions, authSessions, groups, groupSettings, memberships, invites, passwordResets, mfaMethods, auditEvents, targetGroupShares, platformSettings, providerVerificationStatuses, predictiveEvents] = await Promise.all([
+  const [targets, polls, coverageGaps, validations, alerts, snapshots, users, userSettings, authAccounts, authTransactions, authSessions, groups, groupSettings, memberships, invites, passwordResets, mfaMethods, auditEvents, targetGroupShares, platformSettings, providerVerificationStatuses, predictiveEvents, trustListSources, trustListSnapshots, trustListSyncRuns, trustListExtractedCertificates] = await Promise.all([
     currentPool.query<TargetRow>(
       `
         select
@@ -1099,6 +1335,18 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
     ),
     currentPool.query<PredictiveEventRow>(
       `select id, target_id, certificate_id, group_id, predictive_type, severity, next_update, message, created_at, resolved_at from predictive_events order by created_at asc`
+    ),
+    currentPool.query<TrustListSourceRow>(
+      `select id, label, url, enabled, group_ids, created_by_user_id, created_at, updated_at from trust_list_sources order by updated_at desc`
+    ),
+    currentPool.query<TrustListSnapshotRow>(
+      `select id, source_id, digest_sha256, sequence_number, territory, issue_date, next_update, accepted_at, xml_size_bytes, certificate_count from trust_list_snapshots order by accepted_at desc`
+    ),
+    currentPool.query<TrustListSyncRunRow>(
+      `select id, source_id, status, started_at, finished_at, digest_sha256, sequence_number, territory, issue_date, next_update, snapshot_id, failure_reason, imported_count, skipped_count, failed_count from trust_list_sync_runs order by started_at desc`
+    ),
+    currentPool.query<TrustListExtractedCertificateRow>(
+      `select id, source_id, snapshot_id, run_id, fingerprint, subject_summary, pem, imported_certificate_id, import_status, failure_reason, created_at from trust_list_extracted_certificates order by created_at desc`
     ),
   ]);
 
@@ -1294,6 +1542,11 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
     createdAt: new Date(row.created_at),
     resolvedAt: row.resolved_at ? new Date(row.resolved_at) : null,
   }));
+  cache.trustListSources = trustListSources.rows.map(mapTrustListSourceRow);
+  cache.trustListSnapshots = trustListSnapshots.rows.map(mapTrustListSnapshotRow);
+  cache.trustListSyncRuns = trustListSyncRuns.rows.map(mapTrustListSyncRunRow);
+  cache.trustListExtractedCertificates =
+    trustListExtractedCertificates.rows.map(mapTrustListExtractedCertificateRow);
 }
 
 export async function closeRuntimeStore(): Promise<void> {
@@ -2753,7 +3006,7 @@ export async function listCertificateRecords(): Promise<CertificateRecord[]> {
       pki: string | null;
       jurisdiction: string | null;
       status: "active" | "disabled";
-      source_type: "single" | "zip" | "template";
+      source_type: "single" | "zip" | "template" | "trust-list";
       created_by_user_id: string;
       template_id: string | null;
       created_at: Date;
@@ -3360,4 +3613,375 @@ export async function listCertificateTemplates(): Promise<CertificateTemplateRec
     }));
   }
   return [...cache.certificateTemplates];
+}
+
+export async function upsertTrustListSource(input: {
+  id?: string;
+  label: string;
+  url: string;
+  enabled: boolean;
+  groupIds: string[];
+  createdByUserId: string;
+}): Promise<TrustListSourceRecord> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
+  const existing = input.id
+    ? cache.trustListSources.find((item) => item.id === input.id)
+    : cache.trustListSources.find((item) => item.url === input.url);
+  const now = new Date();
+  const record: TrustListSourceRecord = existing
+    ? {
+        ...existing,
+        label: input.label,
+        url: input.url,
+        enabled: input.enabled,
+        groupIds: input.groupIds,
+        updatedAt: now,
+      }
+    : {
+        id: input.id ?? makeId("trust-list-source"),
+        label: input.label,
+        url: input.url,
+        enabled: input.enabled,
+        groupIds: input.groupIds,
+        createdByUserId: input.createdByUserId,
+        createdAt: now,
+        updatedAt: now,
+      };
+  cache.trustListSources = upsertInCache(cache.trustListSources, record);
+  if (hasDatabase()) {
+    await getPool().query(
+      `
+        insert into trust_list_sources (
+          id, label, url, enabled, group_ids, created_by_user_id, created_at, updated_at
+        ) values ($1,$2,$3,$4,$5,$6,$7,$8)
+        on conflict (id) do update set
+          label = excluded.label,
+          url = excluded.url,
+          enabled = excluded.enabled,
+          group_ids = excluded.group_ids,
+          updated_at = excluded.updated_at
+      `,
+      [
+        record.id,
+        record.label,
+        record.url,
+        record.enabled,
+        record.groupIds,
+        record.createdByUserId,
+        record.createdAt,
+        record.updatedAt,
+      ]
+    );
+  }
+  return record;
+}
+
+export async function listTrustListSources(): Promise<TrustListSourceRecord[]> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<TrustListSourceRow>(
+      `select id, label, url, enabled, group_ids, created_by_user_id, created_at, updated_at from trust_list_sources order by updated_at desc`
+    );
+    cache.trustListSources = result.rows.map(mapTrustListSourceRow);
+  }
+  return [...cache.trustListSources];
+}
+
+export async function listEnabledTrustListSources(): Promise<TrustListSourceRecord[]> {
+  const sources = await listTrustListSources();
+  return sources.filter((source) => source.enabled);
+}
+
+export async function findTrustListSourceById(
+  sourceId: string
+): Promise<TrustListSourceRecord | null> {
+  const sources = await listTrustListSources();
+  return sources.find((item) => item.id === sourceId) ?? null;
+}
+
+export async function createTrustListSyncRun(input: {
+  sourceId: string;
+}): Promise<TrustListSyncRunRecord> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
+  const record: TrustListSyncRunRecord = {
+    id: makeId("trust-list-run"),
+    sourceId: input.sourceId,
+    status: "running",
+    startedAt: new Date(),
+    finishedAt: null,
+    digestSha256: null,
+    sequenceNumber: null,
+    territory: null,
+    issueDate: null,
+    nextUpdate: null,
+    snapshotId: null,
+    failureReason: null,
+    importedCount: 0,
+    skippedCount: 0,
+    failedCount: 0,
+  };
+  cache.trustListSyncRuns = upsertInCache(cache.trustListSyncRuns, record);
+  if (hasDatabase()) {
+    await getPool().query(
+      `
+        insert into trust_list_sync_runs (
+          id, source_id, status, started_at, finished_at, digest_sha256,
+          sequence_number, territory, issue_date, next_update, snapshot_id,
+          failure_reason, imported_count, skipped_count, failed_count
+        ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+      `,
+      [
+        record.id,
+        record.sourceId,
+        record.status,
+        record.startedAt,
+        record.finishedAt,
+        record.digestSha256,
+        record.sequenceNumber,
+        record.territory,
+        record.issueDate,
+        record.nextUpdate,
+        record.snapshotId,
+        record.failureReason,
+        record.importedCount,
+        record.skippedCount,
+        record.failedCount,
+      ]
+    );
+  }
+  return record;
+}
+
+export async function completeTrustListSyncRun(
+  runId: string,
+  input: {
+    status: TrustListSyncRunRecord["status"];
+    digestSha256?: string | null;
+    sequenceNumber?: string | null;
+    territory?: string | null;
+    issueDate?: string | null;
+    nextUpdate?: string | null;
+    snapshotId?: string | null;
+    failureReason?: string | null;
+    importedCount?: number;
+    skippedCount?: number;
+    failedCount?: number;
+  }
+): Promise<TrustListSyncRunRecord | null> {
+  const finishedAt = new Date();
+  let updated: TrustListSyncRunRecord | null = null;
+  cache.trustListSyncRuns = cache.trustListSyncRuns.map((item) => {
+    if (item.id !== runId) {
+      return item;
+    }
+    updated = {
+      ...item,
+      status: input.status,
+      finishedAt,
+      digestSha256: input.digestSha256 ?? item.digestSha256,
+      sequenceNumber: input.sequenceNumber ?? item.sequenceNumber,
+      territory: input.territory ?? item.territory,
+      issueDate: input.issueDate ?? item.issueDate,
+      nextUpdate: input.nextUpdate ?? item.nextUpdate,
+      snapshotId: input.snapshotId ?? item.snapshotId,
+      failureReason: input.failureReason ?? null,
+      importedCount: input.importedCount ?? item.importedCount,
+      skippedCount: input.skippedCount ?? item.skippedCount,
+      failedCount: input.failedCount ?? item.failedCount,
+    };
+    return updated;
+  });
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    await getPool().query(
+      `
+        update trust_list_sync_runs set
+          status = $2,
+          finished_at = $3,
+          digest_sha256 = $4,
+          sequence_number = $5,
+          territory = $6,
+          issue_date = $7,
+          next_update = $8,
+          snapshot_id = $9,
+          failure_reason = $10,
+          imported_count = $11,
+          skipped_count = $12,
+          failed_count = $13
+        where id = $1
+      `,
+      [
+        runId,
+        input.status,
+        finishedAt,
+        input.digestSha256 ?? null,
+        input.sequenceNumber ?? null,
+        input.territory ?? null,
+        input.issueDate ?? null,
+        input.nextUpdate ?? null,
+        input.snapshotId ?? null,
+        input.failureReason ?? null,
+        input.importedCount ?? 0,
+        input.skippedCount ?? 0,
+        input.failedCount ?? 0,
+      ]
+    );
+  }
+  return updated;
+}
+
+export async function createTrustListSnapshot(input: {
+  sourceId: string;
+  digestSha256: string;
+  sequenceNumber?: string | null;
+  territory?: string | null;
+  issueDate?: string | null;
+  nextUpdate?: string | null;
+  xmlSizeBytes: number;
+  certificateCount: number;
+}): Promise<TrustListSnapshotRecord> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
+  const record: TrustListSnapshotRecord = {
+    id: makeId("trust-list-snapshot"),
+    sourceId: input.sourceId,
+    digestSha256: input.digestSha256,
+    sequenceNumber: input.sequenceNumber ?? null,
+    territory: input.territory ?? null,
+    issueDate: input.issueDate ?? null,
+    nextUpdate: input.nextUpdate ?? null,
+    acceptedAt: new Date(),
+    xmlSizeBytes: input.xmlSizeBytes,
+    certificateCount: input.certificateCount,
+  };
+  cache.trustListSnapshots = upsertInCache(cache.trustListSnapshots, record);
+  if (hasDatabase()) {
+    await getPool().query(
+      `
+        insert into trust_list_snapshots (
+          id, source_id, digest_sha256, sequence_number, territory, issue_date,
+          next_update, accepted_at, xml_size_bytes, certificate_count
+        ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      `,
+      [
+        record.id,
+        record.sourceId,
+        record.digestSha256,
+        record.sequenceNumber,
+        record.territory,
+        record.issueDate,
+        record.nextUpdate,
+        record.acceptedAt,
+        record.xmlSizeBytes,
+        record.certificateCount,
+      ]
+    );
+  }
+  return record;
+}
+
+export async function recordTrustListExtractedCertificate(input: {
+  sourceId: string;
+  snapshotId: string;
+  runId: string;
+  fingerprint?: string | null;
+  subjectSummary?: string | null;
+  pem: string;
+  importedCertificateId?: string | null;
+  importStatus: TrustListExtractedCertificateRecord["importStatus"];
+  failureReason?: string | null;
+}): Promise<TrustListExtractedCertificateRecord> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
+  const record: TrustListExtractedCertificateRecord = {
+    id: makeId("trust-list-cert"),
+    sourceId: input.sourceId,
+    snapshotId: input.snapshotId,
+    runId: input.runId,
+    fingerprint: input.fingerprint ?? null,
+    subjectSummary: input.subjectSummary ?? null,
+    pem: input.pem,
+    importedCertificateId: input.importedCertificateId ?? null,
+    importStatus: input.importStatus,
+    failureReason: input.failureReason ?? null,
+    createdAt: new Date(),
+  };
+  cache.trustListExtractedCertificates = upsertInCache(
+    cache.trustListExtractedCertificates,
+    record
+  );
+  if (hasDatabase()) {
+    await getPool().query(
+      `
+        insert into trust_list_extracted_certificates (
+          id, source_id, snapshot_id, run_id, fingerprint, subject_summary, pem,
+          imported_certificate_id, import_status, failure_reason, created_at
+        ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+      `,
+      [
+        record.id,
+        record.sourceId,
+        record.snapshotId,
+        record.runId,
+        record.fingerprint,
+        record.subjectSummary,
+        record.pem,
+        record.importedCertificateId,
+        record.importStatus,
+        record.failureReason,
+        record.createdAt,
+      ]
+    );
+  }
+  return record;
+}
+
+export async function listTrustListSnapshots(
+  sourceId?: string
+): Promise<TrustListSnapshotRecord[]> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<TrustListSnapshotRow>(
+      sourceId
+        ? `select id, source_id, digest_sha256, sequence_number, territory, issue_date, next_update, accepted_at, xml_size_bytes, certificate_count from trust_list_snapshots where source_id = $1 order by accepted_at desc`
+        : `select id, source_id, digest_sha256, sequence_number, territory, issue_date, next_update, accepted_at, xml_size_bytes, certificate_count from trust_list_snapshots order by accepted_at desc`,
+      sourceId ? [sourceId] : []
+    );
+    const mapped = result.rows.map(mapTrustListSnapshotRow);
+    if (!sourceId) {
+      cache.trustListSnapshots = mapped;
+    }
+    return mapped;
+  }
+  return cache.trustListSnapshots
+    .filter((item) => !sourceId || item.sourceId === sourceId)
+    .sort((a, b) => b.acceptedAt.getTime() - a.acceptedAt.getTime());
+}
+
+export async function listTrustListSyncRuns(
+  sourceId?: string
+): Promise<TrustListSyncRunRecord[]> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<TrustListSyncRunRow>(
+      sourceId
+        ? `select id, source_id, status, started_at, finished_at, digest_sha256, sequence_number, territory, issue_date, next_update, snapshot_id, failure_reason, imported_count, skipped_count, failed_count from trust_list_sync_runs where source_id = $1 order by started_at desc`
+        : `select id, source_id, status, started_at, finished_at, digest_sha256, sequence_number, territory, issue_date, next_update, snapshot_id, failure_reason, imported_count, skipped_count, failed_count from trust_list_sync_runs order by started_at desc`,
+      sourceId ? [sourceId] : []
+    );
+    const mapped = result.rows.map(mapTrustListSyncRunRow);
+    if (!sourceId) {
+      cache.trustListSyncRuns = mapped;
+    }
+    return mapped;
+  }
+  return cache.trustListSyncRuns
+    .filter((item) => !sourceId || item.sourceId === sourceId)
+    .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
 }

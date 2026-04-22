@@ -11,13 +11,16 @@
     "quality": "npm run build && npm run typecheck && npm run validate"
   },
   "dependencies": {
+    "@xmldom/xmldom": "^0.9.10",
     "fflate": "^0.8.2",
     "next": "^16.2.2",
     "pg": "^8.20.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwindcss": "^4.2.2",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "xml-crypto": "^6.1.2",
+    "xpath": "^0.0.34"
   },
   "devDependencies": {
     "@types/node": "^25.5.2",
