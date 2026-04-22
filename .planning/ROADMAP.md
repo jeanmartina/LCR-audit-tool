@@ -36,21 +36,22 @@
 #### Phase 18: Trust-List Source Model and Safe Sync Foundation
 **Goal**: Add ETSI trust-list sources as first-class inventory sources with persisted sync metadata, validation gates, and auditable sync runs.
 **Depends on**: Phase 17
-**Requirements**: TSL-01, TSL-02, TSL-03, OPS-04, OPS-05
+**Requirements**: TSL-01, TSL-02, TSL-03, TSL-04 (initial import path), OPS-04, OPS-05
 **Success Criteria** (what must be TRUE):
   1. Platform admins can register a trust-list URL source.
   2. The runtime fetches and parses supported LOTL/TSL metadata into persisted snapshots.
   3. Trust-list integrity is validated before extracted data can affect inventory.
-  4. Sync runs record success/failure state, digest/sequence metadata, and failure reasons.
-  5. The packaged Docker runtime can execute trust-list sync without undeclared host dependencies.
-**Plans**: 0 plans
+  4. Validated extracted certificates can enter the existing certificate-first import pipeline for configured groups.
+  5. Sync runs record success/failure state, digest/sequence metadata, and failure reasons.
+  6. The packaged Docker runtime can execute trust-list sync without undeclared host dependencies.
+**Plans**: `18-01`, `18-02` ready
 
 #### Phase 19: Trust-List Certificate Projection and Reimport
 **Goal**: Project validated trust-list certificates into the existing certificate-first pipeline while preserving provenance and avoiding duplicate unchanged assets.
 **Depends on**: Phase 18
-**Requirements**: TSL-04, TSL-05, TSL-07
+**Requirements**: TSL-04 (hardening), TSL-05, TSL-07
 **Success Criteria** (what must be TRUE):
-  1. Supported trust-list certificates import through the same certificate pipeline used by single/ZIP onboarding.
+  1. Trust-list certificate import is hardened beyond the Phase 18 initial path with duplicate/change handling and richer provenance.
   2. Change detection reimports affected certificates without duplicating unchanged monitored assets.
   3. Trust-list-derived certificates and targets retain provenance back to source URL, snapshot, and import run.
   4. Reporting/admin surfaces can distinguish trust-list-derived assets from manually uploaded assets without creating a separate inventory model.
@@ -82,8 +83,8 @@
 ## Current Status
 
 - Active milestone: `v1.2`
-- Current stage: Phase 17 complete; Phase 18 ready to plan
-- Next recommended step: `$gsd-plan-phase 18`
+- Current stage: Phase 18 planned; ready to execute
+- Next recommended step: `$gsd-execute-phase 18`
 
 ## Backlog
 

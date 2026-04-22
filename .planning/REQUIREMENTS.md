@@ -80,7 +80,7 @@
 | TSL-01 | Phase 18 | Pending |
 | TSL-02 | Phase 18 | Pending |
 | TSL-03 | Phase 18 | Pending |
-| TSL-04 | Phase 19 | Pending |
+| TSL-04 | Phase 18/19 | Pending |
 | TSL-05 | Phase 19 | Pending |
 | TSL-06 | Phase 20 | Pending |
 | TSL-07 | Phase 19 | Pending |
@@ -107,4 +107,4 @@
 
 ---
 *Requirements defined: 2026-04-20*
-*Last updated: 2026-04-21 after Phase 17 execution*
+*Last updated: 2026-04-22 after Phase 18 planning*

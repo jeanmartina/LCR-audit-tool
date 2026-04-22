@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 ## Current Position
 
 Milestone: v1.2
-Phase: 18 ready to plan
-Plan: none
-Status: Phase 17 complete; Phase 18 ready for planning
-Last activity: 2026-04-21 — Executed Phase 17 first-run bootstrap and certificate/ZIP onboarding UX
+Phase: 18 planned
+Plan: 18-01, 18-02 ready
+Status: Phase 18 planned; ready for execution
+Last activity: 2026-04-22 — Planned Phase 18 trust-list safe sync foundation with XMLDSig gate and initial import path
 
 Progress: [█████░░░░░] 43%
 
@@ -53,6 +53,7 @@ Progress: [█████░░░░░] 43%
 - [Milestone v1.2]: Trust-list ingestion, executive summaries, and operator UX are the top priorities, with UX backlog ordering fixed as redesign -> easier onboarding -> first-run admin bootstrap -> field guidance.
 - [Phase 16]: Use shared UI primitives and field-level hints as the baseline for subsequent v1.2 screens; settings redirects must stay public-origin safe via relative `Location` headers.
 - [Phase 17]: First-run admin bootstrap is a narrow public exception that closes after the first platform admin; certificate preview is advisory and pure, while commit routes remain server-authoritative.
+- [Phase 18]: Trust-list ingestion targets ETSI TS 119 612 XML by URL, requires blocking XMLDSig validation before acceptance/import, preserves the last valid snapshot on failed sync, and includes an initial certificate-first import path while leaving robust reimport/provenance hardening to Phase 19.
 
 ### Roadmap Evolution
 - v1.0 archived to `.planning/milestones/v1.0-ROADMAP.md`
@@ -61,7 +62,7 @@ Progress: [█████░░░░░] 43%
 
 ### Pending Todos
 
-- Plan Phase 18 with `$gsd-plan-phase 18`
+- Execute Phase 18 with `$gsd-execute-phase 18`
 - Rotate the Google client secret used during the proof because it was exposed during testing
 
 ### Blockers/Concerns
