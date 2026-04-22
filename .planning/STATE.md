@@ -1,24 +1,42 @@
+---
+gsd_state_version: 1.0
+milestone: v1.2
+milestone_name: Trust Lists, Executive Visibility, and Operator UX
+status: executing
+stopped_at: v1.2 research in progress
+last_updated: "2026-04-22T10:55:11.776Z"
+last_activity: 2026-04-22 -- Phase 18 execution started
+progress:
+  total_phases: 10
+  completed_phases: 2
+  total_plans: 4
+  completed_plans: 2
+  percent: 50
+---
+
 # Project State
 
 ## Project Reference
+
 See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** Never allow a trusted certificate to operate without valid revocation coverage
-**Current focus:** Deep research for milestone v1.2 trust-list ingestion, executive summaries, and operator UX
+**Current focus:** Phase 18 — Trust-List Source Model and Safe Sync Foundation
 
 ## Current Position
 
 Milestone: v1.2
-Phase: 18 planned
-Plan: 18-01, 18-02 ready
-Status: Phase 18 planned; ready for execution
-Last activity: 2026-04-22 — Planned Phase 18 trust-list safe sync foundation with XMLDSig gate and initial import path
+Phase: 18 (Trust-List Source Model and Safe Sync Foundation) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 18
+Last activity: 2026-04-22 -- Phase 18 execution started
 
 Progress: [█████░░░░░] 43%
 
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 17
 - Average duration: 43 min
 - Total execution time: 2.4 hours
@@ -31,12 +49,14 @@ Progress: [█████░░░░░] 43%
 | v1.1 | 8-15 | 8 | Shipped |
 
 **Recent Trend:**
+
 - Last 10 plans: [08-01, 09-01, 10-01, 11-01, 12-01, 13-01, 14-01, 15-01, 16-01, 17-01]
 - Trend: Stable
 
 ## Accumulated Context
 
 ### Decisions
+
 - [Phase 1]: Prioritize continuous coverage tracking and historical recording so audits can prove when CRLs were unavailable.
 - [Phase 2]: Keep email alerts firing until coverage recovers while respecting overrides/cooldowns to avoid alert storms.
 - [Phase 3]: Reporting must provide compliance-ready tables, full evidence drill-down, and differentiated PDF exports.
@@ -56,6 +76,7 @@ Progress: [█████░░░░░] 43%
 - [Phase 18]: Trust-list ingestion targets ETSI TS 119 612 XML by URL, requires blocking XMLDSig validation before acceptance/import, preserves the last valid snapshot on failed sync, and includes an initial certificate-first import path while leaving robust reimport/provenance hardening to Phase 19.
 
 ### Roadmap Evolution
+
 - v1.0 archived to `.planning/milestones/v1.0-ROADMAP.md`
 - v1.1 archived to `.planning/milestones/v1.1-ROADMAP.md`
 - v1.2 opened for deep research before requirements and roadmap definition
