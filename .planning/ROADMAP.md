@@ -55,7 +55,7 @@
   2. Change detection reimports affected certificates without duplicating unchanged monitored assets.
   3. Trust-list-derived certificates and targets retain provenance back to source URL, snapshot, and import run.
   4. Reporting/admin surfaces can distinguish trust-list-derived assets from manually uploaded assets without creating a separate inventory model.
-**Plans**: 0 plans
+**Plans**: `19-01`, `19-02` ready
 
 #### Phase 20: Operator Trust-List Onboarding and Sync Visibility
 **Goal**: Make trust-list onboarding and ongoing sync understandable to operators through guided source creation, sync status, and recovery guidance.
@@ -83,8 +83,8 @@
 ## Current Status
 
 - Active milestone: `v1.2`
-- Current stage: Phase 18 complete; Phase 19 ready to plan
-- Next recommended step: `$gsd-plan-phase 19`
+- Current stage: Phase 19 planned; ready to execute
+- Next recommended step: `$gsd-execute-phase 19`
 
 ## Backlog
 
