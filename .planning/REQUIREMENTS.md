@@ -12,7 +12,7 @@
 - [x] **TSL-03**: System validates trust-list integrity before accepting extracted certificates into the monitored inventory.
 - [x] **TSL-04**: System extracts certificates from supported trust-list sources and imports them through the existing certificate-first pipeline.
 - [x] **TSL-05**: System detects trust-list changes and re-imports affected certificates without duplicating unchanged monitored assets.
-- [ ] **TSL-06**: Operator can see trust-list sync status, last successful sync, next expected update, failure reason, and change summary.
+- [x] **TSL-06**: Operator can see trust-list sync status, last successful sync, next expected update, failure reason, and change summary.
 - [x] **TSL-07**: Trust-list-derived certificates and targets retain provenance back to source URL, snapshot, and import run.
 
 ### Executive Visibility
@@ -28,7 +28,7 @@
 - [x] **UX-01**: Product UI uses a coherent visual system with clearer hierarchy, spacing, typography, panels, states, and action placement.
 - [x] **UX-02**: Certificate onboarding provides a guided flow for single certificate upload with clear preview, derived CRLs, effective defaults, and save outcome.
 - [x] **UX-03**: ZIP onboarding provides a guided flow with upload validation, import progress/result summary, partial-failure details, and next steps.
-- [ ] **UX-04**: Trust-list onboarding uses the same guided source-onboarding model as certificate and ZIP onboarding.
+- [x] **UX-04**: Trust-list onboarding uses the same guided source-onboarding model as certificate and ZIP onboarding.
 - [x] **UX-05**: First system access presents a first-run web flow to create the initial platform admin instead of requiring direct database insertion.
 - [x] **UX-06**: Editable forms include concise field-level hints, examples, and validation feedback for technical fields such as trust source, PKI, jurisdiction, callback origin, predictive windows, and source URLs.
 - [x] **UX-07**: Empty states and post-action states guide operators to the next useful action after setup, onboarding, import, sync, or error outcomes.
@@ -37,7 +37,7 @@
 
 - [x] **OPS-04**: Trust-list sync runs are persisted with auditable success/failure state and do not silently mutate inventory.
 - [ ] **OPS-05**: Existing Docker packaged runtime can run trust-list sync and executive summary features without manual host dependencies.
-- [ ] **OPS-06**: Documentation explains trust-list source setup, sync behavior, failure handling, and operator recovery steps.
+- [x] **OPS-06**: Documentation explains trust-list source setup, sync behavior, failure handling, and operator recovery steps.
 
 ## Future Requirements
 
@@ -82,7 +82,7 @@
 | TSL-03 | Phase 18 | Complete |
 | TSL-04 | Phase 18/19 | Complete |
 | TSL-05 | Phase 19 | Complete |
-| TSL-06 | Phase 20 | Pending |
+| TSL-06 | Phase 20 | Complete |
 | TSL-07 | Phase 19 | Complete |
 | EXEC-01 | Phase 21 | Pending |
 | EXEC-02 | Phase 21 | Pending |
@@ -92,13 +92,13 @@
 | UX-01 | Phase 16 | Complete |
 | UX-02 | Phase 17 | Complete |
 | UX-03 | Phase 17 | Complete |
-| UX-04 | Phase 20 | Pending |
+| UX-04 | Phase 20 | Complete |
 | UX-05 | Phase 17 | Complete |
 | UX-06 | Phase 16 | Complete |
 | UX-07 | Phase 16 | Complete |
 | OPS-04 | Phase 18 | Complete |
 | OPS-05 | Phase 18/21 | Partial: trust-list worker packaging complete; executive summary packaging pending |
-| OPS-06 | Phase 20 | Pending |
+| OPS-06 | Phase 20 | Complete |
 
 **Coverage:**
 - v1.2 requirements: 22 total
@@ -107,4 +107,4 @@
 
 ---
 *Requirements defined: 2026-04-20*
-*Last updated: 2026-04-23 after Phase 20 planning*
+*Last updated: 2026-04-23 after Phase 20 execution*

@@ -66,7 +66,7 @@
   2. Operators can see sync status, last successful sync, next expected update, failure reason, and change summary.
   3. Documentation explains trust-list setup, sync behavior, failure handling, and operator recovery steps.
   4. Trust-list failures are visible and actionable instead of silent background errors.
-**Plans**: `20-01`, `20-02` ready
+**Plans**: `20-01`, `20-02` complete
 
 #### Phase 21: Simple Executive Summary Dashboard and Export
 **Goal**: Add a management-facing view that explains current coverage risk without requiring operator-level investigation.
@@ -83,8 +83,8 @@
 ## Current Status
 
 - Active milestone: `v1.2`
-- Current stage: Phase 19 planned; ready to execute
-- Next recommended step: `$gsd-execute-phase 19`
+- Current stage: Phase 20 complete; Phase 21 ready to plan
+- Next recommended step: `$gsd-plan-phase 21`
 
 ## Backlog
 

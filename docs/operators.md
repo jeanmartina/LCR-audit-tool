@@ -204,3 +204,32 @@ After startup, verify:
 2. The application opens on the HTTPS origin configured by `AUTH_PUBLIC_ORIGIN`.
 3. `worker` logs show poll-loop execution without immediate crashes.
 4. Auth callback origins match the configured HTTPS host before attempting real provider sign-in.
+
+## Trust-list source onboarding
+
+Use `/admin/trust-lists` for the guided trust-list source flow.
+
+1. Open the wizard and fill the source label, HTTPS ETSI XML URL, and comma-separated target group IDs.
+2. Keep scheduled sync enabled only for sources you expect the worker to poll.
+3. Click `Preview source` before saving whenever possible.
+4. Review the preview output:
+   - digest, sequence, territory, XML size, and certificate count
+   - XML signature validation status
+   - recovery guidance when the preview fails
+5. Save the source.
+6. Run `Sync now` to create the first accepted snapshot and certificate projections.
+
+Platform admins can manage every trust-list source. Group admins can manage only sources whose `groupIds` stay inside their own admin scope.
+
+## Recovery guidance
+
+The trust-list page now maps common failures to explicit operator actions.
+
+- `Invalid URL`: fix the URL format and retry preview.
+- `HTTPS required`: use HTTPS for deployed sources; only localhost may stay HTTP for local tests.
+- `XML signature invalid`: confirm the official source and do not sync into inventory until XMLDSig passes.
+- `XML too large`: confirm the file is the expected ETSI XML or raise `TRUST_LIST_MAX_XML_BYTES` deliberately.
+- `Fetch failed`: inspect DNS, firewall, TLS, and upstream HTTP status from the Docker host.
+- `No certificates found`: confirm the document is a real ETSI TS 119 612 trust-list XML and not an index or HTML page.
+- `XML parse failed`: confirm the URL returns XML and points directly to the trust-list document.
+- `Unmapped failure`: capture the raw error and extend recovery mapping if the issue repeats.

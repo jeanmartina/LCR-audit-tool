@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Trust Lists, Executive Visibility, and Operator UX
-status: planned
-stopped_at: Completed 19-02-PLAN.md
-last_updated: "2026-04-23T12:19:56.508Z"
-last_activity: 2026-04-23 -- Phase 20 planned
+status: ready
+stopped_at: Completed 20-02-PLAN.md
+last_updated: "2026-04-23T17:05:00.000Z"
+last_activity: 2026-04-23 -- Phase 20 execution completed
 progress:
   total_phases: 10
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 8
-  completed_plans: 6
-  percent: 75
+  completed_plans: 8
+  percent: 83
 ---
 
 # Project State
@@ -21,25 +21,25 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** Never allow a trusted certificate to operate without valid revocation coverage
-**Current focus:** Phase 20 — Operator Trust-List Onboarding and Sync Visibility
+**Current focus:** Phase 21 — Simple Executive Summary Dashboard and Export
 
 ## Current Position
 
 Milestone: v1.2
-Phase: 20 (Operator Trust-List Onboarding and Sync Visibility) — PLANNED
-Plan: 0 of 2
-Status: Ready to execute Phase 20
-Last activity: 2026-04-23 -- Phase 20 planned
+Phase: 21 (Simple Executive Summary Dashboard and Export) — READY TO PLAN
+Plan: 0 of 0
+Status: Phase 20 complete; Phase 21 not yet planned
+Last activity: 2026-04-23 -- Phase 20 execution completed
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 17
-- Average duration: 43 min
-- Total execution time: 2.4 hours
+- Total plans completed: 19
+- Average duration: 42 min
+- Total execution time: 2.8 hours
 
 **Completed Milestones:**
 
@@ -50,7 +50,7 @@ Progress: [░░░░░░░░░░] 0%
 
 **Recent Trend:**
 
-- Last 10 plans: [08-01, 09-01, 10-01, 11-01, 12-01, 13-01, 14-01, 15-01, 16-01, 17-01]
+- Last 10 plans: [10-01, 11-01, 12-01, 13-01, 14-01, 15-01, 16-01, 17-01, 19-01, 20-01]
 - Trend: Stable
 
 ## Accumulated Context
@@ -75,6 +75,7 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 17]: First-run admin bootstrap is a narrow public exception that closes after the first platform admin; certificate preview is advisory and pure, while commit routes remain server-authoritative.
 - [Phase 18]: Trust-list ingestion targets ETSI TS 119 612 XML by URL, requires blocking XMLDSig validation before acceptance/import, preserves the last valid snapshot on failed sync, and includes an initial certificate-first import path while leaving robust reimport/provenance hardening to Phase 19.
 - [Phase 19]: Trust-list projection uses certificate fingerprint as inventory identity, source/fingerprint/candidate digest for change detection, skips unchanged candidates before import, and exposes admin/certificate provenance while deferring enriched reporting labels.
+- [Phase 20]: Trust-list onboarding now uses a guided wizard with optional non-mutating preview, group-admin scoped operation, explicit sync timeline visibility, and prescriptive recovery guidance mirrored in operator docs.
 
 ### Roadmap Evolution
 
@@ -84,7 +85,6 @@ Progress: [░░░░░░░░░░] 0%
 
 ### Pending Todos
 
-- Execute Phase 20 with `$gsd-execute-phase 20`
 - Rotate the Google client secret used during the proof because it was exposed during testing
 
 ### Blockers/Concerns
@@ -95,6 +95,6 @@ Progress: [░░░░░░░░░░] 0%
 
 ## Session Continuity
 
-Last session: 2026-04-22T16:02:43.447Z
-Stopped at: Completed 19-02-PLAN.md
+Last session: 2026-04-23T17:05:00.000Z
+Stopped at: Completed 20-02-PLAN.md
 Resume file: None
