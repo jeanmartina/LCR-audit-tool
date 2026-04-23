@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Trust Lists, Executive Visibility, and Operator UX
-status: ready
+status: planned
 stopped_at: Completed 19-02-PLAN.md
 last_updated: "2026-04-23T12:19:56.508Z"
-last_activity: 2026-04-23 -- Phase 19 complete
+last_activity: 2026-04-23 -- Phase 20 planned
 progress:
   total_phases: 10
   completed_phases: 4
-  total_plans: 6
+  total_plans: 8
   completed_plans: 6
-  percent: 100
+  percent: 75
 ---
 
 # Project State
@@ -26,12 +26,12 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 ## Current Position
 
 Milestone: v1.2
-Phase: 19 (Trust-List Certificate Projection and Reimport) — COMPLETE
-Plan: 2 of 2
-Status: Ready for Phase 20
-Last activity: 2026-04-23 -- Phase 19 complete
+Phase: 20 (Operator Trust-List Onboarding and Sync Visibility) — PLANNED
+Plan: 0 of 2
+Status: Ready to execute Phase 20
+Last activity: 2026-04-23 -- Phase 20 planned
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -84,7 +84,7 @@ Progress: [██████████] 100%
 
 ### Pending Todos
 
-- Execute Phase 20 with `$gsd-plan-phase 20` after consultation
+- Execute Phase 20 with `$gsd-execute-phase 20`
 - Rotate the Google client secret used during the proof because it was exposed during testing
 
 ### Blockers/Concerns

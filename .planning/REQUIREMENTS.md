@@ -11,9 +11,9 @@
 - [x] **TSL-02**: System fetches and parses supported LOTL/TSL documents while preserving source metadata such as territory, sequence number, issue date, next update, and digest.
 - [x] **TSL-03**: System validates trust-list integrity before accepting extracted certificates into the monitored inventory.
 - [x] **TSL-04**: System extracts certificates from supported trust-list sources and imports them through the existing certificate-first pipeline.
-- [ ] **TSL-05**: System detects trust-list changes and re-imports affected certificates without duplicating unchanged monitored assets.
+- [x] **TSL-05**: System detects trust-list changes and re-imports affected certificates without duplicating unchanged monitored assets.
 - [ ] **TSL-06**: Operator can see trust-list sync status, last successful sync, next expected update, failure reason, and change summary.
-- [ ] **TSL-07**: Trust-list-derived certificates and targets retain provenance back to source URL, snapshot, and import run.
+- [x] **TSL-07**: Trust-list-derived certificates and targets retain provenance back to source URL, snapshot, and import run.
 
 ### Executive Visibility
 
@@ -80,10 +80,10 @@
 | TSL-01 | Phase 18 | Complete |
 | TSL-02 | Phase 18 | Complete |
 | TSL-03 | Phase 18 | Complete |
-| TSL-04 | Phase 18/19 | Complete for initial import; Phase 19 hardening pending |
-| TSL-05 | Phase 19 | Pending |
+| TSL-04 | Phase 18/19 | Complete |
+| TSL-05 | Phase 19 | Complete |
 | TSL-06 | Phase 20 | Pending |
-| TSL-07 | Phase 19 | Pending |
+| TSL-07 | Phase 19 | Complete |
 | EXEC-01 | Phase 21 | Pending |
 | EXEC-02 | Phase 21 | Pending |
 | EXEC-03 | Phase 21 | Pending |
@@ -107,4 +107,4 @@
 
 ---
 *Requirements defined: 2026-04-20*
-*Last updated: 2026-04-22 after Phase 18 execution*
+*Last updated: 2026-04-23 after Phase 20 planning*
