@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Trust Lists, Executive Visibility, and Operator UX
-status: ready
-stopped_at: Completed 20-02-PLAN.md
-last_updated: "2026-04-23T17:05:00.000Z"
-last_activity: 2026-04-23 -- Phase 20 execution completed
+status: planned
+stopped_at: Completed 21-PLAN-CHECK.md
+last_updated: "2026-04-23T17:30:00.000Z"
+last_activity: 2026-04-23 -- Phase 21 planning completed
 progress:
   total_phases: 10
   completed_phases: 5
-  total_plans: 8
+  total_plans: 11
   completed_plans: 8
-  percent: 83
+  percent: 73
 ---
 
 # Project State
@@ -26,10 +26,10 @@ See: .planning/PROJECT.md (updated 2026-04-13)
 ## Current Position
 
 Milestone: v1.2
-Phase: 21 (Simple Executive Summary Dashboard and Export) — READY TO PLAN
-Plan: 0 of 0
-Status: Phase 20 complete; Phase 21 not yet planned
-Last activity: 2026-04-23 -- Phase 20 execution completed
+Phase: 21 (Simple Executive Summary Dashboard and Export) — PLANNED
+Plan: 3 plans ready
+Status: Phase 21 planned and ready to execute
+Last activity: 2026-04-23 -- Phase 21 planning completed
 
 Progress: [████████░░] 83%
 
@@ -38,6 +38,7 @@ Progress: [████████░░] 83%
 **Velocity:**
 
 - Total plans completed: 19
+- Plans ready: 3
 - Average duration: 42 min
 - Total execution time: 2.8 hours
 
@@ -76,6 +77,7 @@ Progress: [████████░░] 83%
 - [Phase 18]: Trust-list ingestion targets ETSI TS 119 612 XML by URL, requires blocking XMLDSig validation before acceptance/import, preserves the last valid snapshot on failed sync, and includes an initial certificate-first import path while leaving robust reimport/provenance hardening to Phase 19.
 - [Phase 19]: Trust-list projection uses certificate fingerprint as inventory identity, source/fingerprint/candidate digest for change detection, skips unchanged candidates before import, and exposes admin/certificate provenance while deferring enriched reporting labels.
 - [Phase 20]: Trust-list onboarding now uses a guided wizard with optional non-mutating preview, group-admin scoped operation, explicit sync timeline visibility, and prescriptive recovery guidance mirrored in operator docs.
+- [Phase 21 Planning]: Executive visibility will ship as both a dedicated route and a reporting-integrated entry, open to any authorized user, with PDF + print output and packaged smoke validation.
 
 ### Roadmap Evolution
 
@@ -96,5 +98,5 @@ Progress: [████████░░] 83%
 ## Session Continuity
 
 Last session: 2026-04-23T17:05:00.000Z
-Stopped at: Completed 20-02-PLAN.md
+Stopped at: Completed 21-PLAN-CHECK.md
 Resume file: None

@@ -78,13 +78,13 @@
   3. Top risks and upcoming expiration/publication risks link to operational evidence.
   4. A short trend view shows recent coverage health and incidents.
   5. The summary can be exported or printed as a concise management-facing report.
-**Plans**: 0 plans
+**Plans**: `21-01`, `21-02`, `21-03` ready
 
 ## Current Status
 
 - Active milestone: `v1.2`
-- Current stage: Phase 20 complete; Phase 21 ready to plan
-- Next recommended step: `$gsd-plan-phase 21`
+- Current stage: Phase 21 planned; ready to execute
+- Next recommended step: `$gsd-execute-phase 21`
 
 ## Backlog
 
