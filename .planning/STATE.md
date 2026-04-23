@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Trust Lists, Executive Visibility, and Operator UX
-status: planned
-stopped_at: Planned Phase 19
-last_updated: "2026-04-22T16:02:43.451Z"
-last_activity: 2026-04-22
+status: ready
+stopped_at: Completed 19-02-PLAN.md
+last_updated: "2026-04-23T12:19:56.508Z"
+last_activity: 2026-04-23 -- Phase 19 complete
 progress:
-  total_phases: 6
-  completed_phases: 3
-  total_plans: 4
-  completed_plans: 4
-  percent: 50
+  total_phases: 10
+  completed_phases: 4
+  total_plans: 6
+  completed_plans: 6
+  percent: 100
 ---
 
 # Project State
@@ -21,17 +21,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** Never allow a trusted certificate to operate without valid revocation coverage
-**Current focus:** Phase 19 execution — trust-list projection hardening, change detection, and provenance
+**Current focus:** Phase 20 — Operator Trust-List Onboarding and Sync Visibility
 
 ## Current Position
 
 Milestone: v1.2
-Phase: 19 planned
-Plan: 19-01, 19-02 ready
-Status: Phase 19 planned; ready for execution
-Last activity: 2026-04-22 — Planned Phase 19 trust-list projection and provenance hardening
+Phase: 19 (Trust-List Certificate Projection and Reimport) — COMPLETE
+Plan: 2 of 2
+Status: Ready for Phase 20
+Last activity: 2026-04-23 -- Phase 19 complete
 
-Progress: [█████░░░░░] 50%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -74,6 +74,7 @@ Progress: [█████░░░░░] 50%
 - [Phase 16]: Use shared UI primitives and field-level hints as the baseline for subsequent v1.2 screens; settings redirects must stay public-origin safe via relative `Location` headers.
 - [Phase 17]: First-run admin bootstrap is a narrow public exception that closes after the first platform admin; certificate preview is advisory and pure, while commit routes remain server-authoritative.
 - [Phase 18]: Trust-list ingestion targets ETSI TS 119 612 XML by URL, requires blocking XMLDSig validation before acceptance/import, preserves the last valid snapshot on failed sync, and includes an initial certificate-first import path while leaving robust reimport/provenance hardening to Phase 19.
+- [Phase 19]: Trust-list projection uses certificate fingerprint as inventory identity, source/fingerprint/candidate digest for change detection, skips unchanged candidates before import, and exposes admin/certificate provenance while deferring enriched reporting labels.
 
 ### Roadmap Evolution
 
@@ -83,7 +84,7 @@ Progress: [█████░░░░░] 50%
 
 ### Pending Todos
 
-- Execute Phase 19 with `$gsd-execute-phase 19`
+- Execute Phase 20 with `$gsd-plan-phase 20` after consultation
 - Rotate the Google client secret used during the proof because it was exposed during testing
 
 ### Blockers/Concerns
@@ -95,5 +96,5 @@ Progress: [█████░░░░░] 50%
 ## Session Continuity
 
 Last session: 2026-04-22T16:02:43.447Z
-Stopped at: Completed 18-02-PLAN.md
+Stopped at: Completed 19-02-PLAN.md
 Resume file: None

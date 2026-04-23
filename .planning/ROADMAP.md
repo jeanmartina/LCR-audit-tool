@@ -55,7 +55,7 @@
   2. Change detection reimports affected certificates without duplicating unchanged monitored assets.
   3. Trust-list-derived certificates and targets retain provenance back to source URL, snapshot, and import run.
   4. Reporting/admin surfaces can distinguish trust-list-derived assets from manually uploaded assets without creating a separate inventory model.
-**Plans**: `19-01`, `19-02` ready
+**Plans**: `19-01`, `19-02` complete
 
 #### Phase 20: Operator Trust-List Onboarding and Sync Visibility
 **Goal**: Make trust-list onboarding and ongoing sync understandable to operators through guided source creation, sync status, and recovery guidance.
