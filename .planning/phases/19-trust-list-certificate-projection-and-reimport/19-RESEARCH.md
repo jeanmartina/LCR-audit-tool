@@ -50,7 +50,7 @@ Why a table:
 
 - Keeps certificate-first inventory intact.
 - Allows many trust-list sources/snapshots to point to one certificate asset.
-- Makes reporting provenance queryable without parsing JSON summaries.
+- Keeps provenance queryable for future reporting without parsing JSON summaries.
 - Supports future Phase 20 change summaries and recovery guidance.
 
 ## Change Detection Strategy
@@ -73,12 +73,11 @@ Algorithm:
 
 ## Provenance Surface Strategy
 
-Minimum Phase 19 UI/reporting exposure:
+Minimum Phase 19 UI exposure:
 
 - Certificate admin/detail: show source type `trust-list`, trust-list source label/URL, latest snapshot sequence/territory/digest, latest run ID, and projection status.
 - Trust-list admin source table: add change/import summary for latest successful run with imported/updated/skipped/failed counts and failure reasons.
-- Reporting row/read model: expose provenance fields or a provenance label so users can distinguish manual/ZIP/trust-list-derived assets.
-- Filter options already include source type; Phase 19 should make the display/copy explicit and avoid relying only on raw `trust-list` value.
+- Reporting row/read model: preserve source-type compatibility; enriched provenance filters/labels are deferred because the user selected admin counters plus certificate provenance for Phase 19.
 
 ## Validation Architecture
 
@@ -89,7 +88,7 @@ Extend `scripts/validate-trust-list-foundation.js` or add `scripts/validate-trus
 - Sync computes candidate keys/digests.
 - Sync skips unchanged candidates before calling `importCertificate`.
 - Sync records provenance with source/snapshot/run/extracted/certificate IDs.
-- Admin/reporting surfaces include trust-list provenance labels.
+- Admin and certificate detail surfaces include trust-list provenance labels.
 - Phase 18 XMLDSig gate remains present.
 - `node scripts/validate-all.js` includes the projection validator.
 
@@ -99,7 +98,7 @@ Extend `scripts/validate-trust-list-foundation.js` or add `scripts/validate-trus
 |------|------------|
 | Duplicate unchanged assets bloat inventory | Fingerprint identity plus projection digest skip before import. |
 | Lost provenance for reimported certificates | Dedicated projection records linked to certificate/source/snapshot/run/extracted item. |
-| False confidence from raw source type only | UI/reporting surfaces show source URL/sequence/digest/run where available. |
+| False confidence from raw source type only | Admin/certificate surfaces show source URL/sequence/digest/run where available. |
 | Invalid XML mutates inventory | Preserve Phase 18 XMLDSig gate before projection. |
 | Failed item masks successful snapshot | Keep item-level failure status and counts separate from snapshot acceptance. |
 | Breaking manual/ZIP imports | Keep source-specific logic inside trust-list sync/projection helpers; do not alter non-trust-list import behavior beyond optional read-only provenance display. |
@@ -107,4 +106,4 @@ Extend `scripts/validate-trust-list-foundation.js` or add `scripts/validate-trus
 ## Recommended Plan Split
 
 1. **19-01 Projection Model and Change Detection** — schema, helpers, candidate key/digest, sync reimport/skip logic, validator foundation.
-2. **19-02 Provenance Surfaces and Final Validation** — admin/reporting provenance read models, i18n/UI copy, validator integration, final build/typecheck/validate-all.
+2. **19-02 Provenance Surfaces and Final Validation** — admin/certificate provenance read models, reporting compatibility review, i18n/UI copy, validator integration, final build/typecheck/validate-all.

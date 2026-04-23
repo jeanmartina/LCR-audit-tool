@@ -35,11 +35,7 @@ For trust-list-derived certificates, show a compact provenance panel:
 
 ### Reporting Read Model
 
-Rows should expose a human-readable source/provenance label so `trust-list` is not only a raw filter token. This can be rendered as:
-
-- Source type: Trust-list
-- Source label: configured trust-list label
-- Snapshot: sequence/territory/digest short form
+No enriched reporting filter or label is required in Phase 19. Reporting must not regress: trust-list-derived certificates should remain distinguishable through existing source type data if already present, but the user-selected Phase 19 UI scope is admin source/run counters plus certificate-level provenance. Richer reporting labels and executive analytics remain later milestone work.
 
 ## Copy Requirements
 
@@ -54,6 +50,7 @@ Use existing Phase 16 primitives: `Panel`, `Field`, `Notice`, `StatusPill`, `Emp
 
 ## Acceptance
 
-- Trust-list-derived assets are distinguishable from single/ZIP imports.
+- Trust-list-derived assets are distinguishable from single/ZIP imports in admin/certificate detail.
 - Provenance is visible without SQL access.
 - Counts make skipped unchanged syncs look expected, not broken.
+- Reporting behavior does not regress, but enriched reporting filters/labels are not required in Phase 19.

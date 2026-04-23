@@ -20,7 +20,7 @@ Required checks:
 5. `src/trust-lists/sync.ts` checks latest projection before calling `importCertificate`.
 6. `src/trust-lists/sync.ts` records source ID, snapshot ID, run ID, extracted item ID, certificate ID, fingerprint, and status.
 7. Existing XMLDSig blocking validation remains present before snapshot/projection.
-8. Admin/reporting surfaces expose trust-list provenance labels/metadata.
+8. Admin source/run and certificate-detail surfaces expose trust-list provenance labels/metadata.
 9. i18n validation covers new provenance copy in `en`, `pt-BR`, and `es`.
 10. `npm run build`, `npm run typecheck`, and `node scripts/validate-all.js` pass.
 
@@ -29,12 +29,12 @@ Required checks:
 - Register a trust-list source and sync a valid signed test fixture.
 - Sync the same signed fixture again and confirm unchanged candidates are skipped, not duplicated.
 - Change a candidate PEM in a signed fixture and confirm only affected projection reimports/updates.
-- Confirm trust-list-derived certificate detail/reporting shows source label/URL, snapshot sequence/digest, run ID, and projection status.
+- Confirm trust-list-derived certificate detail shows source label/URL, snapshot sequence/digest, run ID, and projection status.
 - Confirm manual/ZIP imports still work and do not require trust-list provenance.
 
 ## Failure Conditions
 
 - If unchanged trust-list candidates call `importCertificate` repeatedly, Phase 19 fails.
 - If a trust-list-derived certificate lacks source/snapshot/run provenance, Phase 19 fails.
-- If reporting/admin cannot distinguish trust-list-derived assets from manual/ZIP assets, Phase 19 fails.
+- If admin/certificate-detail surfaces cannot distinguish trust-list-derived assets from manual/ZIP assets, Phase 19 fails.
 - If XMLDSig-invalid XML can project/import certificates, Phase 19 fails.
