@@ -5,6 +5,13 @@ export interface TrustListCertificateCandidate {
   sourcePath: string;
 }
 
+
+export interface TrustListProjectionCandidate extends TrustListCertificateCandidate {
+  fingerprint: string;
+  candidateKey: string;
+  candidateDigest: string;
+}
+
 export interface ParsedTrustListDocument {
   digestSha256: string;
   xmlSizeBytes: number;

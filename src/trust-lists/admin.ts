@@ -2,15 +2,25 @@ import { assertPlatformAdmin, type AuthenticatedPrincipal } from "../auth/author
 import {
   findGroupById,
   findTrustListSourceById,
+  listTrustListCertificateProjections,
   listTrustListSnapshots,
   listTrustListSources,
   listTrustListSyncRuns,
   upsertTrustListSource,
+  type TrustListCertificateProjectionRecord,
   type TrustListSnapshotRecord,
   type TrustListSourceRecord,
   type TrustListSyncRunRecord,
 } from "../storage/runtime-store";
 import { syncTrustListSource } from "./sync";
+
+export interface TrustListProjectionCounts {
+  imported: number;
+  updated: number;
+  skippedUnchanged: number;
+  skippedDuplicate: number;
+  failed: number;
+}
 
 export interface TrustListSourceSummary {
   source: TrustListSourceRecord;
@@ -18,6 +28,14 @@ export interface TrustListSourceSummary {
   lastRun: TrustListSyncRunRecord | null;
   lastSuccess: TrustListSyncRunRecord | null;
   lastFailure: TrustListSyncRunRecord | null;
+  projectionCounts: TrustListProjectionCounts;
+  latestProjectionFailureReason: string | null;
+}
+
+export interface TrustListCertificateProvenance {
+  source: TrustListSourceRecord | null;
+  snapshot: TrustListSnapshotRecord | null;
+  projection: TrustListCertificateProjectionRecord;
 }
 
 async function ensurePlatformAdmin(actor?: AuthenticatedPrincipal): Promise<AuthenticatedPrincipal> {
@@ -53,8 +71,24 @@ async function validateGroupIds(groupIds: string[]): Promise<void> {
   }
 }
 
+function summarizeProjectionCounts(
+  projections: TrustListCertificateProjectionRecord[],
+): TrustListProjectionCounts {
+  return projections.reduce<TrustListProjectionCounts>(
+    (counts, projection) => {
+      if (projection.status === "imported") counts.imported += 1;
+      if (projection.status === "updated") counts.updated += 1;
+      if (projection.status === "failed") counts.failed += 1;
+      if (projection.changeReason === "unchanged") counts.skippedUnchanged += 1;
+      if (projection.changeReason === "duplicate-in-run") counts.skippedDuplicate += 1;
+      return counts;
+    },
+    { imported: 0, updated: 0, skippedUnchanged: 0, skippedDuplicate: 0, failed: 0 },
+  );
+}
+
 export async function listTrustListSourcesForAdmin(
-  actor?: AuthenticatedPrincipal
+  actor?: AuthenticatedPrincipal,
 ): Promise<TrustListSourceSummary[]> {
   await ensurePlatformAdmin(actor);
   const sources = await listTrustListSources();
@@ -64,20 +98,45 @@ export async function listTrustListSourcesForAdmin(
       listTrustListSnapshots(source.id),
       listTrustListSyncRuns(source.id),
     ]);
+    const lastRun = runs[0] ?? null;
+    const runProjections = lastRun
+      ? await listTrustListCertificateProjections({ runId: lastRun.id })
+      : [];
     summaries.push({
       source,
       lastSnapshot: snapshots[0] ?? null,
-      lastRun: runs[0] ?? null,
+      lastRun,
       lastSuccess: runs.find((run) => run.status === "succeeded") ?? null,
       lastFailure: runs.find((run) => run.status === "failed") ?? null,
+      projectionCounts: summarizeProjectionCounts(runProjections),
+      latestProjectionFailureReason:
+        runProjections.find((projection) => projection.failureReason)?.failureReason ?? null,
     });
   }
   return summaries;
 }
 
+export async function findTrustListCertificateProvenance(
+  certificateId: string,
+): Promise<TrustListCertificateProvenance | null> {
+  const [projection] = await listTrustListCertificateProjections({ certificateId });
+  if (!projection) {
+    return null;
+  }
+  const [source, snapshots] = await Promise.all([
+    findTrustListSourceById(projection.sourceId),
+    listTrustListSnapshots(projection.sourceId),
+  ]);
+  return {
+    source,
+    snapshot: snapshots.find((item) => item.id === projection.snapshotId) ?? null,
+    projection,
+  };
+}
+
 export async function createTrustListSource(
   actor: AuthenticatedPrincipal | undefined,
-  input: { label: string; url: string; enabled: boolean; groupIds: string[] }
+  input: { label: string; url: string; enabled: boolean; groupIds: string[] },
 ): Promise<TrustListSourceRecord> {
   const principal = await ensurePlatformAdmin(actor);
   const label = input.label.trim();
@@ -97,7 +156,7 @@ export async function createTrustListSource(
 
 export async function syncTrustListSourceNow(
   actor: AuthenticatedPrincipal | undefined,
-  sourceId: string
+  sourceId: string,
 ) {
   await ensurePlatformAdmin(actor);
   const source = await findTrustListSourceById(sourceId);

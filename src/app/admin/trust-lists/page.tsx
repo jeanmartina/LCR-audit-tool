@@ -134,6 +134,12 @@ export default async function TrustListsPage({
                           <span>{t("admin.trustLists.metadata.territory")}: {item.lastSnapshot?.territory ?? "-"}</span>
                           <span>{t("admin.trustLists.metadata.nextUpdate")}: {item.lastSnapshot?.nextUpdate ?? "-"}</span>
                           <span>{t("admin.trustLists.metadata.imported")}: {item.lastSuccess?.importedCount ?? 0} / {item.lastSuccess?.failedCount ?? 0}</span>
+                          <span>{t("admin.trustLists.projection.imported")}: {item.projectionCounts.imported}</span>
+                          <span>{t("admin.trustLists.projection.updated")}: {item.projectionCounts.updated}</span>
+                          <span>{t("admin.trustLists.projection.skippedUnchanged")}: {item.projectionCounts.skippedUnchanged}</span>
+                          <span>{t("admin.trustLists.projection.skippedDuplicate")}: {item.projectionCounts.skippedDuplicate}</span>
+                          <span>{t("admin.trustLists.projection.failed")}: {item.projectionCounts.failed}</span>
+                          <span>{t("admin.trustLists.projection.latestFailure")}: {item.latestProjectionFailureReason ?? "-"}</span>
                         </div>
                       </td>
                       <td style={cellStyle}>

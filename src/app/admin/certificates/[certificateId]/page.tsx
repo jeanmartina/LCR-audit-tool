@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { assertAuthenticated } from "../../../../auth/authorization";
 import { getPrincipalTranslator } from "../../../../i18n";
 import { getCertificateAdminDetail } from "../../../../inventory/certificate-admin";
+import { findTrustListCertificateProvenance } from "../../../../trust-lists/admin";
 import { Notice } from "../../../../components/ui/primitives";
 
 const BOX_STYLE = {
@@ -42,6 +43,8 @@ export default async function CertificateDetailPage({
     );
   }
 
+  const trustListProvenance = await findTrustListCertificateProvenance(detail.certificate.id);
+
   return (
     <main style={{ padding: "32px", display: "grid", gap: "24px" }}>
       <header style={{ display: "grid", gap: "8px" }}>
@@ -60,6 +63,53 @@ export default async function CertificateDetailPage({
         <Notice tone="success" title={t("admin.certificates.importedSingle.title")}>
           {t("admin.certificates.importedSingle.body")}
         </Notice>
+      ) : null}
+
+      {trustListProvenance ? (
+        <section style={BOX_STYLE}>
+          <h2 style={{ marginTop: 0 }}>{t("admin.certificates.detail.trustListProvenance.title")}</h2>
+          <p style={{ color: "#94a3b8", marginTop: 0 }}>
+            {t("admin.certificates.detail.trustListProvenance.body")}
+          </p>
+          <dl style={{ display: "grid", gap: "8px", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+            <div>
+              <dt style={{ color: "#94a3b8", fontSize: "12px" }}>{t("admin.certificates.detail.trustListProvenance.source")}</dt>
+              <dd style={{ margin: 0 }}>{trustListProvenance.source?.label ?? trustListProvenance.projection.sourceId}</dd>
+            </div>
+            <div>
+              <dt style={{ color: "#94a3b8", fontSize: "12px" }}>{t("admin.certificates.detail.trustListProvenance.url")}</dt>
+              <dd style={{ margin: 0, overflowWrap: "anywhere" }}>{trustListProvenance.source?.url ?? "-"}</dd>
+            </div>
+            <div>
+              <dt style={{ color: "#94a3b8", fontSize: "12px" }}>{t("admin.certificates.detail.trustListProvenance.sequence")}</dt>
+              <dd style={{ margin: 0 }}>{trustListProvenance.projection.sequenceNumber ?? trustListProvenance.snapshot?.sequenceNumber ?? "-"}</dd>
+            </div>
+            <div>
+              <dt style={{ color: "#94a3b8", fontSize: "12px" }}>{t("admin.certificates.detail.trustListProvenance.territory")}</dt>
+              <dd style={{ margin: 0 }}>{trustListProvenance.projection.territory ?? trustListProvenance.snapshot?.territory ?? "-"}</dd>
+            </div>
+            <div>
+              <dt style={{ color: "#94a3b8", fontSize: "12px" }}>{t("admin.certificates.detail.trustListProvenance.digest")}</dt>
+              <dd style={{ margin: 0, overflowWrap: "anywhere" }}>{trustListProvenance.snapshot?.digestSha256 ?? "-"}</dd>
+            </div>
+            <div>
+              <dt style={{ color: "#94a3b8", fontSize: "12px" }}>{t("admin.certificates.detail.trustListProvenance.run")}</dt>
+              <dd style={{ margin: 0 }}>{trustListProvenance.projection.runId}</dd>
+            </div>
+            <div>
+              <dt style={{ color: "#94a3b8", fontSize: "12px" }}>{t("admin.certificates.detail.trustListProvenance.status")}</dt>
+              <dd style={{ margin: 0 }}>{trustListProvenance.projection.status}</dd>
+            </div>
+            <div>
+              <dt style={{ color: "#94a3b8", fontSize: "12px" }}>{t("admin.certificates.detail.trustListProvenance.changeReason")}</dt>
+              <dd style={{ margin: 0 }}>{trustListProvenance.projection.changeReason}</dd>
+            </div>
+            <div>
+              <dt style={{ color: "#94a3b8", fontSize: "12px" }}>{t("admin.certificates.detail.trustListProvenance.sourcePath")}</dt>
+              <dd style={{ margin: 0, overflowWrap: "anywhere" }}>{trustListProvenance.projection.sourcePath}</dd>
+            </div>
+          </dl>
+        </section>
       ) : null}
 
       <section style={{ display: "grid", gap: "12px", gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>

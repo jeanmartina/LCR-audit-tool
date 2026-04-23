@@ -379,6 +379,30 @@ export interface TrustListExtractedCertificateRecord {
   createdAt: Date;
 }
 
+export interface TrustListCertificateProjectionRecord {
+  id: string;
+  sourceId: string;
+  snapshotId: string;
+  runId: string;
+  extractedCertificateId: string;
+  certificateId: string | null;
+  fingerprint: string;
+  candidateKey: string;
+  candidateDigest: string;
+  sourcePath: string;
+  sequenceNumber: string | null;
+  territory: string | null;
+  status: "imported" | "updated" | "skipped" | "failed";
+  changeReason:
+    | "new-fingerprint"
+    | "changed-candidate"
+    | "unchanged"
+    | "import-failed"
+    | "duplicate-in-run";
+  failureReason: string | null;
+  createdAt: Date;
+}
+
 const cache = {
   targets: [] as TargetRecord[],
   polls: [] as PersistedPollEvent[],
@@ -414,6 +438,7 @@ const cache = {
   trustListSnapshots: [] as TrustListSnapshotRecord[],
   trustListSyncRuns: [] as TrustListSyncRunRecord[],
   trustListExtractedCertificates: [] as TrustListExtractedCertificateRecord[],
+  trustListCertificateProjections: [] as TrustListCertificateProjectionRecord[],
 };
 
 let pool: Pool | null = null;
@@ -659,6 +684,30 @@ type TrustListExtractedCertificateRow = {
   pem: string;
   imported_certificate_id: string | null;
   import_status: "imported" | "updated" | "skipped" | "failed";
+  failure_reason: string | null;
+  created_at: Date;
+};
+
+type TrustListCertificateProjectionRow = {
+  id: string;
+  source_id: string;
+  snapshot_id: string;
+  run_id: string;
+  extracted_certificate_id: string;
+  certificate_id: string | null;
+  fingerprint: string;
+  candidate_key: string;
+  candidate_digest: string;
+  source_path: string;
+  sequence_number: string | null;
+  territory: string | null;
+  status: "imported" | "updated" | "skipped" | "failed";
+  change_reason:
+    | "new-fingerprint"
+    | "changed-candidate"
+    | "unchanged"
+    | "import-failed"
+    | "duplicate-in-run";
   failure_reason: string | null;
   created_at: Date;
 };
@@ -1082,6 +1131,30 @@ export const RUNTIME_SQL_SCHEMA = {
       failure_reason text null,
       created_at timestamptz not null
     );
+
+    create table if not exists trust_list_certificate_projections (
+      id text primary key,
+      source_id text not null,
+      snapshot_id text not null,
+      run_id text not null,
+      extracted_certificate_id text not null,
+      certificate_id text null,
+      fingerprint text not null,
+      candidate_key text not null,
+      candidate_digest text not null,
+      source_path text not null,
+      sequence_number text null,
+      territory text null,
+      status text not null,
+      change_reason text not null,
+      failure_reason text null,
+      created_at timestamptz not null
+    );
+
+    create index if not exists trust_list_certificate_projections_lookup_idx
+      on trust_list_certificate_projections (source_id, fingerprint, candidate_key, created_at desc);
+    create index if not exists trust_list_certificate_projections_certificate_idx
+      on trust_list_certificate_projections (certificate_id, created_at desc);
   `,
 };
 
@@ -1203,13 +1276,36 @@ function mapTrustListExtractedCertificateRow(
   };
 }
 
+function mapTrustListCertificateProjectionRow(
+  row: TrustListCertificateProjectionRow
+): TrustListCertificateProjectionRecord {
+  return {
+    id: row.id,
+    sourceId: row.source_id,
+    snapshotId: row.snapshot_id,
+    runId: row.run_id,
+    extractedCertificateId: row.extracted_certificate_id,
+    certificateId: row.certificate_id,
+    fingerprint: row.fingerprint,
+    candidateKey: row.candidate_key,
+    candidateDigest: row.candidate_digest,
+    sourcePath: row.source_path,
+    sequenceNumber: row.sequence_number,
+    territory: row.territory,
+    status: row.status,
+    changeReason: row.change_reason,
+    failureReason: row.failure_reason,
+    createdAt: new Date(row.created_at),
+  };
+}
+
 export async function reloadRuntimeStoreCache(): Promise<void> {
   if (!hasDatabase()) {
     return;
   }
 
   const currentPool = getPool();
-  const [targets, polls, coverageGaps, validations, alerts, snapshots, users, userSettings, authAccounts, authTransactions, authSessions, groups, groupSettings, memberships, invites, passwordResets, mfaMethods, auditEvents, targetGroupShares, platformSettings, providerVerificationStatuses, predictiveEvents, trustListSources, trustListSnapshots, trustListSyncRuns, trustListExtractedCertificates] = await Promise.all([
+  const [targets, polls, coverageGaps, validations, alerts, snapshots, users, userSettings, authAccounts, authTransactions, authSessions, groups, groupSettings, memberships, invites, passwordResets, mfaMethods, auditEvents, targetGroupShares, platformSettings, providerVerificationStatuses, predictiveEvents, trustListSources, trustListSnapshots, trustListSyncRuns, trustListExtractedCertificates, trustListCertificateProjections] = await Promise.all([
     currentPool.query<TargetRow>(
       `
         select
@@ -1347,6 +1443,9 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
     ),
     currentPool.query<TrustListExtractedCertificateRow>(
       `select id, source_id, snapshot_id, run_id, fingerprint, subject_summary, pem, imported_certificate_id, import_status, failure_reason, created_at from trust_list_extracted_certificates order by created_at desc`
+    ),
+    currentPool.query<TrustListCertificateProjectionRow>(
+      `select id, source_id, snapshot_id, run_id, extracted_certificate_id, certificate_id, fingerprint, candidate_key, candidate_digest, source_path, sequence_number, territory, status, change_reason, failure_reason, created_at from trust_list_certificate_projections order by created_at desc`
     ),
   ]);
 
@@ -1547,6 +1646,8 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
   cache.trustListSyncRuns = trustListSyncRuns.rows.map(mapTrustListSyncRunRow);
   cache.trustListExtractedCertificates =
     trustListExtractedCertificates.rows.map(mapTrustListExtractedCertificateRow);
+  cache.trustListCertificateProjections =
+    trustListCertificateProjections.rows.map(mapTrustListCertificateProjectionRow);
 }
 
 export async function closeRuntimeStore(): Promise<void> {
@@ -3940,6 +4041,147 @@ export async function recordTrustListExtractedCertificate(input: {
     );
   }
   return record;
+}
+
+export async function recordTrustListCertificateProjection(input: {
+  sourceId: string;
+  snapshotId: string;
+  runId: string;
+  extractedCertificateId: string;
+  certificateId?: string | null;
+  fingerprint: string;
+  candidateKey: string;
+  candidateDigest: string;
+  sourcePath: string;
+  sequenceNumber?: string | null;
+  territory?: string | null;
+  status: TrustListCertificateProjectionRecord["status"];
+  changeReason: TrustListCertificateProjectionRecord["changeReason"];
+  failureReason?: string | null;
+}): Promise<TrustListCertificateProjectionRecord> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
+  const record: TrustListCertificateProjectionRecord = {
+    id: makeId("trust-list-projection"),
+    sourceId: input.sourceId,
+    snapshotId: input.snapshotId,
+    runId: input.runId,
+    extractedCertificateId: input.extractedCertificateId,
+    certificateId: input.certificateId ?? null,
+    fingerprint: input.fingerprint,
+    candidateKey: input.candidateKey,
+    candidateDigest: input.candidateDigest,
+    sourcePath: input.sourcePath,
+    sequenceNumber: input.sequenceNumber ?? null,
+    territory: input.territory ?? null,
+    status: input.status,
+    changeReason: input.changeReason,
+    failureReason: input.failureReason ?? null,
+    createdAt: new Date(),
+  };
+  cache.trustListCertificateProjections = upsertInCache(
+    cache.trustListCertificateProjections,
+    record
+  );
+  if (hasDatabase()) {
+    await getPool().query(
+      `
+        insert into trust_list_certificate_projections (
+          id, source_id, snapshot_id, run_id, extracted_certificate_id,
+          certificate_id, fingerprint, candidate_key, candidate_digest,
+          source_path, sequence_number, territory, status, change_reason,
+          failure_reason, created_at
+        ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+      `,
+      [
+        record.id,
+        record.sourceId,
+        record.snapshotId,
+        record.runId,
+        record.extractedCertificateId,
+        record.certificateId,
+        record.fingerprint,
+        record.candidateKey,
+        record.candidateDigest,
+        record.sourcePath,
+        record.sequenceNumber,
+        record.territory,
+        record.status,
+        record.changeReason,
+        record.failureReason,
+        record.createdAt,
+      ]
+    );
+  }
+  return record;
+}
+
+export async function findLatestTrustListProjection(input: {
+  sourceId: string;
+  fingerprint: string;
+  candidateKey: string;
+}): Promise<TrustListCertificateProjectionRecord | null> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<TrustListCertificateProjectionRow>(
+      `select id, source_id, snapshot_id, run_id, extracted_certificate_id, certificate_id, fingerprint, candidate_key, candidate_digest, source_path, sequence_number, territory, status, change_reason, failure_reason, created_at
+       from trust_list_certificate_projections
+       where source_id = $1 and fingerprint = $2 and candidate_key = $3
+       order by created_at desc limit 1`,
+      [input.sourceId, input.fingerprint, input.candidateKey]
+    );
+    return result.rows[0] ? mapTrustListCertificateProjectionRow(result.rows[0]) : null;
+  }
+  return cache.trustListCertificateProjections
+    .filter(
+      (item) =>
+        item.sourceId === input.sourceId &&
+        item.fingerprint === input.fingerprint &&
+        item.candidateKey === input.candidateKey
+    )
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null;
+}
+
+export async function listTrustListCertificateProjections(input: {
+  certificateId?: string;
+  sourceId?: string;
+  runId?: string;
+} = {}): Promise<TrustListCertificateProjectionRecord[]> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const clauses: string[] = [];
+    const values: string[] = [];
+    if (input.certificateId) {
+      values.push(input.certificateId);
+      clauses.push(`certificate_id = $${values.length}`);
+    }
+    if (input.sourceId) {
+      values.push(input.sourceId);
+      clauses.push(`source_id = $${values.length}`);
+    }
+    if (input.runId) {
+      values.push(input.runId);
+      clauses.push(`run_id = $${values.length}`);
+    }
+    const where = clauses.length ? ` where ${clauses.join(" and ")}` : "";
+    const result = await getPool().query<TrustListCertificateProjectionRow>(
+      `select id, source_id, snapshot_id, run_id, extracted_certificate_id, certificate_id, fingerprint, candidate_key, candidate_digest, source_path, sequence_number, territory, status, change_reason, failure_reason, created_at
+       from trust_list_certificate_projections${where}
+       order by created_at desc`,
+      values
+    );
+    const mapped = result.rows.map(mapTrustListCertificateProjectionRow);
+    if (!input.certificateId && !input.sourceId && !input.runId) {
+      cache.trustListCertificateProjections = mapped;
+    }
+    return mapped;
+  }
+  return cache.trustListCertificateProjections
+    .filter((item) => !input.certificateId || item.certificateId === input.certificateId)
+    .filter((item) => !input.sourceId || item.sourceId === input.sourceId)
+    .filter((item) => !input.runId || item.runId === input.runId)
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 export async function listTrustListSnapshots(

@@ -25,6 +25,7 @@ const commands = [
   ["node", ["scripts/validate-first-run-onboarding.js"]],
   ["node", ["scripts/validate-ui-guidance.js"]],
   ["node", ["scripts/validate-trust-list-foundation.js"]],
+  ["node", ["scripts/validate-trust-list-projection.js"]],
   ["node", ["scripts/validate-i18n.js", "foundation"]],
   ["node", ["scripts/validate-i18n.js", "ui"]],
   ["node", ["scripts/validate-i18n.js", "exports"]],
