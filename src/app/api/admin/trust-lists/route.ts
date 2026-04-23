@@ -1,4 +1,4 @@
-import { assertPlatformAdmin } from "../../../../auth/authorization";
+import { assertAuthenticated } from "../../../../auth/authorization";
 import { createTrustListSource, listTrustListSourcesForAdmin } from "../../../../trust-lists/admin";
 
 function parseCsv(value: FormDataEntryValue | null): string[] {
@@ -35,7 +35,7 @@ async function parseRequest(request: Request): Promise<{
 
 export async function GET(): Promise<Response> {
   try {
-    const principal = await assertPlatformAdmin();
+    const principal = await assertAuthenticated();
     return Response.json({ sources: await listTrustListSourcesForAdmin(principal) });
   } catch (error) {
     return Response.json(
@@ -47,7 +47,7 @@ export async function GET(): Promise<Response> {
 
 export async function POST(request: Request): Promise<Response> {
   try {
-    const principal = await assertPlatformAdmin();
+    const principal = await assertAuthenticated();
     const source = await createTrustListSource(principal, await parseRequest(request));
     if (request.headers.get("accept")?.includes("application/json")) {
       return Response.json({ source }, { status: 201 });

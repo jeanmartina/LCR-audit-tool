@@ -1,4 +1,4 @@
-import { assertPlatformAdmin, type AuthenticatedPrincipal } from "../auth/authorization";
+import { assertAuthenticated, type AuthenticatedPrincipal } from "../auth/authorization";
 import {
   findGroupById,
   findTrustListSourceById,
@@ -12,7 +12,12 @@ import {
   type TrustListSourceRecord,
   type TrustListSyncRunRecord,
 } from "../storage/runtime-store";
-import { syncTrustListSource } from "./sync";
+import {
+  getTrustListRecoveryGuidance,
+  previewTrustListXmlSource,
+  syncTrustListSource,
+} from "./sync";
+import type { TrustListRecoveryGuidance, TrustListSourcePreviewResult } from "./types";
 
 export interface TrustListProjectionCounts {
   imported: number;
@@ -30,6 +35,7 @@ export interface TrustListSourceSummary {
   lastFailure: TrustListSyncRunRecord | null;
   projectionCounts: TrustListProjectionCounts;
   latestProjectionFailureReason: string | null;
+  latestRecovery: TrustListRecoveryGuidance | null;
 }
 
 export interface TrustListCertificateProvenance {
@@ -38,12 +44,37 @@ export interface TrustListCertificateProvenance {
   projection: TrustListCertificateProjectionRecord;
 }
 
-async function ensurePlatformAdmin(actor?: AuthenticatedPrincipal): Promise<AuthenticatedPrincipal> {
-  if (actor) {
-    if (!actor.isPlatformAdmin) throw new Error("platform-admin-required");
-    return actor;
+async function ensureTrustListOperator(actor?: AuthenticatedPrincipal): Promise<AuthenticatedPrincipal> {
+  const principal = actor ?? (await assertAuthenticated());
+  if (principal.isPlatformAdmin || getManagedTrustListGroupIds(principal).length > 0) {
+    return principal;
   }
-  return assertPlatformAdmin();
+  throw new Error("trust-list-operator-required");
+}
+
+function getManagedTrustListGroupIds(actor: AuthenticatedPrincipal): string[] {
+  if (actor.isPlatformAdmin) return [];
+  return actor.groupRoles
+    .filter((membership) => membership.role === "group-admin")
+    .map((membership) => membership.groupId);
+}
+
+function canManageTrustListGroups(actor: AuthenticatedPrincipal, groupIds: string[]): boolean {
+  if (actor.isPlatformAdmin) return true;
+  const managed = new Set(getManagedTrustListGroupIds(actor));
+  return groupIds.length > 0 && groupIds.every((groupId) => managed.has(groupId));
+}
+
+function canSeeTrustListSource(actor: AuthenticatedPrincipal, source: TrustListSourceRecord): boolean {
+  if (actor.isPlatformAdmin) return true;
+  const managed = new Set(getManagedTrustListGroupIds(actor));
+  return source.groupIds.some((groupId) => managed.has(groupId));
+}
+
+function assertTrustListGroupScope(actor: AuthenticatedPrincipal, groupIds: string[]): void {
+  if (!canManageTrustListGroups(actor, groupIds)) {
+    throw new Error("trust-list-group-admin-required");
+  }
 }
 
 function assertHttpsTrustListUrl(url: string): void {
@@ -71,6 +102,13 @@ async function validateGroupIds(groupIds: string[]): Promise<void> {
   }
 }
 
+function normalizeTrustListSourceInput(input: { label?: string; url: string; enabled?: boolean; groupIds: string[] }) {
+  const label = input.label?.trim() ?? "";
+  const url = input.url.trim();
+  const groupIds = [...new Set(input.groupIds.map((item) => item.trim()).filter(Boolean))];
+  return { label, url, enabled: input.enabled !== false, groupIds };
+}
+
 function summarizeProjectionCounts(
   projections: TrustListCertificateProjectionRecord[],
 ): TrustListProjectionCounts {
@@ -90,8 +128,8 @@ function summarizeProjectionCounts(
 export async function listTrustListSourcesForAdmin(
   actor?: AuthenticatedPrincipal,
 ): Promise<TrustListSourceSummary[]> {
-  await ensurePlatformAdmin(actor);
-  const sources = await listTrustListSources();
+  const principal = await ensureTrustListOperator(actor);
+  const sources = (await listTrustListSources()).filter((source) => canSeeTrustListSource(principal, source));
   const summaries: TrustListSourceSummary[] = [];
   for (const source of sources) {
     const [snapshots, runs] = await Promise.all([
@@ -102,6 +140,9 @@ export async function listTrustListSourcesForAdmin(
     const runProjections = lastRun
       ? await listTrustListCertificateProjections({ runId: lastRun.id })
       : [];
+    const latestProjectionFailureReason =
+      runProjections.find((projection) => projection.failureReason)?.failureReason ?? null;
+    const latestFailureReason = lastRun?.failureReason ?? latestProjectionFailureReason;
     summaries.push({
       source,
       lastSnapshot: snapshots[0] ?? null,
@@ -109,8 +150,8 @@ export async function listTrustListSourcesForAdmin(
       lastSuccess: runs.find((run) => run.status === "succeeded") ?? null,
       lastFailure: runs.find((run) => run.status === "failed") ?? null,
       projectionCounts: summarizeProjectionCounts(runProjections),
-      latestProjectionFailureReason:
-        runProjections.find((projection) => projection.failureReason)?.failureReason ?? null,
+      latestProjectionFailureReason,
+      latestRecovery: getTrustListRecoveryGuidance(latestFailureReason),
     });
   }
   return summaries;
@@ -138,28 +179,39 @@ export async function createTrustListSource(
   actor: AuthenticatedPrincipal | undefined,
   input: { label: string; url: string; enabled: boolean; groupIds: string[] },
 ): Promise<TrustListSourceRecord> {
-  const principal = await ensurePlatformAdmin(actor);
-  const label = input.label.trim();
-  const url = input.url.trim();
-  const groupIds = [...new Set(input.groupIds.map((item) => item.trim()).filter(Boolean))];
-  if (!label) throw new Error("trust-list-label-required");
-  assertHttpsTrustListUrl(url);
-  await validateGroupIds(groupIds);
+  const principal = await ensureTrustListOperator(actor);
+  const normalized = normalizeTrustListSourceInput(input);
+  if (!normalized.label) throw new Error("trust-list-label-required");
+  assertHttpsTrustListUrl(normalized.url);
+  await validateGroupIds(normalized.groupIds);
+  assertTrustListGroupScope(principal, normalized.groupIds);
   return upsertTrustListSource({
-    label,
-    url,
-    enabled: input.enabled,
-    groupIds,
+    label: normalized.label,
+    url: normalized.url,
+    enabled: normalized.enabled,
+    groupIds: normalized.groupIds,
     createdByUserId: principal.userId,
   });
+}
+
+export async function previewTrustListSource(
+  actor: AuthenticatedPrincipal | undefined,
+  input: { url: string; groupIds: string[] },
+): Promise<TrustListSourcePreviewResult> {
+  const principal = await ensureTrustListOperator(actor);
+  const normalized = normalizeTrustListSourceInput({ url: input.url, groupIds: input.groupIds });
+  await validateGroupIds(normalized.groupIds);
+  assertTrustListGroupScope(principal, normalized.groupIds);
+  return previewTrustListXmlSource(normalized.url);
 }
 
 export async function syncTrustListSourceNow(
   actor: AuthenticatedPrincipal | undefined,
   sourceId: string,
 ) {
-  await ensurePlatformAdmin(actor);
+  const principal = await ensureTrustListOperator(actor);
   const source = await findTrustListSourceById(sourceId);
   if (!source) throw new Error("trust-list-source-not-found");
+  if (!canSeeTrustListSource(principal, source)) throw new Error("trust-list-group-admin-required");
   return syncTrustListSource(source);
 }

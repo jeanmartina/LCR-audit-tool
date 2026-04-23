@@ -1,4 +1,4 @@
-import { assertPlatformAdmin } from "../../../../../../auth/authorization";
+import { assertAuthenticated } from "../../../../../../auth/authorization";
 import { syncTrustListSourceNow } from "../../../../../../trust-lists/admin";
 
 export async function POST(
@@ -7,7 +7,7 @@ export async function POST(
 ): Promise<Response> {
   const { sourceId } = await context.params;
   try {
-    const principal = await assertPlatformAdmin();
+    const principal = await assertAuthenticated();
     const result = await syncTrustListSourceNow(principal, sourceId);
     if (request.headers.get("accept")?.includes("application/json")) {
       return Response.json({ result }, { status: result.status === "succeeded" ? 200 : 400 });

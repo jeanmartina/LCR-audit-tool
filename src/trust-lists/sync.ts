@@ -13,7 +13,12 @@ import {
   type TrustListSourceRecord,
 } from "../storage/runtime-store";
 import { parseTrustListXml } from "./parser";
-import type { TrustListCertificateCandidate, TrustListSyncSummary } from "./types";
+import type {
+  TrustListCertificateCandidate,
+  TrustListRecoveryGuidance,
+  TrustListSourcePreviewResult,
+  TrustListSyncSummary,
+} from "./types";
 import { validateTrustListXmlSignature } from "./xmldsig";
 
 const DEFAULT_FETCH_TIMEOUT_MS = 30000;
@@ -136,6 +141,84 @@ async function recordProjection(input: {
     changeReason: input.changeReason,
     failureReason: input.failureReason ?? null,
   });
+}
+
+
+export function getTrustListRecoveryGuidance(reason?: string | null): TrustListRecoveryGuidance | null {
+  if (!reason) return null;
+  const normalized = reason.toLowerCase();
+  let code: TrustListRecoveryGuidance["code"] = "unknown";
+  if (normalized.includes("trust-list-invalid-url") || normalized.includes("invalid url")) {
+    code = "invalid-url";
+  } else if (normalized.includes("trust-list-url-must-use-https")) {
+    code = "https-required";
+  } else if (normalized.includes("trust-list-xml-too-large")) {
+    code = "xml-too-large";
+  } else if (normalized.includes("trust-list-fetch-failed") || normalized.includes("fetch")) {
+    code = "fetch-failed";
+  } else if (normalized.includes("trust-list-no-certificates")) {
+    code = "no-certificates";
+  } else if (normalized.includes("signature") || normalized.includes("xmldsig")) {
+    code = "xml-signature-invalid";
+  } else if (normalized.includes("xml") || normalized.includes("parse")) {
+    code = "parse-failed";
+  }
+  const severity: TrustListRecoveryGuidance["severity"] =
+    code === "unknown" ? "warning" : code === "fetch-failed" ? "warning" : "critical";
+  const key = code.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
+  return {
+    code,
+    severity,
+    titleKey: `admin.trustLists.recovery.${key}.title`,
+    bodyKey: `admin.trustLists.recovery.${key}.body`,
+    actionKey: `admin.trustLists.recovery.${key}.action`,
+  };
+}
+
+export async function previewTrustListXmlSource(url: string): Promise<TrustListSourcePreviewResult> {
+  const trimmedUrl = url.trim();
+  try {
+    if (!trimmedUrl) {
+      throw new Error("trust-list-invalid-url");
+    }
+    const xml = await fetchTrustListXml(trimmedUrl);
+    const parsed = parseTrustListXml(xml);
+    if (parsed.certificates.length === 0) {
+      throw new Error("trust-list-no-certificates");
+    }
+    const signature = validateTrustListXmlSignature(xml);
+    const failureReason = signature.valid ? null : signature.reason ?? "xml-signature-invalid";
+    return {
+      ok: signature.valid,
+      url: trimmedUrl,
+      digestSha256: parsed.digestSha256,
+      sequenceNumber: parsed.sequenceNumber,
+      territory: parsed.territory,
+      issueDate: parsed.issueDate,
+      nextUpdate: parsed.nextUpdate,
+      xmlSizeBytes: parsed.xmlSizeBytes,
+      certificateCount: parsed.certificates.length,
+      validationStatus: signature.valid ? "valid" : "invalid",
+      failureReason,
+      recovery: getTrustListRecoveryGuidance(failureReason),
+    };
+  } catch (error) {
+    const failureReason = error instanceof Error ? error.message : "trust-list-preview-failed";
+    return {
+      ok: false,
+      url: trimmedUrl,
+      digestSha256: null,
+      sequenceNumber: null,
+      territory: null,
+      issueDate: null,
+      nextUpdate: null,
+      xmlSizeBytes: null,
+      certificateCount: null,
+      validationStatus: "invalid",
+      failureReason,
+      recovery: getTrustListRecoveryGuidance(failureReason),
+    };
+  }
 }
 
 export async function syncTrustListSource(source: TrustListSourceRecord): Promise<TrustListSyncSummary> {

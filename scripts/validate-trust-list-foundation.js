@@ -69,13 +69,13 @@ assertContains("src/trust-lists/sync.ts", "failureReason");
 assertContains("src/inventory/certificate-admin.ts", '"trust-list"');
 
 if (fs.existsSync(path.join(process.cwd(), "src/trust-lists/admin.ts"))) {
-  assertContains("src/trust-lists/admin.ts", "assertPlatformAdmin");
+  assertContains("src/trust-lists/admin.ts", "ensureTrustListOperator");
   assertContains("src/trust-lists/admin.ts", "createTrustListSource");
   assertContains("src/trust-lists/admin.ts", "syncTrustListSourceNow");
   assertContains("src/app/api/admin/trust-lists/route.ts", "createTrustListSource");
   assertContains("src/app/api/admin/trust-lists/[sourceId]/sync/route.ts", "syncTrustListSourceNow");
   assertContains("src/app/admin/trust-lists/page.tsx", "StatusPill");
-  assertContains("src/app/admin/trust-lists/page.tsx", "XMLDSig");
+  assertContains("src/i18n/index.ts", "XMLDSig");
   assertContains("scripts/run-worker.js", "syncEnabledTrustListSources");
 }
 
