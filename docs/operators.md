@@ -97,13 +97,14 @@ Provider secrets remain env-only. The settings page only shows callback URLs, co
 1. `docker compose up --build -d`
 2. confirm `docker compose ps` shows `web`, `worker`, `postgres`, and `caddy` up
 3. confirm `https://<host>` opens through Caddy without mixed-origin surprises
-4. confirm the invite target email matches the Google account you will use
-5. generate or locate the invite link for that email
-6. start the flow from the invite acceptance page
-7. complete Google redirect and callback
-8. confirm the app creates a session and lands on an authorized surface
-9. open reporting and confirm authorized access works after login
-10. capture logs and audit evidence before marking the provider verified
+4. confirm the published root landing links operators to `/auth` for local login and to `/auth/accept-invite` for invite/provider flows
+5. confirm the invite target email matches the Google account you will use
+6. generate or locate the invite link for that email
+7. start the flow from the invite acceptance page
+8. complete Google redirect and callback
+9. confirm the app creates a session and lands on an authorized surface
+10. open reporting and confirm authorized access works after login
+11. capture logs and audit evidence before marking the provider verified
 
 Use `docs/google-public-proof.md` together with `.planning/phases/15-public-https-oauth-oidc-proof-and-callback-validation/15-PROOF-REPORT-TEMPLATE.md` while you execute the run.
 

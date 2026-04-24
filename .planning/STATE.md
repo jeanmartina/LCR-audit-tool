@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Trust Lists, Executive Visibility, and Operator UX
 status: active
-stopped_at: Planned 21.1-01
-last_updated: "2026-04-24T00:50:00.000Z"
-last_activity: 2026-04-24 -- Phase 21.1 planned after explicit user consultation
+stopped_at: Completed 21.1-01
+last_updated: "2026-04-24T01:35:00.000Z"
+last_activity: 2026-04-24 -- Phase 21.1 executed and validated
 progress:
   total_phases: 7
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 12
-  completed_plans: 11
-  percent: 92
+  completed_plans: 12
+  percent: 100
 ---
 
 # Project State
@@ -21,17 +21,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** Never allow a trusted certificate to operate without valid revocation coverage
-**Current focus:** Urgent Phase 21.1 planning for published landing/auth entry fix
+**Current focus:** v1.2 ready to re-run milestone close after the published landing/auth entry fix
 
 ## Current Position
 
 Milestone: v1.2
 Phase: Phase 21.1 — Public landing page and discoverable authentication entry
 Plan: 1 of 1 planned
-Status: Phase 21.1 planned; ready for execution
-Last activity: 2026-04-24 -- Phase 21.1 planned after explicit user consultation
+Status: Phase 21.1 executed and validated
+Last activity: 2026-04-24 -- Phase 21.1 executed and validated
 
-Progress: [█████████░] 93%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -94,7 +94,7 @@ Progress: [█████████░] 93%
 
 - No delivery blocker is active yet, but v1.2 scope spans both domain ingestion and substantial UX work, so requirements discipline matters.
 - Trust-list ingestion should extend the existing certificate-first model instead of introducing a second inconsistent operator workflow.
-- Milestone closure is paused until Phase 21.1 resolves the published-root landing and auth-entry discoverability bug.
+- Milestone closure can resume now that the published-root landing and auth-entry discoverability bug is fixed.
 
 ## Session Continuity
 

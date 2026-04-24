@@ -32,7 +32,7 @@
 - [x] **UX-05**: First system access presents a first-run web flow to create the initial platform admin instead of requiring direct database insertion.
 - [x] **UX-06**: Editable forms include concise field-level hints, examples, and validation feedback for technical fields such as trust source, PKI, jurisdiction, callback origin, predictive windows, and source URLs.
 - [x] **UX-07**: Empty states and post-action states guide operators to the next useful action after setup, onboarding, import, sync, or error outcomes.
-- [ ] **UX-08**: The published root URL provides a non-error landing page with discoverable sign-in entry points for local username/password and any enabled identity providers.
+- [x] **UX-08**: The published root URL provides a non-error landing page with discoverable sign-in entry points for local username/password and any enabled identity providers.
 
 ### Operations and Safety
 

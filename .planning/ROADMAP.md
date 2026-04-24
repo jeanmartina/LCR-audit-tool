@@ -89,7 +89,7 @@
   2. Users can discover local username/password login from the landing surface without guessing hidden routes.
   3. Users can discover and start any enabled IDP login flows directly from the same landing surface.
   4. The landing surface reflects enabled providers accurately and degrades cleanly when only local login is available.
-**Plans**: `21.1-01` ready
+**Plans**: `21.1-01` complete
 
 ## Current Status
 

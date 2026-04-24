@@ -114,10 +114,11 @@ The expected Google proof path is:
 
 1. configure Google in `.env`
 2. expose the stack on a public HTTPS origin served by Caddy
-3. register this callback URL in Google:
+3. confirm `https://<your-host>/` opens the public landing page and links operators to `/auth`
+4. register this callback URL in Google:
    - `https://<your-host>/api/auth/callback/google`
-4. start from an invite acceptance flow and complete one real Google sign-in
-5. mark the Google verification status in the platform-admin settings page after the real callback succeeds
+5. start from an invite acceptance flow and complete one real Google sign-in
+6. mark the Google verification status in the platform-admin settings page after the real callback succeeds
 
 Local HTTPS remains useful for stack verification, but it does not close the milestone callback requirement by itself.
 
