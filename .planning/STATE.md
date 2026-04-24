@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Trust Lists, Executive Visibility, and Operator UX
 status: active
-stopped_at: Completed 21.1-01
-last_updated: "2026-04-24T01:35:00.000Z"
-last_activity: 2026-04-24 -- Phase 21.1 executed and validated
+stopped_at: Audited milestone v1.2
+last_updated: "2026-04-24T02:05:00.000Z"
+last_activity: 2026-04-24 -- Milestone v1.2 audit passed after Phase 21.1
 progress:
   total_phases: 7
   completed_phases: 7
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** Never allow a trusted certificate to operate without valid revocation coverage
-**Current focus:** v1.2 ready to re-run milestone close after the published landing/auth entry fix
+**Current focus:** v1.2 ready for milestone completion
 
 ## Current Position
 
 Milestone: v1.2
-Phase: Phase 21.1 — Public landing page and discoverable authentication entry
-Plan: 1 of 1 planned
-Status: Phase 21.1 executed and validated
-Last activity: 2026-04-24 -- Phase 21.1 executed and validated
+Phase: Milestone audit
+Plan: n/a
+Status: v1.2 audit passed; ready for completion
+Last activity: 2026-04-24 -- Milestone v1.2 audit passed after Phase 21.1
 
 Progress: [██████████] 100%
 
