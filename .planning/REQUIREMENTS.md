@@ -97,7 +97,7 @@
 | UX-05 | Phase 17 | Complete |
 | UX-06 | Phase 16 | Complete |
 | UX-07 | Phase 16 | Complete |
-| UX-08 | Phase 21.1 | Planned |
+| UX-08 | Phase 21.1 | Complete |
 | OPS-04 | Phase 18 | Complete |
 | OPS-05 | Phase 18/21 | Complete |
 | OPS-06 | Phase 20 | Complete |
