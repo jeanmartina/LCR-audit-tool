@@ -80,11 +80,22 @@
   5. The summary can be exported or printed as a concise management-facing report.
 **Plans**: `21-01`, `21-02`, `21-03` complete
 
+#### Phase 21.1: Public Landing Page and Discoverable Authentication Entry (INSERTED)
+**Goal**: Fix the published root-path experience so operators do not hit a 404 and can immediately discover how to sign in with local credentials or enabled identity providers.
+**Depends on**: Phase 21
+**Requirements**: UX-08
+**Success Criteria** (what must be TRUE):
+  1. Opening the published root URL `/` no longer returns a 404 and instead shows a clear landing/auth entry surface.
+  2. Users can discover local username/password login from the landing surface without guessing hidden routes.
+  3. Users can discover and start any enabled IDP login flows directly from the same landing surface.
+  4. The landing surface reflects enabled providers accurately and degrades cleanly when only local login is available.
+**Plans**: `21.1-01` ready
+
 ## Current Status
 
 - Active milestone: `v1.2`
-- Current stage: Milestone v1.2 implemented; ready for milestone audit
-- Next recommended step: `$gsd-audit-milestone`
+- Current stage: Urgent Phase `21.1` inserted after milestone audit due to published-root/login discoverability gap
+- Next recommended step: `$gsd-execute-phase 21.1`
 
 ## Backlog
 

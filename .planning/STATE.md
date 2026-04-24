@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Trust Lists, Executive Visibility, and Operator UX
-status: ready
-stopped_at: Completed 21-03-PLAN.md
-last_updated: "2026-04-23T23:55:00.000Z"
-last_activity: 2026-04-23 -- Phase 21 execution completed
+status: active
+stopped_at: Planned 21.1-01
+last_updated: "2026-04-24T00:50:00.000Z"
+last_activity: 2026-04-24 -- Phase 21.1 planned after explicit user consultation
 progress:
-  total_phases: 10
+  total_phases: 7
   completed_phases: 6
   total_plans: 11
   completed_plans: 11
-  percent: 100
+  percent: 86
 ---
 
 # Project State
@@ -21,17 +21,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** Never allow a trusted certificate to operate without valid revocation coverage
-**Current focus:** Milestone v1.2 audit and closure
+**Current focus:** Urgent Phase 21.1 planning for published landing/auth entry fix
 
 ## Current Position
 
 Milestone: v1.2
-Phase: Milestone v1.2 — READY FOR AUDIT
-Plan: 3 of 3 complete
-Status: Phase 21 complete; milestone ready for audit
-Last activity: 2026-04-23 -- Phase 21 execution completed
+Phase: Phase 21.1 — Public landing page and discoverable authentication entry
+Plan: 1 of 1 planned
+Status: Phase 21.1 planned; ready for execution
+Last activity: 2026-04-24 -- Phase 21.1 inserted after published-root/login discoverability bug report
 
-Progress: [██████████] 100%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -77,12 +77,14 @@ Progress: [██████████] 100%
 - [Phase 19]: Trust-list projection uses certificate fingerprint as inventory identity, source/fingerprint/candidate digest for change detection, skips unchanged candidates before import, and exposes admin/certificate provenance while deferring enriched reporting labels.
 - [Phase 20]: Trust-list onboarding now uses a guided wizard with optional non-mutating preview, group-admin scoped operation, explicit sync timeline visibility, and prescriptive recovery guidance mirrored in operator docs.
 - [Phase 21]: Executive visibility now ships as a dedicated route plus reporting entry point, open to any authorized user, with PDF + print output and packaged-runtime validation closure.
+- [Phase 21.1]: Published deployments need a non-404 root landing page with explicit local-login and enabled-IDP entry points so authentication is discoverable from the default URL.
 
 ### Roadmap Evolution
 
 - v1.0 archived to `.planning/milestones/v1.0-ROADMAP.md`
 - v1.1 archived to `.planning/milestones/v1.1-ROADMAP.md`
 - v1.2 opened for deep research before requirements and roadmap definition
+- Phase 21.1 inserted after Phase 21 for an urgent published-root landing/auth discoverability fix discovered during milestone-close review
 
 ### Pending Todos
 
@@ -92,7 +94,7 @@ Progress: [██████████] 100%
 
 - No delivery blocker is active yet, but v1.2 scope spans both domain ingestion and substantial UX work, so requirements discipline matters.
 - Trust-list ingestion should extend the existing certificate-first model instead of introducing a second inconsistent operator workflow.
-- No active delivery blocker remains inside v1.2; the next step is milestone audit and closure.
+- Milestone closure is paused until Phase 21.1 resolves the published-root landing and auth-entry discoverability bug.
 
 ## Session Continuity
 
