@@ -18,6 +18,7 @@ const commands = [
   ["node", ["scripts/validate-auth-foundation.js", "schema"]],
   ["node", ["scripts/validate-auth-foundation.js", "auth"]],
   ["node", ["scripts/validate-auth-foundation.js", "permissions"]],
+  ["node", ["scripts/validate-auth-foundation.js", "entry"]],
   ["node", ["scripts/validate-onboarding-admin.js", "schema"]],
   ["node", ["scripts/validate-onboarding-admin.js", "import"]],
   ["node", ["scripts/validate-onboarding-admin.js", "ui"]],

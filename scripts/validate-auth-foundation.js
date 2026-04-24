@@ -22,6 +22,10 @@ const providerStartRoute = read('src/app/api/auth/provider/start/[provider]/rout
 const providerCallbackRoute = read('src/app/api/auth/callback/[provider]/route.ts');
 const providerFlow = read('src/auth/provider-flow.ts');
 const providers = read('src/auth/providers.ts');
+const publicEntryPage = read('src/app/page.tsx');
+const authPage = read('src/app/auth/page.tsx');
+const acceptInvitePage = read('src/app/auth/accept-invite/page.tsx');
+const i18n = read('src/i18n/index.ts');
 const settingsPage = read('src/app/settings/page.tsx');
 const platformRoute = read('src/app/api/settings/platform/route.ts');
 const providerStatusRoute = read('src/app/api/settings/platform/providers/[provider]/route.ts');
@@ -91,4 +95,20 @@ if (mode === 'permissions') {
   process.exit(0);
 }
 
-throw new Error('Usage: node scripts/validate-auth-foundation.js <schema|auth|permissions>');
+if (mode === 'entry') {
+  assertIncludes(publicEntryPage, 'getCurrentPrincipal', 'Missing session-aware root entry');
+  assertIncludes(publicEntryPage, 'redirect("/reporting")', 'Missing authenticated root redirect');
+  assertIncludes(publicEntryPage, 'href={`/auth?locale=${encodeURIComponent(locale)}`}', 'Missing root link to auth page');
+  assertIncludes(publicEntryPage, 'getExternalProviderRuntimeConfigs', 'Missing external provider runtime usage on root page');
+  assertIncludes(publicEntryPage, 'href={`/auth/accept-invite?locale=${encodeURIComponent(locale)}#provider-${provider.id}`}', 'Missing provider invite entry links on root page');
+  assertIncludes(authPage, 'action="/api/auth/login"', 'Missing local login form on auth page');
+  assertIncludes(authPage, 'href={`/auth/accept-invite?locale=${encodeURIComponent(locale)}#provider-${provider.id}`}', 'Missing actionable provider entry on auth page');
+  assertIncludes(acceptInvitePage, 'id={`provider-${provider.id}`}', 'Missing provider anchors on invite page');
+  assertIncludes(providers, 'getExternalProviderRuntimeConfigs', 'Missing external provider helper');
+  assertIncludes(i18n, '"auth.entry.title"', 'Missing auth entry translations');
+  assertIncludes(i18n, '"auth.landing.providerHelp"', 'Missing auth landing guidance translations');
+  console.log('Published auth entry ready');
+  process.exit(0);
+}
+
+throw new Error('Usage: node scripts/validate-auth-foundation.js <schema|auth|permissions|entry>');

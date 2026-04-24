@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import Link from "next/link";
-import { getProviderRuntimeConfigs } from "../../auth/providers";
+import { getExternalProviderRuntimeConfigs } from "../../auth/providers";
 import { getRequestTranslator, getSupportedLocaleOptions } from "../../i18n";
 
 export default async function AuthLandingPage({
@@ -9,7 +9,7 @@ export default async function AuthLandingPage({
   searchParams?: Promise<{ locale?: string }>;
 }): Promise<ReactElement> {
   const { locale, t } = await getRequestTranslator((await searchParams)?.locale);
-  const providers = getProviderRuntimeConfigs();
+  const providers = getExternalProviderRuntimeConfigs();
   const localeOptions = getSupportedLocaleOptions(locale);
 
   return (
@@ -19,6 +19,9 @@ export default async function AuthLandingPage({
         <h1 style={{ margin: 0 }}>{t("auth.landing.title")}</h1>
         <p style={{ margin: 0, color: "#cbd5e1", maxWidth: "720px" }}>
           {t("auth.landing.description")}
+        </p>
+        <p style={{ margin: 0, color: "#94a3b8", maxWidth: "720px" }}>
+          {t("auth.landing.providerHelp")}
         </p>
       </header>
 
@@ -39,23 +42,36 @@ export default async function AuthLandingPage({
           </button>
         </form>
 
-        <form
-          action="/api/auth/login"
-          method="post"
-          style={{ border: "1px solid #334155", borderRadius: "12px", padding: "12px", display: "grid", gap: "8px", maxWidth: "520px" }}
+        <section
+          style={{
+            border: "1px solid #334155",
+            borderRadius: "12px",
+            padding: "12px",
+            display: "grid",
+            gap: "12px",
+            maxWidth: "560px",
+          }}
         >
           <strong>{t("auth.landing.loginTitle")}</strong>
-          <input name="email" type="email" placeholder={t("auth.landing.loginEmail")} required style={{ padding: "10px" }} />
-          <input name="password" type="password" placeholder={t("auth.landing.loginPassword")} required style={{ padding: "10px" }} />
-          <input type="hidden" name="locale" value={locale} />
-          <button type="submit" style={{ padding: "10px 14px" }}>
-            {t("auth.landing.loginButton")}
-          </button>
-        </form>
+          <p style={{ margin: 0, color: "#94a3b8" }}>{t("auth.landing.loginDescription")}</p>
+          <form action="/api/auth/login" method="post" style={{ display: "grid", gap: "8px" }}>
+            <input name="email" type="email" placeholder={t("auth.landing.loginEmail")} required style={{ padding: "10px" }} />
+            <input name="password" type="password" placeholder={t("auth.landing.loginPassword")} required style={{ padding: "10px" }} />
+            <input type="hidden" name="locale" value={locale} />
+            <button type="submit" style={{ padding: "10px 14px", width: "fit-content" }}>
+              {t("auth.landing.loginButton")}
+            </button>
+          </form>
+        </section>
 
-        <Link href={`/auth/accept-invite?locale=${encodeURIComponent(locale)}`} style={{ color: "#93c5fd" }}>
-          {t("auth.landing.acceptInvite")}
-        </Link>
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <Link href={`/auth/accept-invite?locale=${encodeURIComponent(locale)}`} style={{ color: "#93c5fd" }}>
+            {t("auth.landing.acceptInvite")}
+          </Link>
+          <Link href={`/?locale=${encodeURIComponent(locale)}`} style={{ color: "#93c5fd" }}>
+            {t("auth.landing.backToEntry")}
+          </Link>
+        </div>
         {providers.map((provider) => (
           <div key={provider.id} style={{ border: "1px solid #334155", borderRadius: "12px", padding: "12px" }}>
             <strong>{t(`auth.provider.${provider.id}`)}</strong>
@@ -65,6 +81,13 @@ export default async function AuthLandingPage({
             <div style={{ color: "#94a3b8", fontSize: "12px" }}>
               {t("auth.landing.providerCallback")}: {provider.callbackUrl}
             </div>
+            {provider.enabled ? (
+              <Link href={`/auth/accept-invite?locale=${encodeURIComponent(locale)}#provider-${provider.id}`} style={{ color: "#93c5fd" }}>
+                {t("auth.landing.providerAction", { provider: t(`auth.provider.${provider.id}`) })}
+              </Link>
+            ) : (
+              <div style={{ color: "#94a3b8" }}>{t("auth.entry.providerUnavailable")}</div>
+            )}
           </div>
         ))}
       </section>

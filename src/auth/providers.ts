@@ -29,6 +29,10 @@ export function getProviderRuntimeConfigs(): ProviderRuntimeConfig[] {
   }));
 }
 
+export function getExternalProviderRuntimeConfigs(): ProviderRuntimeConfig[] {
+  return getProviderRuntimeConfigs().filter((provider) => provider.id !== "credentials");
+}
+
 export async function listProviderStatusEntries(): Promise<ProviderStatusEntry[]> {
   const providers = AUTH_PROVIDERS.filter(
     (provider): provider is (typeof AUTH_PROVIDERS)[number] & { id: Exclude<AuthProvider, "credentials"> } =>

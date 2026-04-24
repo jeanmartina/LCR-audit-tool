@@ -50,6 +50,7 @@ export default async function AcceptInvitePage({
         ].map((provider) => (
           <form
             key={provider.id}
+            id={`provider-${provider.id}`}
             action={`/api/auth/provider/start/${provider.id}`}
             method="post"
             style={{ display: "grid", gap: "8px", border: "1px solid #334155", borderRadius: "12px", padding: "12px" }}
