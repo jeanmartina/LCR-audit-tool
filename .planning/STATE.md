@@ -9,9 +9,9 @@ last_activity: 2026-04-24 -- Phase 21.1 planned after explicit user consultation
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 11
+  total_plans: 12
   completed_plans: 11
-  percent: 86
+  percent: 92
 ---
 
 # Project State
@@ -29,7 +29,7 @@ Milestone: v1.2
 Phase: Phase 21.1 — Public landing page and discoverable authentication entry
 Plan: 1 of 1 planned
 Status: Phase 21.1 planned; ready for execution
-Last activity: 2026-04-24 -- Phase 21.1 inserted after published-root/login discoverability bug report
+Last activity: 2026-04-24 -- Phase 21.1 planned after explicit user consultation
 
 Progress: [█████████░] 93%
 
