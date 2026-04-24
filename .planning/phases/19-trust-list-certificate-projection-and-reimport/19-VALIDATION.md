@@ -1,40 +1,53 @@
-# Phase 19 Validation Strategy: Trust-List Certificate Projection and Reimport
+---
+phase: 19-trust-list-certificate-projection-and-reimport
+validated: 2026-04-24
+nyquist_compliant: true
+wave_0_complete: true
+status: passed
+---
 
-**Date:** 2026-04-22
-**Status:** Ready for execution
+# Phase 19 Validation
 
-## Validation Objective
+## Evidence Reviewed
+- `19-01-SUMMARY.md`
+- `19-02-SUMMARY.md`
+- `19-VERIFICATION.md`
+- `scripts/validate-trust-list-projection.js`
+- `scripts/validate-i18n.js`
+- `scripts/validate-all.js`
 
-Prove that trust-list certificates are projected into certificate-first inventory with stable change detection, no duplicate unchanged imports, and durable provenance from reporting/admin records back to source, snapshot, sync run, and extracted item.
+## Automated Coverage
 
-## Automated Checks
+| Coverage Area | Command | Result |
+|---|---|---|
+| Trust-list projection and reimport contract | `node scripts/validate-trust-list-projection.js` | passed |
+| Provenance copy in foundation locale set | `node scripts/validate-i18n.js foundation` | passed |
+| Provenance/admin UI locale coverage | `node scripts/validate-i18n.js ui` | passed |
+| Project-wide regression coverage | `node scripts/validate-all.js` | passed |
+| Type-level integration | `npm run typecheck` | passed |
+| Production build integration | `npm run build` | passed |
 
-Add `scripts/validate-trust-list-projection.js` and wire it into `scripts/validate-all.js`.
+## Validation Result
+- The phase has automated verification for projection persistence, stable candidate key/digest computation, unchanged-skip behavior, projection outcome recording, admin provenance read models, certificate-detail provenance rendering, and i18n coverage.
+- `scripts/validate-trust-list-projection.js` is the active Nyquist mechanism for this phase. It checks the concrete projection schema, sync ordering, provenance read helpers, and UI/i18n anchors introduced by Phase 19.
+- `node scripts/validate-all.js`, `npm run typecheck`, and `npm run build` confirm the projection/provenance additions integrate without regressions across the broader product surface.
 
-Required checks:
+## Requirement Mapping
 
-1. `src/storage/runtime-store.ts` includes `trust_list_certificate_projections` schema.
-2. Runtime store exports projection helpers for latest projection lookup and projection outcome recording.
-3. `src/trust-lists/types.ts` includes candidate key/digest/provenance fields.
-4. `src/trust-lists/sync.ts` computes candidate keys/digests.
-5. `src/trust-lists/sync.ts` checks latest projection before calling `importCertificate`.
-6. `src/trust-lists/sync.ts` records source ID, snapshot ID, run ID, extracted item ID, certificate ID, fingerprint, and status.
-7. Existing XMLDSig blocking validation remains present before snapshot/projection.
-8. Admin source/run and certificate-detail surfaces expose trust-list provenance labels/metadata.
-9. i18n validation covers new provenance copy in `en`, `pt-BR`, and `es`.
-10. `npm run build`, `npm run typecheck`, and `node scripts/validate-all.js` pass.
+| Requirement | Validation Basis | Status |
+|---|---|---|
+| `TSL-04` | projection validator checks validated certificates still flow through `importCertificate`, with provenance evidence linking projected certificates back to source/snapshot/run | covered |
+| `TSL-05` | projection validator checks candidate key/digest computation, latest-projection lookup before import, and unchanged/duplicate skip outcomes | covered |
+| `TSL-07` | projection validator plus i18n/UI checks confirm durable provenance is exposed in admin summaries and certificate detail surfaces | covered |
 
-## Manual/UAT Checks
+## Residual Risk
+- This validation pass relies on shipped validators and build integration, not a live in-session reimport against multiple signed fixture revisions.
+- The formal guarantees for skip-vs-reimport logic are validator-backed, but milestone closure should still prefer Docker/staging UAT with repeated signed fixture syncs.
 
-- Register a trust-list source and sync a valid signed test fixture.
-- Sync the same signed fixture again and confirm unchanged candidates are skipped, not duplicated.
-- Change a candidate PEM in a signed fixture and confirm only affected projection reimports/updates.
-- Confirm trust-list-derived certificate detail shows source label/URL, snapshot sequence/digest, run ID, and projection status.
-- Confirm manual/ZIP imports still work and do not require trust-list provenance.
+## Validation Audit 2026-04-24
 
-## Failure Conditions
-
-- If unchanged trust-list candidates call `importCertificate` repeatedly, Phase 19 fails.
-- If a trust-list-derived certificate lacks source/snapshot/run provenance, Phase 19 fails.
-- If admin/certificate-detail surfaces cannot distinguish trust-list-derived assets from manual/ZIP assets, Phase 19 fails.
-- If XMLDSig-invalid XML can project/import certificates, Phase 19 fails.
+| Metric | Count |
+|---|---:|
+| Gaps found | 1 |
+| Resolved | 1 |
+| Escalated | 0 |
