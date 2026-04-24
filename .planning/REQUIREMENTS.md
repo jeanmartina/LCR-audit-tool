@@ -17,11 +17,11 @@
 
 ### Executive Visibility
 
-- [ ] **EXEC-01**: Authorized user can open a simple executive summary dashboard for their allowed groups.
-- [ ] **EXEC-02**: Executive summary shows current healthy, degraded, unavailable, and at-risk asset counts without requiring operator-level drill-down.
-- [ ] **EXEC-03**: Executive summary highlights top current risks and upcoming expiration/publication risks with links to operational evidence.
-- [ ] **EXEC-04**: Executive summary exposes a short trend view for recent coverage health and incidents.
-- [ ] **EXEC-05**: Executive summary can be exported or printed as a concise management-facing report.
+- [x] **EXEC-01**: Authorized user can open a simple executive summary dashboard for their allowed groups.
+- [x] **EXEC-02**: Executive summary shows current healthy, degraded, unavailable, and at-risk asset counts without requiring operator-level drill-down.
+- [x] **EXEC-03**: Executive summary highlights top current risks and upcoming expiration/publication risks with links to operational evidence.
+- [x] **EXEC-04**: Executive summary exposes a short trend view for recent coverage health and incidents.
+- [x] **EXEC-05**: Executive summary can be exported or printed as a concise management-facing report.
 
 ### Operator UX and Visual Design
 
@@ -36,7 +36,7 @@
 ### Operations and Safety
 
 - [x] **OPS-04**: Trust-list sync runs are persisted with auditable success/failure state and do not silently mutate inventory.
-- [ ] **OPS-05**: Existing Docker packaged runtime can run trust-list sync and executive summary features without manual host dependencies.
+- [x] **OPS-05**: Existing Docker packaged runtime can run trust-list sync and executive summary features without manual host dependencies.
 - [x] **OPS-06**: Documentation explains trust-list source setup, sync behavior, failure handling, and operator recovery steps.
 
 ## Future Requirements
@@ -84,11 +84,11 @@
 | TSL-05 | Phase 19 | Complete |
 | TSL-06 | Phase 20 | Complete |
 | TSL-07 | Phase 19 | Complete |
-| EXEC-01 | Phase 21 | Pending |
-| EXEC-02 | Phase 21 | Pending |
-| EXEC-03 | Phase 21 | Pending |
-| EXEC-04 | Phase 21 | Pending |
-| EXEC-05 | Phase 21 | Pending |
+| EXEC-01 | Phase 21 | Complete |
+| EXEC-02 | Phase 21 | Complete |
+| EXEC-03 | Phase 21 | Complete |
+| EXEC-04 | Phase 21 | Complete |
+| EXEC-05 | Phase 21 | Complete |
 | UX-01 | Phase 16 | Complete |
 | UX-02 | Phase 17 | Complete |
 | UX-03 | Phase 17 | Complete |
@@ -97,7 +97,7 @@
 | UX-06 | Phase 16 | Complete |
 | UX-07 | Phase 16 | Complete |
 | OPS-04 | Phase 18 | Complete |
-| OPS-05 | Phase 18/21 | Partial: trust-list worker packaging complete; executive summary packaging pending |
+| OPS-05 | Phase 18/21 | Complete |
 | OPS-06 | Phase 20 | Complete |
 
 **Coverage:**
@@ -107,4 +107,4 @@
 
 ---
 *Requirements defined: 2026-04-20*
-*Last updated: 2026-04-23 after Phase 20 execution*
+*Last updated: 2026-04-23 after Phase 21 execution*
