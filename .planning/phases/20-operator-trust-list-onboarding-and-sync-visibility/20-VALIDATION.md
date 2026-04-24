@@ -1,40 +1,54 @@
-# Phase 20 Validation Strategy: Operator Trust-List Onboarding and Sync Visibility
+---
+phase: 20-operator-trust-list-onboarding-and-sync-visibility
+validated: 2026-04-24
+nyquist_compliant: true
+wave_0_complete: true
+status: passed
+---
 
-**Date:** 2026-04-23
-**Status:** Ready for execution
+# Phase 20 Validation
 
-## Validation Objective
+## Evidence Reviewed
+- `20-01-SUMMARY.md`
+- `20-02-SUMMARY.md`
+- `20-VERIFICATION.md`
+- `scripts/validate-trust-list-operator-ux.js`
+- `scripts/validate-i18n.js`
+- `scripts/validate-all.js`
+- `docs/operators.md`
 
-Prove that platform admins and group-admins can understand and operate trust-list onboarding/sync through guided UI, optional pre-save testing, actionable failure guidance, and operator documentation without weakening the Phase 18/19 trust-list safety guarantees.
+## Automated Coverage
 
-## Automated Checks
+| Coverage Area | Command | Result |
+|---|---|---|
+| Trust-list operator onboarding and recovery contract | `node scripts/validate-trust-list-operator-ux.js` | passed |
+| Operator copy in foundation locale set | `node scripts/validate-i18n.js foundation` | passed |
+| Operator UI locale coverage | `node scripts/validate-i18n.js ui` | passed |
+| Project-wide regression coverage | `node scripts/validate-all.js` | passed |
+| Type-level integration | `npm run typecheck` | passed |
+| Production build integration | `npm run build` | passed |
 
-Add `scripts/validate-trust-list-operator-ux.js` and wire it into `scripts/validate-all.js`.
+## Validation Result
+- The phase has automated verification for operator authorization scope, non-mutating source preview, recovery guidance mapping, guided wizard wiring, sync timeline rendering, localized operator copy, and operator documentation coverage.
+- `scripts/validate-trust-list-operator-ux.js` is the active Nyquist mechanism for this phase. It checks the authorization helper, preview safety boundaries, preview route, UI onboarding hooks, timeline/recovery anchors, i18n keys, and operator docs anchors introduced by Phase 20.
+- `node scripts/validate-all.js`, `npm run typecheck`, and `npm run build` confirm the operator workflow integrates cleanly with the rest of the application after later phases.
 
-Required checks:
+## Requirement Mapping
 
-1. `src/trust-lists/admin.ts` includes a trust-list authorization helper supporting platform admins and group-admins.
-2. Group-admin source creation rejects unmanaged group IDs.
-3. Non-mutating preview/test helper exists for source URL validation, parsing, XMLDSig validation, and metadata preview.
-4. Preview route exists under `src/app/api/admin/trust-lists/preview/route.ts` or an equivalent explicit path.
-5. Preview helper does not call source/snapshot/sync run/certificate/projection mutation helpers.
-6. Recovery guidance mapping covers invalid URL, HTTPS required, XMLDSig missing/invalid, XML too large, fetch failed, and no certificates found.
-7. `/admin/trust-lists` uses guided onboarding structure and shows sync timeline/status/recovery guidance.
-8. i18n contains Phase 20 trust-list onboarding and recovery keys in `en`, `pt-BR`, and `es`.
-9. `docs/operators.md` explains trust-list setup, sync behavior, failure handling, and recovery steps.
-10. `npm run build`, `npm run typecheck`, and `node scripts/validate-all.js` pass.
+| Requirement | Validation Basis | Status |
+|---|---|---|
+| `TSL-06` | operator validator checks group-admin/platform-admin enforcement, preview/test path, timeline visibility, and recovery guidance for trust-list operations | covered |
+| `UX-04` | operator validator plus UI/i18n evidence confirm guided onboarding, optional preview-before-save, and readable sync status surfaces on `/admin/trust-lists` | covered |
+| `OPS-06` | operator validator and docs evidence confirm setup, sync behavior, failure handling, recovery guidance, and worker role are documented for operators | covered |
 
-## Manual/UAT Checks
+## Residual Risk
+- This validation pass is validator-backed and build-backed, not a live in-session role-based UAT with both a platform admin and a constrained group-admin account.
+- Milestone closure should still prefer Docker/staging checks for group-admin group scoping and preview/save/sync behavior against real operator identities.
 
-- As platform admin, open `/admin/trust-lists`, test a valid source URL, save it, sync it, and confirm timeline/status updates.
-- As group-admin, create a source for a managed group and confirm unmanaged group IDs are rejected.
-- Test invalid URL, HTTP URL, unreachable URL, XMLDSig-invalid XML, and too-large XML if fixtures are available; confirm guidance is actionable.
-- Confirm saving without test is still possible but the UI warns about the risk.
-- Confirm docs match the UI recovery language.
+## Validation Audit 2026-04-24
 
-## Failure Conditions
-
-- If trust-list source management remains platform-admin-only, Phase 20 fails.
-- If preview/test mutates persisted sources, snapshots, runs, certificates, or projections, Phase 20 fails.
-- If failures are visible only as raw error strings without recommended action, Phase 20 fails.
-- If docs do not explain setup, sync behavior, failure handling, and recovery, Phase 20 fails.
+| Metric | Count |
+|---|---:|
+| Gaps found | 1 |
+| Resolved | 1 |
+| Escalated | 0 |
