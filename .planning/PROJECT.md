@@ -8,27 +8,26 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 
 ## Current State
 
-- **Shipped version:** `v1.1` on 2026-04-13
+- **Shipped version:** `v1.2` on 2026-04-24
 - **Monitoring runtime:** database-backed inventory, per-target polling with configurable interval/timeout, and persisted polls, coverage gaps, snapshots, validation events, and alerts
-- **Integrity path:** signature/hash validation, invalid artifact rejection, and retained audit evidence
-- **Reporting:** dashboard with filters, target drill-down, audit timeline, CSV exports, executive/operational PDFs, predictive views, and group-scoped authorization
-- **Identity and access:** invitation-only local auth, Google invite-gated login proof on a real public host, sessions, audit events, groups, memberships, and backend-enforced reporting/export boundaries
-- **Onboarding/admin:** certificate-first onboarding, batch ZIP import, shared target administration, ignored derived URLs, templates, change history, and layered defaults
+- **Integrity path:** signature/hash validation, invalid artifact rejection, retained audit evidence, and blocking trust-list XMLDSig validation
+- **Reporting:** dashboard with filters, target drill-down, audit timeline, CSV exports, executive/operational PDFs, predictive views, executive summary route, print support, and group-scoped authorization
+- **Identity and access:** invitation-only local auth, Google invite-gated login proof on a real public host, sessions, audit events, groups, memberships, backend-enforced reporting/export boundaries, and a published root landing/auth entry path
+- **Onboarding/admin:** first-run platform-admin bootstrap, certificate-first onboarding, batch ZIP import, trust-list source onboarding, shared target administration, ignored derived URLs, templates, change history, and layered defaults
+- **Trust-list runtime:** persisted trust-list sources, snapshots, sync runs, change detection, certificate projection, provenance, operator preview, timeline visibility, and recovery guidance
 - **Internationalization:** canonical English dictionaries with `pt-BR` and `es` translations, locale-aware auth/reporting/settings/admin surfaces, and localized CSV/PDF exports
 - **Packaging and operations:** Docker packaging for `web` and `worker`, compose topology for `web + worker + postgres + caddy`, HTTPS ingress through Caddy, README/operator docs, and a public-host Google proof runbook
 
-## Current Milestone: v1.2 Trust Lists, Executive Visibility, and Operator UX
+## Next Milestone Goals
 
-**Goal:** add trust-list ingestion and simpler executive visibility while materially improving the operator/admin experience.
+**Goal:** deepen the operational and executive value of the shipped platform without regressing the simpler v1.2 operator experience.
 
-**Target features:**
-- ETSI TS 119 612 trust-list import by URL
-- automatic certificate re-import when a tracked trust list changes
-- simpler executive dashboards and summary views
-- visual redesign of the product UI
-- easier certificate and ZIP onboarding flows
-- first-run platform-admin bootstrap in the web UI
-- field-level hints and contextual guidance in forms
+**Candidate features:**
+- Microsoft Entra ID and generic OIDC proof on the packaged/public deployment
+- deeper executive analytics such as SLOs, burn rates, and error budgets
+- richer trust-list operational drill-down and historical sync analysis
+- future monitoring sources such as OCSP and CP/CPS/DPC document availability
+- scalability work for multi-worker and multi-region execution
 
 ## Requirements
 
@@ -67,22 +66,39 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 - ✓ **OPS-02**: Caddy provides HTTPS termination with automatic renewal suitable for auth callbacks — `v1.1`
 - ✓ **OPS-03**: Runtime configuration cleanly supports callback/public-origin settings, provider secrets, and database connectivity — `v1.1`
 - ✓ **DOC-01**: The repository includes a basic English README for setup and day-to-day usage — `v1.1`
+- ✓ **TSL-01**: Platform admin can register an ETSI TS 119 612 trust-list source by URL — `v1.2`
+- ✓ **TSL-02**: System fetches and parses supported LOTL/TSL documents while preserving source metadata — `v1.2`
+- ✓ **TSL-03**: System validates trust-list integrity before accepting extracted certificates into monitored inventory — `v1.2`
+- ✓ **TSL-04**: System extracts certificates from supported trust-list sources and imports them through the existing certificate-first pipeline — `v1.2`
+- ✓ **TSL-05**: System detects trust-list changes and re-imports affected certificates without duplicating unchanged monitored assets — `v1.2`
+- ✓ **TSL-06**: Operator can see trust-list sync status, last successful sync, next expected update, failure reason, and change summary — `v1.2`
+- ✓ **TSL-07**: Trust-list-derived certificates and targets retain provenance back to source URL, snapshot, and import run — `v1.2`
+- ✓ **EXEC-01**: Authorized users can open a simple executive summary dashboard for their allowed groups — `v1.2`
+- ✓ **EXEC-02**: Executive summary shows healthy, degraded, unavailable, and at-risk counts without operator drill-down — `v1.2`
+- ✓ **EXEC-03**: Executive summary highlights top current risks and upcoming expiration/publication risks with links to operational evidence — `v1.2`
+- ✓ **EXEC-04**: Executive summary exposes a short trend view for recent coverage health and incidents — `v1.2`
+- ✓ **EXEC-05**: Executive summary can be exported or printed as a concise management-facing report — `v1.2`
+- ✓ **UX-01**: Product UI uses a coherent visual system with clearer hierarchy, spacing, typography, panels, states, and action placement — `v1.2`
+- ✓ **UX-02**: Certificate onboarding provides a guided flow for single certificate upload with clear preview, derived CRLs, effective defaults, and save outcome — `v1.2`
+- ✓ **UX-03**: ZIP onboarding provides a guided flow with upload validation, import progress/result summary, partial-failure details, and next steps — `v1.2`
+- ✓ **UX-04**: Trust-list onboarding uses the same guided source-onboarding model as certificate and ZIP onboarding — `v1.2`
+- ✓ **UX-05**: First system access presents a first-run web flow to create the initial platform admin — `v1.2`
+- ✓ **UX-06**: Editable forms include concise field-level hints, examples, and validation feedback for technical fields — `v1.2`
+- ✓ **UX-07**: Empty states and post-action states guide operators to the next useful action after setup, onboarding, import, sync, or error outcomes — `v1.2`
+- ✓ **UX-08**: The published root URL provides a non-error landing page with discoverable sign-in entry points for local username/password and enabled identity providers — `v1.2`
+- ✓ **OPS-04**: Trust-list sync runs are persisted with auditable success/failure state and do not silently mutate inventory — `v1.2`
+- ✓ **OPS-05**: Existing Docker packaged runtime can run trust-list sync and executive summary features without manual host dependencies — `v1.2`
+- ✓ **OPS-06**: Documentation explains trust-list source setup, sync behavior, failure handling, and operator recovery steps — `v1.2`
 
 ### Active
 
 - [ ] **AUTH-03**: Invited user can accept access through Microsoft Entra ID login.
 - [ ] **AUTH-04**: Invited user can accept access through a generic OIDC provider.
-- [ ] **SRC-01**: Import trust lists according to ETSI TS 119 612 using the trust-list distribution URL as the onboarding source.
-- [ ] **SRC-02**: Re-import certificates automatically when a tracked trust list updates.
 - [ ] **SRC-03**: Monitor OCSP availability in addition to CRLs.
 - [ ] **SRC-04**: Monitor the availability of CP/CPS/DPC document URLs referenced by certificates.
 - [ ] **SCL-01**: Scale workers horizontally for high target counts.
 - [ ] **SCL-02**: Run workers from multiple regions/jurisdictions and compare availability by probe location.
 - [ ] **DIF-03**: Expose SLOs, burn rates, and historical error budgets for executive prioritization.
-- [ ] **UX-01**: Bootstrap the first platform admin from the web UI on first run.
-- [ ] **UX-02**: Redesign the visual system and operator-facing UI quality.
-- [ ] **UX-03**: Make certificate and ZIP onboarding operator-friendly.
-- [ ] **UX-04**: Add field-level hints, examples, and contextual form guidance.
 
 ### Out of Scope
 
@@ -116,7 +132,7 @@ The original scope started from a compliance/engineering dashboard with backgrou
 - The domain must handle European TSL-driven ecosystems and standalone certificates while always validating signature/hash and preserving downloaded CRL history for future document-verification use cases.
 - The stack now spans Postgres-backed monitoring, multi-user access control, localized user-facing surfaces, and Docker/Caddy deployment.
 - The product has proven the Google invite-gated flow on a real public HTTPS host; Entra ID and generic OIDC still require the same level of proof.
-- Operator/admin UX still needs significant polish for first-run bootstrap, onboarding guidance, and overall visual quality.
+- v1.2 materially improved operator/admin UX, but deeper analytics and broader source coverage still remain future work.
 
 ## Constraints
 - **Interface**: configurable, table-first operator workflows for engineering/compliance; no dedicated mobile design or heavy animation requirements.
@@ -149,6 +165,10 @@ The original scope started from a compliance/engineering dashboard with backgrou
 | Build certificate-first admin before predictive/group reporting | Predictive monitoring and group-scoped reporting should build on certificate/admin truth, not SQL-only target maintenance | ✓ Good |
 | Move the active product surface to English-first i18n | The product needs user-selectable languages without losing a stable English engineering baseline | ✓ Good |
 | Close v1.1 auth proof with real Google public-host validation | The milestone needed one proven public-host external provider path instead of placeholder readiness only | ✓ Good |
+| Extend trust-list ingestion through the certificate-first model | Keeps one inventory model and one operator workflow instead of splitting trust-list assets into a parallel system | ✓ Good |
+| Treat trust-list XMLDSig validation as blocking | Prevents unverified trust-list data from mutating inventory or reports | ✓ Good |
+| Keep executive reporting summary-oriented and principal-scoped | Preserves evidence boundaries while giving leadership a simpler view | ✓ Good |
+| Fix published-root auth discoverability before closing v1.2 | A shipped deployment cannot rely on hidden auth routes or a 404 root path | ✓ Good |
 
 ## Evolution
 This document evolves with each phase and milestone transition.
@@ -167,4 +187,4 @@ This document evolves with each phase and milestone transition.
 4. Update context with the current operational state and any active risk signals.
 
 ---
-*Last updated: 2026-04-20 after v1.2 requirements and roadmap definition*
+*Last updated: 2026-04-24 after v1.2 milestone completion*

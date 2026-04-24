@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Trust Lists, Executive Visibility, and Operator UX
-status: active
-stopped_at: Audited milestone v1.2
-last_updated: "2026-04-24T02:05:00.000Z"
-last_activity: 2026-04-24 -- Milestone v1.2 audit passed after Phase 21.1
+status: ready_for_new_milestone
+stopped_at: Archived milestone v1.2
+last_updated: "2026-04-24T02:20:00.000Z"
+last_activity: 2026-04-24 -- Milestone v1.2 archived and ready for next milestone
 progress:
   total_phases: 7
   completed_phases: 7
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** Never allow a trusted certificate to operate without valid revocation coverage
-**Current focus:** v1.2 ready for milestone completion
+**Current focus:** start the next milestone from a fresh requirements definition
 
 ## Current Position
 
-Milestone: v1.2
-Phase: Milestone audit
+Milestone: none active
+Phase: Milestone completion
 Plan: n/a
-Status: v1.2 audit passed; ready for completion
-Last activity: 2026-04-24 -- Milestone v1.2 audit passed after Phase 21.1
+Status: v1.2 archived; ready for `/gsd-new-milestone`
+Last activity: 2026-04-24 -- Milestone v1.2 archived and ready for next milestone
 
 Progress: [██████████] 100%
 
@@ -47,6 +47,7 @@ Progress: [██████████] 100%
 |-----------|--------|-------|--------|
 | v1.0 | 1-7 | 7 | Shipped |
 | v1.1 | 8-15 | 8 | Shipped |
+| v1.2 | 16-21.1 | 12 | Shipped |
 
 **Recent Trend:**
 
@@ -85,6 +86,7 @@ Progress: [██████████] 100%
 - v1.1 archived to `.planning/milestones/v1.1-ROADMAP.md`
 - v1.2 opened for deep research before requirements and roadmap definition
 - Phase 21.1 inserted after Phase 21 for an urgent published-root landing/auth discoverability fix discovered during milestone-close review
+- v1.2 archived after all 23 milestone requirements were satisfied and the milestone audit passed
 
 ### Pending Todos
 
@@ -94,7 +96,7 @@ Progress: [██████████] 100%
 
 - No delivery blocker is active yet, but v1.2 scope spans both domain ingestion and substantial UX work, so requirements discipline matters.
 - Trust-list ingestion should extend the existing certificate-first model instead of introducing a second inconsistent operator workflow.
-- Milestone closure can resume now that the published-root landing and auth-entry discoverability bug is fixed.
+- No active blocker remains; the project is waiting for the next milestone definition.
 
 ## Session Continuity
 
