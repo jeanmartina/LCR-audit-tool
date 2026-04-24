@@ -75,6 +75,61 @@ export interface DashboardSummary {
   mode: "certificate" | "crl";
 }
 
+export interface ExecutiveRiskItem {
+  id: string;
+  name: string;
+  currentStatus: DashboardRow["currentStatus"];
+  predictiveSeverity: DashboardRow["predictiveSeverity"];
+  predictiveType: DashboardRow["predictiveType"];
+  openAlerts: number;
+  slaPercent: number;
+  nextExpiration: string | null;
+  latestUnavailabilityAt: Date | null;
+  structuredTags: StructuredTags;
+  evidenceHref: string;
+}
+
+export interface ExecutiveTrendPoint {
+  label: string;
+  healthy: number;
+  degraded: number;
+  offline: number;
+  atRisk: number;
+}
+
+export interface ExecutiveBreakdownBucket {
+  label: string;
+  total: number;
+  healthy: number;
+  degraded: number;
+  offline: number;
+  atRisk: number;
+  openAlerts: number;
+}
+
+export interface ExecutiveSummary {
+  mode: "certificate" | "crl";
+  dateRange: {
+    from: Date;
+    to: Date;
+  };
+  totalRows: number;
+  healthyRows: number;
+  degradedRows: number;
+  offlineRows: number;
+  atRiskRows: number;
+  averageSlaPercent: number;
+  openAlerts: number;
+  topRisks: ExecutiveRiskItem[];
+  upcomingRisks: ExecutiveRiskItem[];
+  trend: ExecutiveTrendPoint[];
+  breakdowns: {
+    trustSources: ExecutiveBreakdownBucket[];
+    pkis: ExecutiveBreakdownBucket[];
+    jurisdictions: ExecutiveBreakdownBucket[];
+  };
+}
+
 export interface DashboardFilterOptions {
   sources: string[];
   issuers: string[];
@@ -568,6 +623,133 @@ export async function buildDashboardSummary(
       to: filters.dateTo ?? new Date(),
     },
     mode: filters.mode ?? "certificate",
+  };
+}
+
+function buildEvidenceHref(row: DashboardRow): string {
+  if (row.rowType === "certificate") {
+    const params = new URLSearchParams({ tab: "timeline", mode: "certificate" });
+    return `/reporting/${row.id}?${params.toString()}`;
+  }
+  const params = new URLSearchParams({ mode: "crl", snapshotHash: row.id });
+  return `/reporting?${params.toString()}`;
+}
+
+function isAtRiskRow(row: DashboardRow): boolean {
+  return row.currentStatus !== "healthy" || row.predictiveSeverity !== null || row.openAlerts > 0;
+}
+
+function getRiskPriority(row: DashboardRow): number {
+  const statusScore = row.currentStatus === "offline" ? 300 : row.currentStatus === "degraded" ? 200 : 0;
+  const predictiveScore = row.predictiveSeverity === "critical" ? 80 : row.predictiveSeverity === "warning" ? 40 : 0;
+  const alertScore = Math.min(row.openAlerts, 10) * 5;
+  const expirationScore = row.nextExpiration ? 20 : 0;
+  const slaScore = Math.max(0, 100 - row.slaPercent);
+  return statusScore + predictiveScore + alertScore + expirationScore + slaScore;
+}
+
+function toExecutiveRiskItem(row: DashboardRow): ExecutiveRiskItem {
+  return {
+    id: row.id,
+    name: row.name,
+    currentStatus: row.currentStatus,
+    predictiveSeverity: row.predictiveSeverity,
+    predictiveType: row.predictiveType,
+    openAlerts: row.openAlerts,
+    slaPercent: row.slaPercent,
+    nextExpiration: row.nextExpiration,
+    latestUnavailabilityAt: row.latestUnavailabilityAt,
+    structuredTags: row.structuredTags,
+    evidenceHref: buildEvidenceHref(row),
+  };
+}
+
+function buildBreakdownBuckets(
+  rows: DashboardRow[],
+  key: keyof StructuredTags,
+): ExecutiveBreakdownBucket[] {
+  const grouped = new Map<string, DashboardRow[]>();
+  for (const row of rows) {
+    const label = row.structuredTags[key] ?? "unassigned";
+    grouped.set(label, [...(grouped.get(label) ?? []), row]);
+  }
+  return [...grouped.entries()]
+    .map(([label, bucketRows]) => ({
+      label,
+      total: bucketRows.length,
+      healthy: bucketRows.filter((row) => row.currentStatus === "healthy").length,
+      degraded: bucketRows.filter((row) => row.currentStatus === "degraded").length,
+      offline: bucketRows.filter((row) => row.currentStatus === "offline").length,
+      atRisk: bucketRows.filter(isAtRiskRow).length,
+      openAlerts: bucketRows.reduce((sum, row) => sum + row.openAlerts, 0),
+    }))
+    .sort((left, right) => right.atRisk - left.atRisk || right.total - left.total || left.label.localeCompare(right.label))
+    .slice(0, 5);
+}
+
+async function buildExecutiveTrend(
+  filters: ReportFilters,
+  principal?: AuthenticatedPrincipal,
+): Promise<ExecutiveTrendPoint[]> {
+  const baseFrom = filters.dateFrom ?? new Date(Date.now() - 28 * 24 * 60 * 60 * 1000);
+  const baseTo = filters.dateTo ?? new Date();
+  const totalWindowMs = Math.max(4, baseTo.getTime() - baseFrom.getTime());
+  const bucketMs = Math.max(24 * 60 * 60 * 1000, Math.floor(totalWindowMs / 4));
+  const points: ExecutiveTrendPoint[] = [];
+  for (let index = 0; index < 4; index += 1) {
+    const start = new Date(baseFrom.getTime() + bucketMs * index);
+    const end = index === 3 ? baseTo : new Date(Math.min(baseTo.getTime(), start.getTime() + bucketMs));
+    const rows = await buildDashboardRows({ ...filters, dateFrom: start, dateTo: end }, principal);
+    points.push({
+      label: `${start.toISOString().slice(5, 10)}-${end.toISOString().slice(5, 10)}`,
+      healthy: rows.filter((row) => row.currentStatus === "healthy").length,
+      degraded: rows.filter((row) => row.currentStatus === "degraded").length,
+      offline: rows.filter((row) => row.currentStatus === "offline").length,
+      atRisk: rows.filter(isAtRiskRow).length,
+    });
+  }
+  return points;
+}
+
+export async function buildExecutiveSummary(
+  filters: ReportFilters = {},
+  principal?: AuthenticatedPrincipal,
+): Promise<ExecutiveSummary> {
+  const summary = await buildDashboardSummary(filters, principal);
+  const rows = await buildDashboardRows(filters, principal);
+  const certificateRows = rows.filter((row) => row.rowType === "certificate");
+  const topRisks = [...certificateRows]
+    .sort((left, right) => getRiskPriority(right) - getRiskPriority(left))
+    .slice(0, 5)
+    .map(toExecutiveRiskItem);
+  const upcomingRisks = [...certificateRows]
+    .filter((row) => row.nextExpiration || row.predictiveType === "publication-delayed")
+    .sort((left, right) => {
+      const leftTime = left.nextExpiration ? new Date(left.nextExpiration).getTime() : Number.MAX_SAFE_INTEGER;
+      const rightTime = right.nextExpiration ? new Date(right.nextExpiration).getTime() : Number.MAX_SAFE_INTEGER;
+      return leftTime - rightTime || getRiskPriority(right) - getRiskPriority(left);
+    })
+    .slice(0, 5)
+    .map(toExecutiveRiskItem);
+
+  return {
+    mode: summary.mode,
+    dateRange: summary.dateRange,
+    totalRows: summary.totalRows,
+    healthyRows: summary.healthyRows,
+    degradedRows: summary.degradedRows,
+    offlineRows: summary.offlineRows,
+    atRiskRows: rows.filter(isAtRiskRow).length,
+    averageSlaPercent: summary.averageSlaPercent,
+    openAlerts: summary.openAlerts,
+    topRisks,
+    upcomingRisks,
+    trend: await buildExecutiveTrend(filters, principal),
+    breakdowns: {
+      trustSources: buildBreakdownBuckets(rows, "trustSource"),
+      pkis: buildBreakdownBuckets(rows, "pki"),
+      jurisdictions: buildBreakdownBuckets(rows, "jurisdiction"),
+    },
   };
 }
 

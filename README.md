@@ -141,6 +141,20 @@ To prove the packaged batch-import flow in the shipped compose stack:
 
 Corrupt archives should fail at the archive level with a top-level import-run error rather than item-by-item processing.
 
+
+## Executive summary in the packaged stack
+
+The packaged deployment also includes a management-facing summary at `/reporting/executive`.
+
+Use it when you need a simpler posture view than the operational dashboard. It supports:
+
+- executive cards and top risks
+- short trend and grouped breakdowns
+- browser print
+- executive PDF export
+
+The deeper operator workflow and packaged smoke path are documented in `docs/operators.md`.
+
 ## Operator documentation
 
 For the deeper deployment and troubleshooting guide, see `docs/operators.md`.

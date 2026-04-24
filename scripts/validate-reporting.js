@@ -90,6 +90,27 @@ function validateSettings() {
   console.log("Settings and theme surface wired");
 }
 
+
+function validateExecutive() {
+  const executivePage = read("src/app/reporting/executive/page.tsx");
+  const dashboard = read("src/app/reporting/page.tsx");
+  const readModels = read("src/reporting/read-models.ts");
+  const pdfModule = read("src/exports/pdf.ts");
+  const printButton = read("src/app/reporting/executive/print-button.tsx");
+
+  assertIncludes(readModels, "export interface ExecutiveSummary", "Executive summary type missing");
+  assertIncludes(readModels, "buildExecutiveSummary", "Executive read model builder missing");
+  assertIncludes(executivePage, 'buildExecutiveSummary(filters, principal)', "Executive page is not using principal-scoped executive summary data");
+  assertIncludes(executivePage, 't("reporting.executive.title")', "Executive title missing");
+  assertIncludes(executivePage, 't("reporting.executive.topRisks.title")', "Top risks section missing");
+  assertIncludes(executivePage, 't("reporting.executive.trend.title")', "Trend section missing");
+  assertIncludes(executivePage, 't("reporting.executive.breakdowns.title")', "Breakdowns section missing");
+  assertIncludes(printButton, 'window.print()', "Executive print support missing");
+  assertIncludes(dashboard, 't("reporting.executive.open")', "Operational dashboard is missing executive navigation");
+  assertIncludes(pdfModule, "buildExecutiveSummary(filters, principal)", "Executive PDF is not using the richer executive summary model");
+  console.log("Executive reporting surface ready");
+}
+
 function validatePdfBytes() {
   const executiveHtml = renderExecutiveReportHtml({
     generatedAt: "2026-04-07T00:00:00.000Z",
@@ -102,6 +123,15 @@ function validatePdfBytes() {
       averageSlaPercent: "99.10",
       openAlerts: 3,
       upcomingExpirations: 1,
+      atRiskTargets: 1,
+      topRisks: ["Certificate A | offline | alerts:2 | sla:97.10"],
+      upcomingRisks: ["Certificate B | 2026-04-10T00:00:00.000Z | upcoming-expiration"],
+      trend: ["04-01-04-07 | H:1 D:0 O:1 R:1"],
+      breakdowns: {
+        trustSources: ["eIDAS | total:2 | risk:1"],
+        pkis: ["ICP-Brasil | total:2 | risk:1"],
+        jurisdictions: ["BR | total:2 | risk:1"],
+      },
       dateRange: {
         from: "2026-03-08T00:00:00.000Z",
         to: "2026-04-07T00:00:00.000Z",
@@ -118,12 +148,20 @@ function validatePdfBytes() {
         filters: "Filters applied",
         summary: "Availability summary",
         posture: "SLA and alert posture",
+        topRisks: "Top current risks",
+        upcomingRisks: "Upcoming risks",
+        trend: "Short trend",
+        breakdowns: "Breakdowns",
+        trustSources: "Trust sources",
+        pkis: "PKIs",
+        jurisdictions: "Jurisdictions",
       },
       metrics: {
         targets: "Targets",
         healthy: "Healthy",
         degraded: "Degraded",
         offline: "Offline",
+        atRisk: "At risk",
         averageSla: "Average SLA",
         openAlerts: "Open alerts",
         upcomingExpirations: "Upcoming expirations",
@@ -164,6 +202,15 @@ function validatePdfAudit() {
         averageSlaPercent: "98.52",
         openAlerts: 4,
         upcomingExpirations: 2,
+        atRiskTargets: 3,
+        topRisks: ["Certificate A | offline | alerts:2 | sla:97.10"],
+        upcomingRisks: ["Certificate B | 2026-04-10T00:00:00.000Z | upcoming-expiration"],
+        trend: ["04-01-04-07 | H:3 D:1 O:1 R:3"],
+        breakdowns: {
+          trustSources: ["eIDAS | total:5 | risk:3"],
+          pkis: ["ICP-Brasil | total:5 | risk:3"],
+          jurisdictions: ["BR | total:5 | risk:3"],
+        },
         dateRange: {
           from: "2026-03-08T00:00:00.000Z",
           to: "2026-04-07T00:00:00.000Z",
@@ -180,12 +227,20 @@ function validatePdfAudit() {
           filters: "Filters applied",
           summary: "Availability summary",
           posture: "SLA and alert posture",
+          topRisks: "Top current risks",
+          upcomingRisks: "Upcoming risks",
+          trend: "Short trend",
+          breakdowns: "Breakdowns",
+          trustSources: "Trust sources",
+          pkis: "PKIs",
+          jurisdictions: "Jurisdictions",
         },
         metrics: {
           targets: "Targets",
           healthy: "Healthy",
           degraded: "Degraded",
           offline: "Offline",
+          atRisk: "At risk",
           averageSla: "Average SLA",
           openAlerts: "Open alerts",
           upcomingExpirations: "Upcoming expirations",
@@ -240,6 +295,8 @@ function validatePdfAudit() {
   assertIncludes(pdfModule, "createPdfBytesFromHtml", "PDF module is not using the real PDF renderer");
   assertIncludes(executiveText, "Executive availability report", "Executive PDF content is missing its report heading");
   assertIncludes(executiveText, "Filters applied", "Executive PDF content is missing applied filters");
+  assertIncludes(executiveText, "Top current risks", "Executive PDF content is missing top risks");
+  assertIncludes(executiveText, "Short trend", "Executive PDF content is missing trend content");
   assertIncludes(operationalText, "Operational evidence report", "Operational PDF content is missing its report heading");
   assertIncludes(operationalText, "Timeline", "Operational PDF content is missing the timeline section");
   assertIncludes(operationalText, "Validation failures", "Operational PDF content is missing validation content");
@@ -256,6 +313,8 @@ if (mode === "read-models") {
   validateDetail();
 } else if (mode === "settings") {
   validateSettings();
+} else if (mode === "executive") {
+  validateExecutive();
 } else if (mode === "pdf-bytes") {
   validatePdfBytes();
 } else if (mode === "pdf-routes") {

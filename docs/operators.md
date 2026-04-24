@@ -233,3 +233,27 @@ The trust-list page now maps common failures to explicit operator actions.
 - `No certificates found`: confirm the document is a real ETSI TS 119 612 trust-list XML and not an index or HTML page.
 - `XML parse failed`: confirm the URL returns XML and points directly to the trust-list document.
 - `Unmapped failure`: capture the raw error and extend recovery mapping if the issue repeats.
+
+## Executive summary in the packaged stack
+
+The packaged stack now exposes a management-facing summary at `/reporting/executive` for any authenticated user whose groups authorize the underlying certificates/CRLs.
+
+Use this path when you want a shorter management view than the operational reporting grid.
+
+### Executive workflow
+
+1. Open `/reporting/executive` after signing in.
+2. Review the posture cards, top current risks, upcoming risks, short trend, and grouped breakdowns.
+3. Use the evidence links to jump back to operational reporting when a risk needs investigation.
+4. Use the built-in browser print action for a printable management snapshot.
+5. Use the executive PDF export when you need a file artifact.
+
+### Executive packaged smoke path
+
+After `docker compose up --build`:
+
+1. confirm `https://<host>/reporting/executive` loads behind Caddy after authentication
+2. confirm the page shows the executive cards and sections instead of the operational table
+3. confirm the print action opens the browser print flow with a readable summary layout
+4. confirm `https://<host>/reporting/export/executive.pdf` returns a real PDF under the same authorized scope
+5. confirm the evidence links still return to the operational reporting surface without authorization drift

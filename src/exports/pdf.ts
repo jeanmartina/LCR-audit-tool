@@ -1,6 +1,6 @@
 import { AuthenticatedPrincipal } from "../auth/authorization";
 import { getPrincipalTranslator } from "../i18n";
-import { buildDashboardSummary, buildDetailEvidence, ReportFilters } from "../reporting/read-models";
+import { buildDetailEvidence, buildExecutiveSummary, ReportFilters } from "../reporting/read-models";
 import { buildAuditTimeline } from "../reporting/timeline";
 import { serializeReportFilters } from "../reporting/query-state";
 import { createPdfBytesFromHtml, stripHtmlToText } from "./pdf-engine.js";
@@ -112,7 +112,7 @@ export async function buildExecutivePdf(
   principal?: AuthenticatedPrincipal
 ): Promise<PdfExportResult> {
   const { t } = await getPrincipalTranslator(principal);
-  const summary = await buildDashboardSummary(filters, principal);
+  const summary = await buildExecutiveSummary(filters, principal);
   const generatedAt = new Date().toISOString();
   const filtersApplied = serializeReportFilters(filters);
   const html = renderExecutiveReportHtml({
@@ -123,12 +123,21 @@ export async function buildExecutivePdf(
       healthyTargets: summary.healthyRows,
       degradedTargets: summary.degradedRows,
       offlineTargets: summary.offlineRows,
+      atRiskTargets: summary.atRiskRows,
       averageSlaPercent: summary.averageSlaPercent.toFixed(2),
       openAlerts: summary.openAlerts,
-      upcomingExpirations: summary.upcomingExpirations,
+      upcomingExpirations: summary.upcomingRisks.length,
       dateRange: {
         from: summary.dateRange.from.toISOString(),
         to: summary.dateRange.to.toISOString(),
+      },
+      topRisks: summary.topRisks.map((item) => `${item.name} | ${item.currentStatus} | alerts:${item.openAlerts} | sla:${item.slaPercent.toFixed(2)}`),
+      upcomingRisks: summary.upcomingRisks.map((item) => `${item.name} | ${item.nextExpiration ?? "-"} | ${item.predictiveType ?? "none"}`),
+      trend: summary.trend.map((point) => `${point.label} | H:${point.healthy} D:${point.degraded} O:${point.offline} R:${point.atRisk}`),
+      breakdowns: {
+        trustSources: summary.breakdowns.trustSources.map((item) => `${item.label} | total:${item.total} | risk:${item.atRisk}`),
+        pkis: summary.breakdowns.pkis.map((item) => `${item.label} | total:${item.total} | risk:${item.atRisk}`),
+        jurisdictions: summary.breakdowns.jurisdictions.map((item) => `${item.label} | total:${item.total} | risk:${item.atRisk}`),
       },
     },
     labels: {
@@ -154,12 +163,20 @@ export async function buildExecutivePdf(
         filters: t("exports.pdf.section.filters"),
         summary: t("exports.pdf.section.summary"),
         posture: t("exports.pdf.section.posture"),
+        topRisks: t("exports.pdf.section.topRisks"),
+        upcomingRisks: t("exports.pdf.section.upcomingRisks"),
+        trend: t("exports.pdf.section.trend"),
+        breakdowns: t("exports.pdf.section.breakdowns"),
+        trustSources: t("exports.pdf.section.trustSources"),
+        pkis: t("exports.pdf.section.pkis"),
+        jurisdictions: t("exports.pdf.section.jurisdictions"),
       },
       metrics: {
         targets: t("exports.pdf.summary.targets"),
         healthy: t("exports.pdf.summary.healthy"),
         degraded: t("exports.pdf.summary.degraded"),
         offline: t("exports.pdf.summary.offline"),
+        atRisk: t("exports.pdf.summary.atRisk"),
         averageSla: t("exports.pdf.summary.averageSla"),
         openAlerts: t("exports.pdf.summary.openAlerts"),
         upcomingExpirations: t("exports.pdf.summary.upcomingExpirations"),

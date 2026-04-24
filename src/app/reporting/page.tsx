@@ -173,6 +173,9 @@ export default async function ReportingPage({
           <a href={`/reporting/export/dashboard.csv?${query}`} style={{ color: "var(--link-color)" }}>
             {t("common.actions.exportCsv")}
           </a>
+          <Link href={`/reporting/executive?${query}`} style={{ color: "var(--link-color)" }}>
+            {t("reporting.executive.open")}
+          </Link>
           <a href={`/reporting/export/executive.pdf?${query}`} style={{ color: "var(--link-color)" }}>
             {t("reporting.exportExecutivePdf")}
           </a>

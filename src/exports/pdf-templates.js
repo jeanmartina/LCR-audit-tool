@@ -26,6 +26,10 @@ function renderSection(title, body) {
   `;
 }
 
+function renderExecutiveList(items) {
+  return `<ul>${(items || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+}
+
 function renderExecutiveReportHtml(input) {
   const {
     generatedAt,
@@ -49,6 +53,7 @@ function renderExecutiveReportHtml(input) {
             <li>${labels.metrics.healthy}: ${summary.healthyTargets}</li>
             <li>${labels.metrics.degraded}: ${summary.degradedTargets}</li>
             <li>${labels.metrics.offline}: ${summary.offlineTargets}</li>
+            <li>${labels.metrics.atRisk}: ${summary.atRiskTargets}</li>
           </ul>`
         )}
         ${renderSection(
@@ -58,6 +63,15 @@ function renderExecutiveReportHtml(input) {
             <li>${labels.metrics.openAlerts}: ${summary.openAlerts}</li>
             <li>${labels.metrics.upcomingExpirations}: ${summary.upcomingExpirations}</li>
           </ul>`
+        )}
+        ${renderSection(labels.sections.topRisks, renderExecutiveList(summary.topRisks))}
+        ${renderSection(labels.sections.upcomingRisks, renderExecutiveList(summary.upcomingRisks))}
+        ${renderSection(labels.sections.trend, renderExecutiveList(summary.trend))}
+        ${renderSection(
+          labels.sections.breakdowns,
+          `${renderSection(labels.sections.trustSources, renderExecutiveList(summary.breakdowns.trustSources))}
+           ${renderSection(labels.sections.pkis, renderExecutiveList(summary.breakdowns.pkis))}
+           ${renderSection(labels.sections.jurisdictions, renderExecutiveList(summary.breakdowns.jurisdictions))}`
         )}
       </body>
     </html>

@@ -9,6 +9,7 @@ const commands = [
   ["node", ["scripts/validate-runtime-wiring.js", "persistence"]],
   ["node", ["scripts/validate-reporting.js", "read-models"]],
   ["node", ["scripts/validate-reporting.js", "dashboard"]],
+  ["node", ["scripts/validate-reporting.js", "executive"]],
   ["node", ["scripts/validate-reporting.js", "detail"]],
   ["node", ["scripts/validate-reporting.js", "settings"]],
   ["node", ["scripts/validate-reporting.js", "pdf-bytes"]],
