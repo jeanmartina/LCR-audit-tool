@@ -1,7 +1,10 @@
+import { rejectCrossOriginRequest } from "../../../../auth/request-security";
 import { resolvePublicOrigin } from "../../../../auth/config";
-import { logoutCurrentSession, SESSION_COOKIE_NAME } from "../../../../auth/session";
+import { logoutCurrentSession, serializeClearSessionCookie, SESSION_COOKIE_NAME } from "../../../../auth/session";
 
 export async function POST(request: Request): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   const token = request.headers
     .get("cookie")
     ?.split(";")
@@ -17,7 +20,7 @@ export async function POST(request: Request): Promise<Response> {
     status: 303,
     headers: {
       Location: new URL("/auth", resolvePublicOrigin()).toString(),
-      "set-cookie": `${SESSION_COOKIE_NAME}=; Path=/; HttpOnly; Max-Age=0; SameSite=Lax`,
+      "set-cookie": serializeClearSessionCookie(),
     },
   });
 }

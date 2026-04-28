@@ -40,7 +40,7 @@ The packaged local/staging stack runs four services:
 - Supported certificate files inside the archive are `.pem`, `.crt`, and `.cer`.
 - PEM and DER encodings are both accepted.
 - Archive extraction happens inside the application runtime. The packaged stack does not rely on a host `unzip` binary.
-- Archive size is not hard-limited yet. Current behavior is constrained by runtime resources.
+- Archive size, extracted size, certificate count, and single-certificate size are enforced by environment-variable limits documented below.
 
 ## Day-to-day commands
 
@@ -79,6 +79,13 @@ The packaged local/staging stack runs four services:
 | `POSTGRES_USER` | Yes | Compose-managed Postgres username. |
 | `POSTGRES_PASSWORD` | Yes | Compose-managed Postgres password. |
 | `WORKER_LOOP_INTERVAL_MS` | Optional | Worker poll-loop interval in milliseconds. |
+| `SESSION_COOKIE_SECURE` | Optional | Force session cookies to use or skip `Secure`. Defaults to secure when `AUTH_PUBLIC_ORIGIN` is HTTPS. |
+| `CERT_IMPORT_MAX_CERTIFICATE_BYTES` | Optional | Maximum single certificate upload size in bytes. |
+| `CERT_IMPORT_MAX_ARCHIVE_BYTES` | Optional | Maximum ZIP archive upload size in bytes. |
+| `CERT_IMPORT_MAX_UNCOMPRESSED_BYTES` | Optional | Maximum total uncompressed ZIP certificate payload in bytes. |
+| `CERT_IMPORT_MAX_FILES` | Optional | Maximum certificate files accepted from one ZIP archive. |
+| `TRUST_LIST_FETCH_TIMEOUT_MS` | Optional | Server-side trust-list fetch timeout in milliseconds. |
+| `TRUST_LIST_MAX_XML_BYTES` | Optional | Maximum trust-list XML response size in bytes. |
 | `AUTH_GOOGLE_CLIENT_ID` | Optional | Google OAuth client ID. |
 | `AUTH_GOOGLE_CLIENT_SECRET` | Optional | Google OAuth client secret. |
 | `AUTH_ENTRA_CLIENT_ID` | Optional | Microsoft Entra application ID. |
@@ -165,3 +172,12 @@ For the deeper deployment and troubleshooting guide, see `docs/operators.md`.
 - This packaging is designed for local/staging use, not full production orchestration.
 - Provider credentials must still be supplied for real social/enterprise auth flows.
 - Local HTTPS helps verify the stack but does not replace a real public callback host for external providers.
+
+## Production hardening status
+
+- Caddy sets baseline browser security headers for CSP, clickjacking, referrer, permissions, and content-type protections.
+- Session cookies are `HttpOnly`, `SameSite=Lax`, and `Secure` when the public origin is HTTPS unless explicitly overridden.
+- State-changing API routes enforce same-origin request checks before processing mutations.
+- Auth rate limits are persisted in Postgres when the packaged stack database is available, with in-memory fallback for non-DB local runs.
+- Trust-list server-side fetches require HTTPS for deployed URLs and reject private/internal addresses except localhost development targets.
+- Rotate provider secrets outside git and back up Postgres before using `docker compose down -v`.

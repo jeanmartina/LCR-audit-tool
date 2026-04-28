@@ -867,6 +867,15 @@ export const RUNTIME_SQL_SCHEMA = {
       created_at timestamptz not null
     );
 
+    create table if not exists rate_limit_events (
+      id text primary key,
+      rate_key text not null,
+      occurred_at timestamptz not null
+    );
+
+    create index if not exists rate_limit_events_lookup_idx
+      on rate_limit_events (rate_key, occurred_at);
+
     create table if not exists auth_sessions (
       id text primary key,
       user_id text not null,
@@ -1988,6 +1997,33 @@ export function getLatestValidSnapshotHash(targetId: string): string | null {
 
 export function makeRuntimeId(prefix: string): string {
   return makeId(prefix);
+}
+
+export async function recordRateLimitAttempt(
+  key: string,
+  windowMs: number,
+  nowMs = Date.now()
+): Promise<number | null> {
+  if (!hasDatabase()) {
+    return null;
+  }
+
+  await ensureRuntimeSchema();
+  const occurredAt = new Date(nowMs);
+  const windowStart = new Date(nowMs - windowMs);
+  const currentPool = getPool();
+
+  await currentPool.query(`delete from rate_limit_events where occurred_at < $1`, [windowStart]);
+  await currentPool.query(
+    `insert into rate_limit_events (id, rate_key, occurred_at) values ($1, $2, $3)`,
+    [makeId("rl"), key, occurredAt]
+  );
+
+  const result = await currentPool.query<{ count: number }>(
+    `select count(*)::int as count from rate_limit_events where rate_key = $1 and occurred_at >= $2`,
+    [key, windowStart]
+  );
+  return Number(result.rows[0]?.count ?? 0);
 }
 
 export async function createUserRecord(input: {

@@ -1,3 +1,4 @@
+import { rejectCrossOriginRequest } from "../../../../auth/request-security";
 import { assertAuthenticated } from "../../../../auth/authorization";
 import { normalizeLocale } from "../../../../i18n";
 import { saveUserSettings } from "../../../../settings/preferences";
@@ -7,6 +8,8 @@ function hasValue(formData: FormData, key: string, value: string): boolean {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   let principal;
   try {
     principal = await assertAuthenticated();

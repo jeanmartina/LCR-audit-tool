@@ -1,5 +1,6 @@
+import { rejectCrossOriginRequest } from "../../../../auth/request-security";
 import { createFirstPlatformAdmin } from "../../../../auth/models";
-import { createSession, SESSION_COOKIE_NAME } from "../../../../auth/session";
+import { createSession, serializeSessionCookie } from "../../../../auth/session";
 import { normalizeLocale } from "../../../../i18n";
 
 function redirectToSetup(error: string): Response {
@@ -10,6 +11,8 @@ function redirectToSetup(error: string): Response {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   const form = await request.formData();
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   const displayName = String(form.get("displayName") ?? "").trim();
@@ -40,7 +43,7 @@ export async function POST(request: Request): Promise<Response> {
       status: 303,
       headers: {
         Location: "/settings?firstRun=complete",
-        "set-cookie": `${SESSION_COOKIE_NAME}=${session.token}; Path=/; HttpOnly; SameSite=Lax`,
+        "set-cookie": serializeSessionCookie(session.token),
       },
     });
   } catch (error) {

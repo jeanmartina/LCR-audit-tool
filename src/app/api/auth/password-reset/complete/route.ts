@@ -1,6 +1,9 @@
+import { rejectCrossOriginRequest } from "../../../../../auth/request-security";
 import { completePasswordReset } from "../../../../../auth/session";
 
 export async function POST(request: Request): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   const form = await request.formData();
   const token = String(form.get("token") ?? "").trim();
   const password = String(form.get("password") ?? "");

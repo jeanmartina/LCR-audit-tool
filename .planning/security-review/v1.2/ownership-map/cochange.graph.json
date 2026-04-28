@@ -1,0 +1,790 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {
+    "community_maintainers": [
+      {
+        "id": 1,
+        "size": 13,
+        "maintainers": [
+          {
+            "person_id": "jean.martina@gmail.com",
+            "name": "Jean Martina",
+            "touches": 50,
+            "touch_share": 1.0,
+            "recency_share": 1.0,
+            "sensitive_share": 0.0,
+            "primary_tz_offset": "-03:00"
+          }
+        ],
+        "bus_factor": 1,
+        "owner_count": 1,
+        "totals": {
+          "touches": 50,
+          "recency_weight": 48.728444,
+          "sensitive_weight": 0
+        }
+      },
+      {
+        "id": 2,
+        "size": 8,
+        "maintainers": [
+          {
+            "person_id": "jean.martina@gmail.com",
+            "name": "Jean Martina",
+            "touches": 88,
+            "touch_share": 1.0,
+            "recency_share": 1.0,
+            "sensitive_share": 0.0,
+            "primary_tz_offset": "-03:00"
+          }
+        ],
+        "bus_factor": 1,
+        "owner_count": 1,
+        "totals": {
+          "touches": 88,
+          "recency_weight": 84.743706,
+          "sensitive_weight": 0
+        }
+      },
+      {
+        "id": 3,
+        "size": 7,
+        "maintainers": [
+          {
+            "person_id": "jean.martina@gmail.com",
+            "name": "Jean Martina",
+            "touches": 15,
+            "touch_share": 1.0,
+            "recency_share": 1.0,
+            "sensitive_share": 0.0,
+            "primary_tz_offset": "-03:00"
+          }
+        ],
+        "bus_factor": 1,
+        "owner_count": 1,
+        "totals": {
+          "touches": 15,
+          "recency_weight": 14.724635,
+          "sensitive_weight": 0
+        }
+      },
+      {
+        "id": 4,
+        "size": 5,
+        "maintainers": [
+          {
+            "person_id": "jean.martina@gmail.com",
+            "name": "Jean Martina",
+            "touches": 15,
+            "touch_share": 1.0,
+            "recency_share": 1.0,
+            "sensitive_share": 0.0,
+            "primary_tz_offset": "-03:00"
+          }
+        ],
+        "bus_factor": 1,
+        "owner_count": 1,
+        "totals": {
+          "touches": 15,
+          "recency_weight": 14.194371,
+          "sensitive_weight": 0
+        }
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "community_id": 2,
+      "id": ".planning/PROJECT.md"
+    },
+    {
+      "community_id": 2,
+      "id": ".planning/REQUIREMENTS.md"
+    },
+    {
+      "community_id": 2,
+      "id": ".planning/ROADMAP.md"
+    },
+    {
+      "community_id": 2,
+      "id": ".planning/STATE.md"
+    },
+    {
+      "community_id": 2,
+      "id": ".planning/phases/21.1-public-landing-page-and-discoverable-authentication-entry/21.1-VALIDATION.md"
+    },
+    {
+      "community_id": 2,
+      "id": "docs/operators.md"
+    },
+    {
+      "community_id": 2,
+      "id": "README.md"
+    },
+    {
+      "community_id": 1,
+      "id": "scripts/validate-all.js"
+    },
+    {
+      "community_id": 1,
+      "id": "src/i18n/index.ts"
+    },
+    {
+      "community_id": 1,
+      "id": "scripts/validate-trust-list-foundation.js"
+    },
+    {
+      "community_id": 1,
+      "id": "src/app/admin/trust-lists/page.tsx"
+    },
+    {
+      "community_id": 1,
+      "id": "src/trust-lists/admin.ts"
+    },
+    {
+      "community_id": 1,
+      "id": "src/trust-lists/sync.ts"
+    },
+    {
+      "community_id": 1,
+      "id": "src/trust-lists/types.ts"
+    },
+    {
+      "community_id": 1,
+      "id": "src/app/api/admin/trust-lists/[sourceId]/sync/route.ts"
+    },
+    {
+      "community_id": 1,
+      "id": "src/app/api/admin/trust-lists/route.ts"
+    },
+    {
+      "community_id": 1,
+      "id": "src/app/admin/certificates/[certificateId]/page.tsx"
+    },
+    {
+      "community_id": 1,
+      "id": "src/storage/runtime-store.ts"
+    },
+    {
+      "community_id": 3,
+      "id": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-01-PLAN.md"
+    },
+    {
+      "community_id": 3,
+      "id": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-02-PLAN.md"
+    },
+    {
+      "community_id": 3,
+      "id": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-CONTEXT.md"
+    },
+    {
+      "community_id": 3,
+      "id": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-PLAN-CHECK.md"
+    },
+    {
+      "community_id": 3,
+      "id": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-RESEARCH.md"
+    },
+    {
+      "community_id": 3,
+      "id": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-UI-SPEC.md"
+    },
+    {
+      "community_id": 3,
+      "id": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-VALIDATION.md"
+    },
+    {
+      "community_id": 1,
+      "id": "src/app/settings/page.tsx"
+    },
+    {
+      "community_id": 1,
+      "id": "src/inventory/certificate-admin.ts"
+    },
+    {
+      "community_id": 4,
+      "id": ".planning/research/ARCHITECTURE.md"
+    },
+    {
+      "community_id": 4,
+      "id": ".planning/research/FEATURES.md"
+    },
+    {
+      "community_id": 4,
+      "id": ".planning/research/PITFALLS.md"
+    },
+    {
+      "community_id": 4,
+      "id": ".planning/research/STACK.md"
+    },
+    {
+      "community_id": 4,
+      "id": ".planning/research/SUMMARY.md"
+    },
+    {
+      "community_id": 2,
+      "id": ".planning/v1.0-MILESTONE-AUDIT.md"
+    }
+  ],
+  "edges": [
+    {
+      "weight": 0.176471,
+      "count": 3,
+      "source": ".planning/PROJECT.md",
+      "target": ".planning/REQUIREMENTS.md"
+    },
+    {
+      "weight": 0.130435,
+      "count": 3,
+      "source": ".planning/PROJECT.md",
+      "target": ".planning/ROADMAP.md"
+    },
+    {
+      "weight": 0.115385,
+      "count": 3,
+      "source": ".planning/PROJECT.md",
+      "target": ".planning/STATE.md"
+    },
+    {
+      "weight": 0.73913,
+      "count": 17,
+      "source": ".planning/REQUIREMENTS.md",
+      "target": ".planning/ROADMAP.md"
+    },
+    {
+      "weight": 0.653846,
+      "count": 17,
+      "source": ".planning/REQUIREMENTS.md",
+      "target": ".planning/STATE.md"
+    },
+    {
+      "weight": 0.117647,
+      "count": 2,
+      "source": ".planning/REQUIREMENTS.md",
+      "target": ".planning/phases/21.1-public-landing-page-and-discoverable-authentication-entry/21.1-VALIDATION.md"
+    },
+    {
+      "weight": 0.111111,
+      "count": 2,
+      "source": ".planning/REQUIREMENTS.md",
+      "target": "docs/operators.md"
+    },
+    {
+      "weight": 0.090909,
+      "count": 2,
+      "source": ".planning/REQUIREMENTS.md",
+      "target": "scripts/validate-all.js"
+    },
+    {
+      "weight": 0.111111,
+      "count": 2,
+      "source": ".planning/REQUIREMENTS.md",
+      "target": "src/app/settings/page.tsx"
+    },
+    {
+      "weight": 0.090909,
+      "count": 2,
+      "source": ".planning/REQUIREMENTS.md",
+      "target": "src/i18n/index.ts"
+    },
+    {
+      "weight": 0.117647,
+      "count": 2,
+      "source": ".planning/REQUIREMENTS.md",
+      "target": ".planning/v1.0-MILESTONE-AUDIT.md"
+    },
+    {
+      "weight": 0.884615,
+      "count": 23,
+      "source": ".planning/ROADMAP.md",
+      "target": ".planning/STATE.md"
+    },
+    {
+      "weight": 0.086957,
+      "count": 2,
+      "source": ".planning/ROADMAP.md",
+      "target": ".planning/phases/21.1-public-landing-page-and-discoverable-authentication-entry/21.1-VALIDATION.md"
+    },
+    {
+      "weight": 0.083333,
+      "count": 2,
+      "source": ".planning/ROADMAP.md",
+      "target": "docs/operators.md"
+    },
+    {
+      "weight": 0.071429,
+      "count": 2,
+      "source": ".planning/ROADMAP.md",
+      "target": "scripts/validate-all.js"
+    },
+    {
+      "weight": 0.083333,
+      "count": 2,
+      "source": ".planning/ROADMAP.md",
+      "target": "src/app/settings/page.tsx"
+    },
+    {
+      "weight": 0.071429,
+      "count": 2,
+      "source": ".planning/ROADMAP.md",
+      "target": "src/i18n/index.ts"
+    },
+    {
+      "weight": 0.086957,
+      "count": 2,
+      "source": ".planning/ROADMAP.md",
+      "target": ".planning/v1.0-MILESTONE-AUDIT.md"
+    },
+    {
+      "weight": 0.076923,
+      "count": 2,
+      "source": ".planning/STATE.md",
+      "target": ".planning/phases/21.1-public-landing-page-and-discoverable-authentication-entry/21.1-VALIDATION.md"
+    },
+    {
+      "weight": 0.076923,
+      "count": 2,
+      "source": ".planning/STATE.md",
+      "target": "README.md"
+    },
+    {
+      "weight": 0.115385,
+      "count": 3,
+      "source": ".planning/STATE.md",
+      "target": "docs/operators.md"
+    },
+    {
+      "weight": 0.1,
+      "count": 3,
+      "source": ".planning/STATE.md",
+      "target": "scripts/validate-all.js"
+    },
+    {
+      "weight": 0.1,
+      "count": 3,
+      "source": ".planning/STATE.md",
+      "target": "src/i18n/index.ts"
+    },
+    {
+      "weight": 0.074074,
+      "count": 2,
+      "source": ".planning/STATE.md",
+      "target": "src/app/settings/page.tsx"
+    },
+    {
+      "weight": 0.076923,
+      "count": 2,
+      "source": ".planning/STATE.md",
+      "target": ".planning/v1.0-MILESTONE-AUDIT.md"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": "docs/operators.md",
+      "target": "README.md"
+    },
+    {
+      "weight": 0.75,
+      "count": 6,
+      "source": "scripts/validate-all.js",
+      "target": "src/i18n/index.ts"
+    },
+    {
+      "weight": 0.285714,
+      "count": 2,
+      "source": "scripts/validate-all.js",
+      "target": "scripts/validate-trust-list-foundation.js"
+    },
+    {
+      "weight": 0.25,
+      "count": 2,
+      "source": "scripts/validate-all.js",
+      "target": "src/app/admin/trust-lists/page.tsx"
+    },
+    {
+      "weight": 0.25,
+      "count": 2,
+      "source": "scripts/validate-all.js",
+      "target": "src/trust-lists/admin.ts"
+    },
+    {
+      "weight": 0.428571,
+      "count": 3,
+      "source": "scripts/validate-all.js",
+      "target": "src/trust-lists/sync.ts"
+    },
+    {
+      "weight": 0.428571,
+      "count": 3,
+      "source": "scripts/validate-all.js",
+      "target": "src/trust-lists/types.ts"
+    },
+    {
+      "weight": 0.285714,
+      "count": 2,
+      "source": "scripts/validate-all.js",
+      "target": "src/app/admin/certificates/[certificateId]/page.tsx"
+    },
+    {
+      "weight": 0.428571,
+      "count": 3,
+      "source": "scripts/validate-all.js",
+      "target": "src/storage/runtime-store.ts"
+    },
+    {
+      "weight": 0.285714,
+      "count": 2,
+      "source": "scripts/validate-all.js",
+      "target": "src/inventory/certificate-admin.ts"
+    },
+    {
+      "weight": 0.25,
+      "count": 2,
+      "source": "scripts/validate-all.js",
+      "target": "src/app/settings/page.tsx"
+    },
+    {
+      "weight": 0.428571,
+      "count": 3,
+      "source": "src/i18n/index.ts",
+      "target": "src/app/admin/trust-lists/page.tsx"
+    },
+    {
+      "weight": 0.285714,
+      "count": 2,
+      "source": "src/i18n/index.ts",
+      "target": "src/app/api/admin/trust-lists/[sourceId]/sync/route.ts"
+    },
+    {
+      "weight": 0.285714,
+      "count": 2,
+      "source": "src/i18n/index.ts",
+      "target": "src/app/api/admin/trust-lists/route.ts"
+    },
+    {
+      "weight": 0.428571,
+      "count": 3,
+      "source": "src/i18n/index.ts",
+      "target": "src/trust-lists/admin.ts"
+    },
+    {
+      "weight": 0.25,
+      "count": 2,
+      "source": "src/i18n/index.ts",
+      "target": "src/trust-lists/sync.ts"
+    },
+    {
+      "weight": 0.25,
+      "count": 2,
+      "source": "src/i18n/index.ts",
+      "target": "src/trust-lists/types.ts"
+    },
+    {
+      "weight": 0.285714,
+      "count": 2,
+      "source": "src/i18n/index.ts",
+      "target": "src/app/admin/certificates/[certificateId]/page.tsx"
+    },
+    {
+      "weight": 0.25,
+      "count": 2,
+      "source": "src/i18n/index.ts",
+      "target": "src/storage/runtime-store.ts"
+    },
+    {
+      "weight": 0.428571,
+      "count": 3,
+      "source": "src/i18n/index.ts",
+      "target": "src/app/settings/page.tsx"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": "scripts/validate-trust-list-foundation.js",
+      "target": "src/trust-lists/sync.ts"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": "scripts/validate-trust-list-foundation.js",
+      "target": "src/trust-lists/types.ts"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": "src/app/admin/trust-lists/page.tsx",
+      "target": "src/app/api/admin/trust-lists/[sourceId]/sync/route.ts"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": "src/app/admin/trust-lists/page.tsx",
+      "target": "src/app/api/admin/trust-lists/route.ts"
+    },
+    {
+      "weight": 1.0,
+      "count": 3,
+      "source": "src/app/admin/trust-lists/page.tsx",
+      "target": "src/trust-lists/admin.ts"
+    },
+    {
+      "weight": 0.5,
+      "count": 2,
+      "source": "src/app/admin/trust-lists/page.tsx",
+      "target": "src/trust-lists/sync.ts"
+    },
+    {
+      "weight": 0.5,
+      "count": 2,
+      "source": "src/app/admin/trust-lists/page.tsx",
+      "target": "src/trust-lists/types.ts"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": "src/trust-lists/admin.ts",
+      "target": "src/app/api/admin/trust-lists/[sourceId]/sync/route.ts"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": "src/trust-lists/admin.ts",
+      "target": "src/app/api/admin/trust-lists/route.ts"
+    },
+    {
+      "weight": 0.5,
+      "count": 2,
+      "source": "src/trust-lists/admin.ts",
+      "target": "src/trust-lists/sync.ts"
+    },
+    {
+      "weight": 0.5,
+      "count": 2,
+      "source": "src/trust-lists/admin.ts",
+      "target": "src/trust-lists/types.ts"
+    },
+    {
+      "weight": 1.0,
+      "count": 3,
+      "source": "src/trust-lists/sync.ts",
+      "target": "src/trust-lists/types.ts"
+    },
+    {
+      "weight": 0.5,
+      "count": 2,
+      "source": "src/trust-lists/sync.ts",
+      "target": "src/storage/runtime-store.ts"
+    },
+    {
+      "weight": 0.5,
+      "count": 2,
+      "source": "src/trust-lists/types.ts",
+      "target": "src/storage/runtime-store.ts"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": "src/app/api/admin/trust-lists/[sourceId]/sync/route.ts",
+      "target": "src/app/api/admin/trust-lists/route.ts"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": "src/app/admin/certificates/[certificateId]/page.tsx",
+      "target": "src/storage/runtime-store.ts"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": "src/storage/runtime-store.ts",
+      "target": "src/inventory/certificate-admin.ts"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-01-PLAN.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-02-PLAN.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-01-PLAN.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-CONTEXT.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-01-PLAN.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-PLAN-CHECK.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-01-PLAN.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-RESEARCH.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-01-PLAN.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-UI-SPEC.md"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-01-PLAN.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-VALIDATION.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-02-PLAN.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-CONTEXT.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-02-PLAN.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-PLAN-CHECK.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-02-PLAN.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-RESEARCH.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-02-PLAN.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-UI-SPEC.md"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-02-PLAN.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-VALIDATION.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-CONTEXT.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-PLAN-CHECK.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-CONTEXT.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-RESEARCH.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-CONTEXT.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-UI-SPEC.md"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-CONTEXT.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-VALIDATION.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-PLAN-CHECK.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-RESEARCH.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-PLAN-CHECK.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-UI-SPEC.md"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-PLAN-CHECK.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-VALIDATION.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-RESEARCH.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-UI-SPEC.md"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-RESEARCH.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-VALIDATION.md"
+    },
+    {
+      "weight": 0.666667,
+      "count": 2,
+      "source": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-UI-SPEC.md",
+      "target": ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-VALIDATION.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/research/ARCHITECTURE.md",
+      "target": ".planning/research/FEATURES.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/research/ARCHITECTURE.md",
+      "target": ".planning/research/PITFALLS.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/research/ARCHITECTURE.md",
+      "target": ".planning/research/STACK.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/research/ARCHITECTURE.md",
+      "target": ".planning/research/SUMMARY.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/research/FEATURES.md",
+      "target": ".planning/research/PITFALLS.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/research/FEATURES.md",
+      "target": ".planning/research/STACK.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/research/FEATURES.md",
+      "target": ".planning/research/SUMMARY.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/research/PITFALLS.md",
+      "target": ".planning/research/STACK.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/research/PITFALLS.md",
+      "target": ".planning/research/SUMMARY.md"
+    },
+    {
+      "weight": 1.0,
+      "count": 2,
+      "source": ".planning/research/STACK.md",
+      "target": ".planning/research/SUMMARY.md"
+    }
+  ]
+}

@@ -40,13 +40,21 @@ if (mode === "import") {
   assertIncludes(certificateAdmin, "importCertificateZip", "Missing zip import flow");
   assertIncludes(certificateAdmin, 'unzipSync', "Missing in-process zip extraction");
   assertIncludes(certificateAdmin, 'normalizeCertificatePem', "Missing PEM/DER normalization");
+  assertIncludes(certificateAdmin, 'CERT_IMPORT_MAX_ARCHIVE_BYTES', "Missing ZIP archive byte limit");
+  assertIncludes(certificateAdmin, 'CERT_IMPORT_MAX_UNCOMPRESSED_BYTES', "Missing ZIP uncompressed byte limit");
+  assertIncludes(certificateAdmin, 'CERT_IMPORT_MAX_FILES', "Missing ZIP file-count limit");
+  assertIncludes(certificateAdmin, 'CERT_IMPORT_MAX_CERTIFICATE_BYTES', "Missing single certificate byte limit");
+  assertIncludes(certificateAdmin, 'filter(file)', "ZIP extraction must filter entries before decompression");
+  assertIncludes(certificateAdmin, 'file.originalSize', "ZIP extraction must inspect uncompressed size before processing");
   if (certificateAdmin.includes('execFileAsync("unzip"') || certificateAdmin.includes('execFile("unzip"')) {
     throw new Error("Batch import still shells out to unzip");
   }
   assertIncludes(adminNewPage, 'action="/api/admin/certificates/import"', "Missing single import form");
   assertIncludes(singleImportRoute, 'normalizeCertificatePem', "Missing single-import PEM/DER normalization");
+  assertIncludes(singleImportRoute, 'getMaxCertificateFileBytes', "Missing single-import file-size guard");
   assertIncludes(singleImportRoute, "importCertificate(", "Missing single import route wiring");
   assertIncludes(batchImportRoute, "importCertificateZip", "Missing batch import route wiring");
+  assertIncludes(batchImportRoute, "getMaxZipArchiveBytes", "Missing batch archive-size guard");
   console.log("Certificate import flows ready");
   process.exit(0);
 }

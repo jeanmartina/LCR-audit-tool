@@ -114,6 +114,31 @@ export interface ImportRunSummary {
 }
 
 export const TRUST_LIST_CERTIFICATE_SOURCE_TYPE = "trust-list" as const;
+export const DEFAULT_MAX_CERTIFICATE_FILE_BYTES = 512 * 1024;
+export const DEFAULT_MAX_ZIP_ARCHIVE_BYTES = 10 * 1024 * 1024;
+export const DEFAULT_MAX_ZIP_UNCOMPRESSED_BYTES = 50 * 1024 * 1024;
+export const DEFAULT_MAX_ZIP_CERTIFICATE_FILES = 500;
+
+function envNumber(name: string, fallback: number): number {
+  const value = Number(process.env[name] ?? fallback);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+export function getMaxCertificateFileBytes(): number {
+  return envNumber("CERT_IMPORT_MAX_CERTIFICATE_BYTES", DEFAULT_MAX_CERTIFICATE_FILE_BYTES);
+}
+
+export function getMaxZipArchiveBytes(): number {
+  return envNumber("CERT_IMPORT_MAX_ARCHIVE_BYTES", DEFAULT_MAX_ZIP_ARCHIVE_BYTES);
+}
+
+function getMaxZipUncompressedBytes(): number {
+  return envNumber("CERT_IMPORT_MAX_UNCOMPRESSED_BYTES", DEFAULT_MAX_ZIP_UNCOMPRESSED_BYTES);
+}
+
+function getMaxZipCertificateFiles(): number {
+  return envNumber("CERT_IMPORT_MAX_FILES", DEFAULT_MAX_ZIP_CERTIFICATE_FILES);
+}
 
 function makeDeterministicId(prefix: string, value: string): string {
   return `${prefix}-${createHash("sha256").update(value).digest("hex").slice(0, 16)}`;
@@ -352,27 +377,54 @@ export async function importCertificate(
 async function extractCertificateFilesFromZip(
   zipBytes: Buffer
 ): Promise<Array<{ name: string; pemText: string }>> {
+  if (zipBytes.byteLength > getMaxZipArchiveBytes()) {
+    throw new Error("zip-archive-too-large");
+  }
   let archiveEntries: Record<string, Uint8Array>;
+  let selectedCertificateFiles = 0;
+  let selectedUncompressedBytes = 0;
+  let limitFailure: string | null = null;
   try {
-    archiveEntries = unzipSync(new Uint8Array(zipBytes));
+    archiveEntries = unzipSync(new Uint8Array(zipBytes), {
+      filter(file) {
+        const lowered = file.name.toLowerCase();
+        const isCertificateFile =
+          !file.name.endsWith("/") &&
+          (lowered.endsWith(".pem") || lowered.endsWith(".crt") || lowered.endsWith(".cer"));
+        if (!isCertificateFile) return false;
+
+        selectedCertificateFiles += 1;
+        selectedUncompressedBytes += file.originalSize;
+        if (selectedCertificateFiles > getMaxZipCertificateFiles()) {
+          limitFailure = "zip-too-many-certificate-files";
+          return false;
+        }
+        if (file.originalSize > getMaxCertificateFileBytes()) {
+          limitFailure = "zip-certificate-file-too-large";
+          return false;
+        }
+        if (selectedUncompressedBytes > getMaxZipUncompressedBytes()) {
+          limitFailure = "zip-uncompressed-content-too-large";
+          return false;
+        }
+        return true;
+      },
+    });
   } catch (error) {
     throw new Error(
       `invalid-zip-archive:${error instanceof Error ? error.message : "unreadable-archive"}`
     );
   }
+  if (limitFailure) {
+    throw new Error(limitFailure);
+  }
 
-  return Object.entries(archiveEntries)
-    .filter(([name]) => {
-      const lowered = name.toLowerCase();
-      return (
-        !name.endsWith("/") &&
-        (lowered.endsWith(".pem") || lowered.endsWith(".crt") || lowered.endsWith(".cer"))
-      );
-    })
-    .map(([name, content]) => ({
-      name,
-      pemText: normalizeCertificatePem(Buffer.from(content)),
-    }));
+  const certificateEntries = Object.entries(archiveEntries);
+
+  return certificateEntries.map(([name, content]) => ({
+    name,
+    pemText: normalizeCertificatePem(Buffer.from(content)),
+  }));
 }
 
 export async function importCertificateZip(

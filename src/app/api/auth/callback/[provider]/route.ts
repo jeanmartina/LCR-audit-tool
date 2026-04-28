@@ -8,7 +8,7 @@ import { AUTH_PROVIDERS, type AuthProvider } from "../../../../../auth/config";
 import { resolvePublicOrigin } from "../../../../../auth/config";
 import { linkAuthAccount } from "../../../../../auth/models";
 import { completeProviderCallback } from "../../../../../auth/provider-flow";
-import { createSession, SESSION_COOKIE_NAME } from "../../../../../auth/session";
+import { createSession, serializeSessionCookie } from "../../../../../auth/session";
 
 function isAuthProvider(value: string): value is AuthProvider {
   return AUTH_PROVIDERS.some((provider) => provider.id === value);
@@ -36,7 +36,7 @@ export async function GET(
   }
 
   try {
-    assertRateLimit(`provider-callback:${providerParam}:${state}`, 10, 15 * 60 * 1000);
+    await assertRateLimit(`provider-callback:${providerParam}:${state}`, 10, 15 * 60 * 1000);
 
     const result = await completeProviderCallback({
       provider: providerParam,
@@ -86,7 +86,7 @@ export async function GET(
       status: 303,
       headers: {
         Location: new URL("/reporting", resolvePublicOrigin()).toString(),
-        "set-cookie": `${SESSION_COOKIE_NAME}=${session.token}; Path=/; HttpOnly; SameSite=Lax`,
+        "set-cookie": serializeSessionCookie(session.token),
       },
     });
   } catch (error) {

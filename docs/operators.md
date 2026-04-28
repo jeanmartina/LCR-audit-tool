@@ -53,7 +53,7 @@ This document covers the local/staging deployment model for the packaged stack a
 - Supported encodings: PEM and DER
 - Archive extraction is handled inside the application runtime
 - No host `unzip` dependency is required in the packaged path
-- Archive size is not hard-limited yet; current behavior is constrained by runtime resources
+- Archive size, extracted size, certificate count, and single-certificate size are enforced by environment-variable limits
 
 ## Local HTTPS mode
 
@@ -173,7 +173,7 @@ If the archive itself is corrupt or unreadable, the expected behavior is a faile
   docker compose down -v
   ```
 
-Use the volume-removal form only when you explicitly want to discard local database state.
+Use the volume-removal form only when you explicitly want to discard local database state. Back up Postgres first when the instance contains proof, demo, or operator data.
 
 ## Environment reference
 
@@ -189,6 +189,13 @@ Use the volume-removal form only when you explicitly want to discard local datab
 
 - `NEXT_PUBLIC_APP_ORIGIN`
 - `WORKER_LOOP_INTERVAL_MS`
+- `SESSION_COOKIE_SECURE`
+- `CERT_IMPORT_MAX_CERTIFICATE_BYTES`
+- `CERT_IMPORT_MAX_ARCHIVE_BYTES`
+- `CERT_IMPORT_MAX_UNCOMPRESSED_BYTES`
+- `CERT_IMPORT_MAX_FILES`
+- `TRUST_LIST_FETCH_TIMEOUT_MS`
+- `TRUST_LIST_MAX_XML_BYTES`
 - all provider-specific OAuth/OIDC variables
 
 ## Security boundary for this phase
@@ -196,6 +203,10 @@ Use the volume-removal form only when you explicitly want to discard local datab
 - Secrets are environment variables in this milestone.
 - Postgres authentication remains enabled even on the internal network.
 - The compose stack avoids manual `DATABASE_URL` authoring by injecting an internal connection string automatically.
+- Session cookies are `HttpOnly`, `SameSite=Lax`, and `Secure` on HTTPS origins unless explicitly overridden for local HTTP testing.
+- State-changing API routes enforce same-origin request checks before mutating data.
+- Auth rate limits are database-backed in the packaged stack and fall back to process memory only when no `DATABASE_URL` is configured.
+- Caddy emits baseline browser security headers.
 
 ## Expected operator checks
 
@@ -221,6 +232,8 @@ Use `/admin/trust-lists` for the guided trust-list source flow.
 6. Run `Sync now` to create the first accepted snapshot and certificate projections.
 
 Platform admins can manage every trust-list source. Group admins can manage only sources whose `groupIds` stay inside their own admin scope.
+
+Trust-list fetches run server-side. Use official public ETSI XML URLs only; deployed URLs must use HTTPS and cannot resolve to private/internal addresses. `localhost` is reserved for local development tests.
 
 ## Recovery guidance
 

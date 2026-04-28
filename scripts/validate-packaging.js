@@ -37,6 +37,11 @@ if (mode === "compose") {
   assertIncludes(compose, "DATABASE_URL: postgresql://", "Compose is missing internal DATABASE_URL wiring");
   assertIncludes(compose, 'command: ["npm", "run", "start:worker"]', "Worker command is missing");
   assertIncludes(caddy, "reverse_proxy web:3000", "Caddy is not proxying to web");
+  assertIncludes(caddy, "Content-Security-Policy", "Caddy is missing CSP header");
+  assertIncludes(caddy, "X-Content-Type-Options", "Caddy is missing nosniff header");
+  assertIncludes(caddy, "X-Frame-Options", "Caddy is missing frame protection header");
+  assertIncludes(compose, "CERT_IMPORT_MAX_ARCHIVE_BYTES", "Compose is missing certificate archive limit env");
+  assertIncludes(compose, "TRUST_LIST_MAX_XML_BYTES", "Compose is missing trust-list XML limit env");
   assertIncludes(executivePage, "/reporting/export/executive.pdf", "Executive packaged route is missing PDF export linkage");
   assertIncludes(executivePdfRoute, "application/pdf", "Executive packaged export route is missing PDF response");
   console.log("Packaging compose topology ready");

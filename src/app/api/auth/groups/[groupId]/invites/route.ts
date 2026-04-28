@@ -1,3 +1,4 @@
+import { rejectCrossOriginRequest } from "../../../../../../auth/request-security";
 import { assertPermission } from "../../../../../../auth/authorization";
 import { issueInvite } from "../../../../../../auth/invitations";
 import type { GroupRole } from "../../../../../../auth/config";
@@ -10,6 +11,8 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ groupId: string }> }
 ): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   const { groupId } = await context.params;
 
   try {

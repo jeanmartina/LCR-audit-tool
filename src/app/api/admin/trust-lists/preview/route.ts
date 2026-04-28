@@ -1,3 +1,4 @@
+import { rejectCrossOriginRequest } from "../../../../../auth/request-security";
 import { assertAuthenticated } from "../../../../../auth/authorization";
 import { previewTrustListSource } from "../../../../../trust-lists/admin";
 
@@ -26,6 +27,8 @@ async function parseRequest(request: Request): Promise<{ url: string; groupIds: 
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   try {
     const principal = await assertAuthenticated();
     const preview = await previewTrustListSource(principal, await parseRequest(request));

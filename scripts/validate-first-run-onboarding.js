@@ -56,7 +56,7 @@ assertIncludes(setupPage, 'action="/api/setup/platform-admin"', "Setup form acti
 assertIncludes(setupPage, "../../components/ui/primitives", "Setup page must use shared primitives");
 assertIncludes(setupRoute, "createFirstPlatformAdmin", "Setup API does not create first admin through helper");
 assertIncludes(setupRoute, "createSession", "Setup API does not create session");
-assertIncludes(setupRoute, "SESSION_COOKIE_NAME", "Setup API does not set session cookie");
+assertIncludes(setupRoute, "serializeSessionCookie", "Setup API does not set session cookie through secure helper");
 assertIncludes(setupRoute, "Location: \"/settings?firstRun=complete\"", "Setup API must use relative success redirect");
 assertNotIncludes(setupRoute, "request.url", "Setup API must not derive redirects from internal request URL");
 

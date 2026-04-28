@@ -1,3 +1,4 @@
+import { rejectCrossOriginRequest } from "../../../../../../auth/request-security";
 import { assertAuthenticated } from "../../../../../../auth/authorization";
 import { syncTrustListSourceNow } from "../../../../../../trust-lists/admin";
 
@@ -5,6 +6,8 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ sourceId: string }> }
 ): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   const { sourceId } = await context.params;
   try {
     const principal = await assertAuthenticated();

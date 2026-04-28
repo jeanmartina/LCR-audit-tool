@@ -1,3 +1,4 @@
+import { rejectCrossOriginRequest } from "../../../../auth/request-security";
 import { assertAuthenticated } from "../../../../auth/authorization";
 import { createTrustListSource, listTrustListSourcesForAdmin } from "../../../../trust-lists/admin";
 
@@ -46,6 +47,8 @@ export async function GET(): Promise<Response> {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   try {
     const principal = await assertAuthenticated();
     const source = await createTrustListSource(principal, await parseRequest(request));

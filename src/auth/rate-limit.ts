@@ -1,3 +1,5 @@
+import { recordRateLimitAttempt } from "../storage/runtime-store";
+
 const counters = new Map<string, number[]>();
 
 function prune(key: string, windowMs: number, now: number): number[] {
@@ -7,8 +9,17 @@ function prune(key: string, windowMs: number, now: number): number[] {
   return next;
 }
 
-export function assertRateLimit(key: string, limit: number, windowMs: number): void {
+export async function assertRateLimit(key: string, limit: number, windowMs: number): Promise<void> {
   const now = Date.now();
+
+  const persistedCount = await recordRateLimitAttempt(key, windowMs, now);
+  if (persistedCount !== null) {
+    if (persistedCount > limit) {
+      throw new Error("rate-limit-exceeded");
+    }
+    return;
+  }
+
   const current = prune(key, windowMs, now);
   if (current.length >= limit) {
     throw new Error("rate-limit-exceeded");

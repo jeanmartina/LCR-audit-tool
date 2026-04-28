@@ -1,11 +1,14 @@
+import { rejectCrossOriginRequest } from "../../../../../auth/request-security";
 import { assertRateLimit } from "../../../../../auth/rate-limit";
 import { issuePasswordReset } from "../../../../../auth/invitations";
 import { findUserByEmail } from "../../../../../storage/runtime-store";
 
 export async function POST(request: Request): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   const form = await request.formData();
   const email = String(form.get("email") ?? "").trim().toLowerCase();
-  assertRateLimit(`password-reset:${email}`, 5, 15 * 60 * 1000);
+  await assertRateLimit(`password-reset:${email}`, 5, 15 * 60 * 1000);
 
   const user = await findUserByEmail(email);
   if (!user) {

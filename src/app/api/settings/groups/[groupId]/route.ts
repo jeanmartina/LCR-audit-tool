@@ -1,3 +1,4 @@
+import { rejectCrossOriginRequest } from "../../../../../auth/request-security";
 import { assertPermission } from "../../../../../auth/authorization";
 import { saveGroupSettings } from "../../../../../settings/preferences";
 
@@ -5,6 +6,8 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ groupId: string }> }
 ): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   const { groupId } = await params;
   try {
     await assertPermission("members.manage", groupId);

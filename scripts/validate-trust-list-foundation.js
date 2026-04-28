@@ -65,6 +65,9 @@ assertContains("src/trust-lists/sync.ts", "validateTrustListXmlSignature");
 assertContains("src/trust-lists/sync.ts", "importCertificate");
 assertContains("src/trust-lists/sync.ts", "trust-list-url-must-use-https");
 assertContains("src/trust-lists/sync.ts", "AbortController");
+assertContains("src/trust-lists/sync.ts", "assertPublicFetchTarget");
+assertContains("src/trust-lists/sync.ts", "trust-list-url-private-address-blocked");
+assertContains("src/trust-lists/sync.ts", "redirect: \"manual\"");
 assertContains("src/trust-lists/sync.ts", "failureReason");
 assertContains("src/inventory/certificate-admin.ts", '"trust-list"');
 

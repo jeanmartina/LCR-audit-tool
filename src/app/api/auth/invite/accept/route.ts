@@ -1,10 +1,13 @@
+import { rejectCrossOriginRequest } from "../../../../../auth/request-security";
 import { assertRateLimit } from "../../../../../auth/rate-limit";
 import { resolvePublicOrigin } from "../../../../../auth/config";
 import { acceptInvite, recordFailedInviteAcceptance } from "../../../../../auth/invitations";
-import { createSession, hashPassword, SESSION_COOKIE_NAME } from "../../../../../auth/session";
+import { createSession, hashPassword, serializeSessionCookie } from "../../../../../auth/session";
 import { normalizeLocale } from "../../../../../i18n";
 
 export async function POST(request: Request): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   const form = await request.formData();
   const inviteCode = String(form.get("inviteCode") ?? "").trim();
   const email = String(form.get("email") ?? "").trim().toLowerCase();
@@ -13,7 +16,7 @@ export async function POST(request: Request): Promise<Response> {
   const preferredLocale = normalizeLocale(String(form.get("locale") ?? ""));
 
   try {
-    assertRateLimit(`invite:${email || inviteCode}`, 10, 15 * 60 * 1000);
+    await assertRateLimit(`invite:${email || inviteCode}`, 10, 15 * 60 * 1000);
     const result = await acceptInvite({
       inviteCode,
       email,
@@ -27,7 +30,7 @@ export async function POST(request: Request): Promise<Response> {
       status: 303,
       headers: {
         Location: new URL("/reporting", resolvePublicOrigin()).toString(),
-        "set-cookie": `${SESSION_COOKIE_NAME}=${session.token}; Path=/; HttpOnly; SameSite=Lax`,
+        "set-cookie": serializeSessionCookie(session.token),
       },
     });
   } catch (error) {

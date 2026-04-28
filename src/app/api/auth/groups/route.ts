@@ -1,7 +1,10 @@
+import { rejectCrossOriginRequest } from "../../../../auth/request-security";
 import { assertPlatformAdmin } from "../../../../auth/authorization";
 import { assignGroupRole, createGroup } from "../../../../auth/models";
 
 export async function POST(request: Request): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   try {
     const principal = await assertPlatformAdmin();
     const form = await request.formData();

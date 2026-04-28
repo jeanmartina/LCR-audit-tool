@@ -1,0 +1,131 @@
+[
+  {
+    "id": 1,
+    "size": 13,
+    "files": [
+      "scripts/validate-all.js",
+      "scripts/validate-trust-list-foundation.js",
+      "src/app/admin/certificates/[certificateId]/page.tsx",
+      "src/app/admin/trust-lists/page.tsx",
+      "src/app/api/admin/trust-lists/[sourceId]/sync/route.ts",
+      "src/app/api/admin/trust-lists/route.ts",
+      "src/app/settings/page.tsx",
+      "src/i18n/index.ts",
+      "src/inventory/certificate-admin.ts",
+      "src/storage/runtime-store.ts",
+      "src/trust-lists/admin.ts",
+      "src/trust-lists/sync.ts",
+      "src/trust-lists/types.ts"
+    ],
+    "maintainers": [
+      {
+        "person_id": "jean.martina@gmail.com",
+        "name": "Jean Martina",
+        "touches": 50,
+        "touch_share": 1.0,
+        "recency_share": 1.0,
+        "sensitive_share": 0.0,
+        "primary_tz_offset": "-03:00"
+      }
+    ],
+    "bus_factor": 1,
+    "owner_count": 1,
+    "totals": {
+      "touches": 50,
+      "recency_weight": 48.728444,
+      "sensitive_weight": 0
+    }
+  },
+  {
+    "id": 2,
+    "size": 8,
+    "files": [
+      ".planning/PROJECT.md",
+      ".planning/REQUIREMENTS.md",
+      ".planning/ROADMAP.md",
+      ".planning/STATE.md",
+      ".planning/phases/21.1-public-landing-page-and-discoverable-authentication-entry/21.1-VALIDATION.md",
+      ".planning/v1.0-MILESTONE-AUDIT.md",
+      "README.md",
+      "docs/operators.md"
+    ],
+    "maintainers": [
+      {
+        "person_id": "jean.martina@gmail.com",
+        "name": "Jean Martina",
+        "touches": 88,
+        "touch_share": 1.0,
+        "recency_share": 1.0,
+        "sensitive_share": 0.0,
+        "primary_tz_offset": "-03:00"
+      }
+    ],
+    "bus_factor": 1,
+    "owner_count": 1,
+    "totals": {
+      "touches": 88,
+      "recency_weight": 84.743706,
+      "sensitive_weight": 0
+    }
+  },
+  {
+    "id": 3,
+    "size": 7,
+    "files": [
+      ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-01-PLAN.md",
+      ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-02-PLAN.md",
+      ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-CONTEXT.md",
+      ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-PLAN-CHECK.md",
+      ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-RESEARCH.md",
+      ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-UI-SPEC.md",
+      ".planning/phases/19-trust-list-certificate-projection-and-reimport/19-VALIDATION.md"
+    ],
+    "maintainers": [
+      {
+        "person_id": "jean.martina@gmail.com",
+        "name": "Jean Martina",
+        "touches": 15,
+        "touch_share": 1.0,
+        "recency_share": 1.0,
+        "sensitive_share": 0.0,
+        "primary_tz_offset": "-03:00"
+      }
+    ],
+    "bus_factor": 1,
+    "owner_count": 1,
+    "totals": {
+      "touches": 15,
+      "recency_weight": 14.724635,
+      "sensitive_weight": 0
+    }
+  },
+  {
+    "id": 4,
+    "size": 5,
+    "files": [
+      ".planning/research/ARCHITECTURE.md",
+      ".planning/research/FEATURES.md",
+      ".planning/research/PITFALLS.md",
+      ".planning/research/STACK.md",
+      ".planning/research/SUMMARY.md"
+    ],
+    "maintainers": [
+      {
+        "person_id": "jean.martina@gmail.com",
+        "name": "Jean Martina",
+        "touches": 15,
+        "touch_share": 1.0,
+        "recency_share": 1.0,
+        "sensitive_share": 0.0,
+        "primary_tz_offset": "-03:00"
+      }
+    ],
+    "bus_factor": 1,
+    "owner_count": 1,
+    "totals": {
+      "touches": 15,
+      "recency_weight": 14.194371,
+      "sensitive_weight": 0
+    }
+  }
+]

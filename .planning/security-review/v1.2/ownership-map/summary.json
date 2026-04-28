@@ -1,0 +1,253 @@
+{
+  "generated_at": "2026-04-28T00:15:34.934870+00:00",
+  "repo": "/home/jeanmartina/Downloads/codex",
+  "parameters": {
+    "since": "24 months ago",
+    "until": null,
+    "half_life_days": 180.0,
+    "bus_factor_threshold": 1,
+    "stale_days": 365,
+    "owner_threshold": 0.5,
+    "sensitive_config": null,
+    "identity": "author",
+    "date_field": "author",
+    "include_merges": false,
+    "cochange_enabled": true,
+    "cochange_max_files": 50,
+    "cochange_min_count": 2,
+    "cochange_min_jaccard": 0.05,
+    "cochange_default_excludes": true,
+    "cochange_excludes": [
+      "**/Cargo.lock",
+      "**/Cargo.toml",
+      "**/package-lock.json",
+      "**/yarn.lock",
+      "**/pnpm-lock.yaml",
+      "**/go.sum",
+      "**/go.mod",
+      "**/Gemfile.lock",
+      "**/Pipfile.lock",
+      "**/poetry.lock",
+      "**/composer.lock",
+      "**/.github/**",
+      "**/.gitignore",
+      "**/.gitattributes",
+      "**/.gitmodules",
+      "**/.editorconfig",
+      "**/.vscode/**",
+      "**/.idea/**"
+    ],
+    "author_default_excludes": true,
+    "author_exclude_regexes": [
+      "dependabot"
+    ],
+    "community_top_owners": 5
+  },
+  "orphaned_sensitive_code": [],
+  "hidden_owners": [
+    {
+      "person": "jean.martina@gmail.com",
+      "name": "Jean Martina",
+      "controls": "100% of auth code",
+      "category": "auth",
+      "share": 1.0
+    }
+  ],
+  "bus_factor_hotspots": [
+    {
+      "path": "src/app/auth/accept-invite/page.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-04-24T15:45:29-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/app/auth/page.tsx",
+      "bus_factor": 1,
+      "last_touch": "2026-04-24T15:45:29-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/auth/providers.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-24T15:45:29-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/auth/models.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-21T21:38:22-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/app/api/auth/callback/[provider]/route.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/app/api/auth/groups/[groupId]/invites/route.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/app/api/auth/groups/route.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/app/api/auth/invite/accept/route.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/app/api/auth/login/route.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/app/api/auth/logout-all/route.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/app/api/auth/logout/route.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/app/api/auth/password-reset/complete/route.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/app/api/auth/password-reset/request/route.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/app/api/auth/provider/start/[provider]/route.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/auth/authorization.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/auth/config.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/auth/invitations.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/auth/provider-flow.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/auth/rate-limit.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    },
+    {
+      "path": "src/auth/session.ts",
+      "bus_factor": 1,
+      "last_touch": "2026-04-13T20:13:15-03:00",
+      "sensitivity_tags": [
+        "auth"
+      ],
+      "top_owner": "jean.martina@gmail.com"
+    }
+  ],
+  "stats": {
+    "commits": 56,
+    "commits_seen": 56,
+    "commits_excluded_identities": 0,
+    "commits_excluded_merges": 0,
+    "edges": 500,
+    "people": 1,
+    "files": 309,
+    "cochange_pairs_total": 928,
+    "cochange_edges": 93,
+    "cochange_commits_used": 43,
+    "cochange_commits_skipped": 2,
+    "cochange_commits_filtered": 0,
+    "cochange_files_excluded": 2
+  }
+}

@@ -1,3 +1,4 @@
+import { rejectCrossOriginRequest } from "../../../../../../auth/request-security";
 import { assertRateLimit } from "../../../../../../auth/rate-limit";
 import { getValidatedPendingInvite, recordFailedInviteAcceptance } from "../../../../../../auth/invitations";
 import { createProviderAuthStart } from "../../../../../../auth/provider-flow";
@@ -9,6 +10,8 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ provider: string }> }
 ): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   const { provider } = await context.params;
   if (!SUPPORTED_PROVIDERS.has(provider)) {
     return Response.json({ error: "unsupported-provider" }, { status: 400 });
@@ -21,7 +24,7 @@ export async function POST(
   const locale = normalizeLocale(String(form.get("locale") ?? ""));
 
   try {
-    assertRateLimit(`provider-start:${provider}:${email || inviteCode}`, 10, 15 * 60 * 1000);
+    await assertRateLimit(`provider-start:${provider}:${email || inviteCode}`, 10, 15 * 60 * 1000);
     await getValidatedPendingInvite(inviteCode, email);
     const location = await createProviderAuthStart({
       provider: provider as "google" | "entra-id" | "oidc",

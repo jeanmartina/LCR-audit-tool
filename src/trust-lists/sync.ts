@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import { lookup } from "node:dns/promises";
+import { isIP } from "node:net";
 import { extractCertificateFingerprint, importCertificate } from "../inventory/certificate-admin";
 import {
   completeTrustListSyncRun,
@@ -23,6 +25,7 @@ import { validateTrustListXmlSignature } from "./xmldsig";
 
 const DEFAULT_FETCH_TIMEOUT_MS = 30000;
 const DEFAULT_MAX_XML_BYTES = 25 * 1024 * 1024;
+const MAX_TRUST_LIST_REDIRECTS = 3;
 
 function getFetchTimeoutMs(): number {
   return Number(process.env.TRUST_LIST_FETCH_TIMEOUT_MS ?? DEFAULT_FETCH_TIMEOUT_MS);
@@ -32,20 +35,66 @@ function getMaxXmlBytes(): number {
   return Number(process.env.TRUST_LIST_MAX_XML_BYTES ?? DEFAULT_MAX_XML_BYTES);
 }
 
-function assertSyncUrl(url: string): void {
-  const parsed = new URL(url);
-  const isLocalhost = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
-  if (parsed.protocol !== "https:" && !isLocalhost) {
-    throw new Error("trust-list-url-must-use-https");
+function isLocalhostName(hostname: string): boolean {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
+function isPrivateAddress(address: string): boolean {
+  if (address === "::1") return true;
+  if (address.startsWith("fe80:") || address.startsWith("fc") || address.startsWith("fd")) return true;
+  const parts = address.split(".").map((part) => Number.parseInt(part, 10));
+  if (parts.length !== 4 || parts.some((part) => Number.isNaN(part))) return false;
+  const [a, b] = parts;
+  return (
+    a === 10 ||
+    a === 127 ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168) ||
+    (a === 100 && b >= 64 && b <= 127) ||
+    a === 0
+  );
+}
+
+async function assertPublicFetchTarget(parsed: URL): Promise<void> {
+  if (isLocalhostName(parsed.hostname)) return;
+  const records = isIP(parsed.hostname)
+    ? [{ address: parsed.hostname }]
+    : await lookup(parsed.hostname, { all: true, verbatim: true });
+  if (records.some((record) => isPrivateAddress(record.address))) {
+    throw new Error("trust-list-url-private-address-blocked");
   }
 }
 
+async function assertSyncUrl(url: string): Promise<URL> {
+  const parsed = new URL(url);
+  if (parsed.protocol !== "https:" && !isLocalhostName(parsed.hostname)) {
+    throw new Error("trust-list-url-must-use-https");
+  }
+  await assertPublicFetchTarget(parsed);
+  return parsed;
+}
+
 async function fetchTrustListXml(url: string): Promise<string> {
-  assertSyncUrl(url);
+  let currentUrl = url;
+  let response: Response | null = null;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), getFetchTimeoutMs());
   try {
-    const response = await fetch(url, { signal: controller.signal });
+    for (let redirects = 0; redirects <= MAX_TRUST_LIST_REDIRECTS; redirects += 1) {
+      const parsed = await assertSyncUrl(currentUrl);
+      response = await fetch(parsed, { signal: controller.signal, redirect: "manual" });
+      if (![301, 302, 303, 307, 308].includes(response.status)) break;
+      const location = response.headers.get("location");
+      if (!location) throw new Error("trust-list-redirect-missing-location");
+      currentUrl = new URL(location, parsed).toString();
+      if (redirects === MAX_TRUST_LIST_REDIRECTS) {
+        throw new Error("trust-list-too-many-redirects");
+      }
+    }
+    if (!response) {
+      throw new Error("trust-list-fetch-failed");
+    }
     if (!response.ok) {
       throw new Error(`trust-list-fetch-failed:${response.status}`);
     }

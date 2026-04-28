@@ -1,0 +1,10 @@
+# Security-sensitive surfaces
+/src/auth/ @jeanmartina
+/src/app/api/auth/ @jeanmartina
+/src/app/api/admin/ @jeanmartina
+/src/trust-lists/ @jeanmartina
+/src/inventory/certificate-admin.ts @jeanmartina
+/Dockerfile @jeanmartina
+/compose.yaml @jeanmartina
+/Caddyfile @jeanmartina
+/.env.example @jeanmartina

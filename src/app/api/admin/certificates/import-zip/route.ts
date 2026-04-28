@@ -1,5 +1,6 @@
+import { rejectCrossOriginRequest } from "../../../../../auth/request-security";
 import { assertAuthenticated } from "../../../../../auth/authorization";
-import { importCertificateZip } from "../../../../../inventory/certificate-admin";
+import { getMaxZipArchiveBytes, importCertificateZip } from "../../../../../inventory/certificate-admin";
 
 function parseCsv(value: FormDataEntryValue | null): string[] {
   return String(value ?? "")
@@ -17,12 +18,17 @@ function parseOverrides(value: FormDataEntryValue | null) {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   try {
     const principal = await assertAuthenticated();
     const form = await request.formData();
     const file = form.get("archive");
     if (!(file instanceof File)) {
       return Response.json({ error: "zip-file-required" }, { status: 400 });
+    }
+    if (file.size > getMaxZipArchiveBytes()) {
+      return Response.json({ error: "zip-archive-too-large" }, { status: 413 });
     }
 
     const summary = await importCertificateZip(

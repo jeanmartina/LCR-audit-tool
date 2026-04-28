@@ -1,3 +1,4 @@
+import { rejectCrossOriginRequest } from "../../../../../../auth/request-security";
 import { assertPlatformAdmin } from "../../../../../../auth/authorization";
 import { getConfigPresence } from "../../../../../../auth/provider-flow";
 import { saveProviderVerificationSetting } from "../../../../../../settings/preferences";
@@ -8,6 +9,8 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ provider: string }> }
 ): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   let principal;
   try {
     principal = await assertPlatformAdmin();

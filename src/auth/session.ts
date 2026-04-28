@@ -14,9 +14,25 @@ import {
   type AuthSessionRecord,
   type UserRecord,
 } from "../storage/runtime-store";
-import { PASSWORD_RESET_TTL_MS, SESSION_INACTIVITY_TIMEOUT_MS } from "./config";
+import { PASSWORD_RESET_TTL_MS, resolvePublicOrigin, SESSION_INACTIVITY_TIMEOUT_MS } from "./config";
 
 export const SESSION_COOKIE_NAME = "lcr_session_token";
+
+function shouldUseSecureSessionCookie(): boolean {
+  if (process.env.SESSION_COOKIE_SECURE === "false") return false;
+  if (process.env.SESSION_COOKIE_SECURE === "true") return true;
+  return resolvePublicOrigin().startsWith("https://");
+}
+
+export function serializeSessionCookie(token: string): string {
+  const secure = shouldUseSecureSessionCookie() ? "; Secure" : "";
+  return `${SESSION_COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Lax${secure}`;
+}
+
+export function serializeClearSessionCookie(): string {
+  const secure = shouldUseSecureSessionCookie() ? "; Secure" : "";
+  return `${SESSION_COOKIE_NAME}=; Path=/; HttpOnly; Max-Age=0; SameSite=Lax${secure}`;
+}
 
 function hashPasswordValue(password: string, salt = randomBytes(16).toString("hex")): string {
   const derived = scryptSync(password, salt, 64).toString("hex");
