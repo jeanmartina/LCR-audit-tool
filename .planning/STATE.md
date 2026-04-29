@@ -1,37 +1,37 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: Trust Lists, Executive Visibility, and Operator UX
-status: ready_for_new_milestone
-stopped_at: Archived milestone v1.2
-last_updated: "2026-04-24T02:20:00.000Z"
-last_activity: 2026-04-24 -- Milestone v1.2 archived and ready for next milestone
+milestone: v1.3
+milestone_name: Monitoring Source Expansion
+status: defining_requirements
+stopped_at: Started milestone v1.3
+last_updated: "2026-04-28T00:00:00.000Z"
+last_activity: 2026-04-28 -- Milestone v1.3 started
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 12
-  completed_plans: 12
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-13)
+See: .planning/PROJECT.md (updated 2026-04-28)
 
 **Core value:** Never allow a trusted certificate to operate without valid revocation coverage
-**Current focus:** start the next milestone from a fresh requirements definition
+**Current focus:** define v1.3 requirements for OCSP and CP/CPS/DPC monitoring-source expansion
 
 ## Current Position
 
-Milestone: none active
-Phase: Milestone completion
-Plan: n/a
-Status: v1.2 archived; ready for `/gsd-new-milestone`
-Last activity: 2026-04-24 -- Milestone v1.2 archived and ready for next milestone
+Milestone: v1.3 Monitoring Source Expansion
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-28 -- Milestone v1.3 started
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -87,6 +87,7 @@ Progress: [██████████] 100%
 - v1.2 opened for deep research before requirements and roadmap definition
 - Phase 21.1 inserted after Phase 21 for an urgent published-root landing/auth discoverability fix discovered during milestone-close review
 - v1.2 archived after all 23 milestone requirements were satisfied and the milestone audit passed
+- v1.3 started for OCSP and CP/CPS/DPC monitoring-source expansion with research before requirements
 
 ### Pending Todos
 

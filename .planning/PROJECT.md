@@ -18,16 +18,16 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 - **Internationalization:** canonical English dictionaries with `pt-BR` and `es` translations, locale-aware auth/reporting/settings/admin surfaces, and localized CSV/PDF exports
 - **Packaging and operations:** Docker packaging for `web` and `worker`, compose topology for `web + worker + postgres + caddy`, HTTPS ingress through Caddy, README/operator docs, and a public-host Google proof runbook
 
-## Next Milestone Goals
+## Current Milestone: v1.3 Monitoring Source Expansion
 
-**Goal:** deepen the operational and executive value of the shipped platform without regressing the simpler v1.2 operator experience.
+**Goal:** expand monitoring beyond CRL/certificate/trust-list availability into OCSP and CP/CPS/DPC document sources while preserving audit evidence for future PKI compliance analysis.
 
-**Candidate features:**
-- Microsoft Entra ID and generic OIDC proof on the packaged/public deployment
-- deeper executive analytics such as SLOs, burn rates, and error budgets
-- richer trust-list operational drill-down and historical sync analysis
-- future monitoring sources such as OCSP and CP/CPS/DPC document availability
-- scalability work for multi-worker and multi-region execution
+**Target features:**
+- Derive OCSP and CP/CPS/DPC monitoring sources automatically from imported certificates and trust-list-derived certificates, without a new manual-source UI in this milestone.
+- Monitor OCSP endpoints with technical availability checks and persisted response evidence suitable for fuller semantic validation later.
+- Download, snapshot, hash, and extract basic metadata/content from CP/CPS/DPC documents when URLs are discoverable.
+- Preserve document evidence as historical input for a future AI-assisted PKI policy/conformance analysis milestone.
+- Expose operational detail and simple executive aggregate cards for the new monitoring-source categories.
 
 ## Requirements
 
@@ -106,12 +106,13 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 - [External notification integrations] — alerts are email-only for now; SMS/push are out of scope.
 - [Dedicated mobile app] — access is through the web dashboard and table-driven operator flows.
 
-## Research Focus for v1.2
+## Research Focus for v1.3
 
-- identify the safest trust-list ingestion model for ETSI TS 119 612 in the current TypeScript/Postgres runtime
-- determine the simplest executive summary surfaces that still help leadership understand coverage risk
-- redesign the operator/admin UX around low-friction onboarding, first-run setup, and field-level guidance
-- avoid adding complexity that would make the product harder to operate than the current certificate-first workflow
+- identify robust OCSP availability/evidence practices that fit the current TypeScript/Postgres worker runtime
+- identify reliable ways to discover CP/CPS/DPC document URLs from certificates and trust-list-derived provenance
+- define safe document download, snapshot, hashing, size limits, content extraction, and retention boundaries
+- determine the smallest reporting additions that expose OCSP/document-source health without overwhelming the v1.2 operator UX
+- preserve enough evidence for a later AI-assisted PKI compliance analysis without implementing that analysis in v1.3
 
 <details>
 <summary>v1.1 shipped milestone snapshot</summary>
@@ -132,7 +133,7 @@ The original scope started from a compliance/engineering dashboard with backgrou
 - The domain must handle European TSL-driven ecosystems and standalone certificates while always validating signature/hash and preserving downloaded CRL history for future document-verification use cases.
 - The stack now spans Postgres-backed monitoring, multi-user access control, localized user-facing surfaces, and Docker/Caddy deployment.
 - The product has proven the Google invite-gated flow on a real public HTTPS host; Entra ID and generic OIDC still require the same level of proof.
-- v1.2 materially improved operator/admin UX, but deeper analytics and broader source coverage still remain future work.
+- v1.2 materially improved operator/admin UX; v1.3 now focuses on broader source coverage while keeping those operator flows simple.
 
 ## Constraints
 - **Interface**: configurable, table-first operator workflows for engineering/compliance; no dedicated mobile design or heavy animation requirements.
@@ -147,7 +148,7 @@ The original scope started from a compliance/engineering dashboard with backgrou
 - **Invitation-only access**: users enter through invites, not public sign-up.
 - **Internationalization**: every new interface must be translatable and initially support English, Portuguese, and Spanish.
 - **Documentation language**: default code and technical documentation remain in English.
-- **External provider scope**: Google is proven; Entra ID and generic OIDC are deferred until they are explicitly prioritized.
+- **External provider scope**: Google is proven; Entra ID and generic OIDC remain deferred while v1.3 prioritizes monitoring-source expansion.
 
 ## Key Decisions
 | Decision | Rationale | Outcome |
@@ -187,4 +188,4 @@ This document evolves with each phase and milestone transition.
 4. Update context with the current operational state and any active risk signals.
 
 ---
-*Last updated: 2026-04-24 after v1.2 milestone completion*
+*Last updated: 2026-04-28 after starting v1.3 milestone*
