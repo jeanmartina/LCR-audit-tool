@@ -1,87 +1,109 @@
-# v1.2 Research: FEATURES
+# v1.3 Research: Feature Behavior for OCSP and CP/CPS/DPC Monitoring
 
-**Research date:** 2026-04-13
-**Milestone focus:** ETSI trust-list ingestion, executive summaries, and simpler operator UX
+**Milestone:** v1.3 Monitoring Source Expansion  
+**Date:** 2026-04-28
 
-## Trust-list ingestion
+## Product Intent
 
-### Table stakes
+v1.3 expands monitored evidence beyond CRLs and trust-list-derived certificates. The milestone should prove the platform can automatically discover and monitor two additional PKI evidence classes:
 
-- add a trust-list source by URL
-- fetch and parse LOTL / TSL metadata safely
-- extract certificates and service metadata from supported trust lists
-- re-import affected certificates when the tracked trust list changes
-- preserve operator visibility into source status, last sync, next update, and sync failures
+1. OCSP responder availability/evidence derived from certificate AIA.
+2. CP/CPS/DPC policy document availability and retained snapshots for later compliance analysis.
 
-### Differentiators
+The future AI compliance agent is explicitly downstream. v1.3 prepares clean, durable evidence; it does not judge policy conformance.
 
-- unify trust-list ingestion with the existing certificate-first admin model instead of creating a separate product island
-- make the resulting assets traceable back to their trust-list source, sequence number, and import run
-- expose safe re-sync behavior and change summaries instead of opaque background ingestion
+## Feature Categories
 
-### Anti-features
+### 1. Derived Source Discovery
 
-- forcing operators to understand raw XML structure to use the feature
-- creating a second admin UI unrelated to certificate onboarding
-- silently mutating monitored inventory without an audit trail
+**Table stakes**
 
-## Executive visibility
+- Derive OCSP responder URLs from the certificate AIA `id-ad-ocsp` access method when present.
+- Derive CPS URLs from RFC 5280 Certificate Policies CPS Pointer qualifiers when present.
+- Derive CP/DPC candidates only when discoverable from certificate/trust-list/provenance metadata or known fields already parsed by the system.
+- Deduplicate derived sources by certificate/provenance/source kind/normalized URL.
+- Mark missing source types explicitly as `not discovered` instead of treating them as failures.
 
-### Table stakes
+**Differentiators**
 
-- high-level coverage summary at a glance
-- trend or snapshot of healthy / degraded / down assets
-- most critical active issues
-- upcoming expiration / publication risk summary
-- easy PDF or screen-friendly executive summary
+- Preserve policy OIDs alongside CPS/document URLs for later certificate-to-policy analysis.
+- Preserve trust-list snapshot/projection provenance for sources derived from trust-list certificates.
 
-### Differentiators
+**Defer/out of scope**
 
-- tie executive summaries to the same evidence trail as operator reporting
-- keep the surface simple: fewer charts, stronger status narrative, and clearer risk blocks
-- separate executive questions from operator questions explicitly
+- Manual source URL entry for OCSP/documents.
+- Web crawling to discover documents from arbitrary CA sites.
 
-### Anti-features
+### 2. OCSP Technical Monitoring
 
-- crowded analytics surfaces with every metric from the operator dashboard
-- BI-style controls that require training
-- exposing raw CRL mechanics where leadership only needs business risk and status
+**Table stakes**
 
-## UX and operator workflow
+- Build an OCSP request for the target certificate when issuer context is available.
+- Send request to the derived responder with bounded timeout and response-size limits.
+- Record HTTP status, content-type, duration, response size, response hash, and failure reason.
+- Treat network/timeout/non-response/wrong content type/oversized response as unhealthy.
+- Store payload evidence or hash/metadata sufficient to reprocess later.
 
-### Table stakes
+**Differentiators**
 
-- clearer first-run setup
-- simpler certificate and ZIP onboarding
-- field hints and examples on editable forms
-- clearer group defaults and onboarding consequences
-- stronger empty states and next-step guidance
+- Parse high-level OCSP response envelope status if feasible without full cryptographic validation.
+- Capture `thisUpdate`, `nextUpdate`, and `producedAt` when cheaply parseable.
 
-### Differentiators
+**Defer/out of scope**
 
-- one coherent onboarding path from first admin setup to first monitored artifact
-- minimal-step flows with progressive disclosure for advanced settings
-- predictable information hierarchy for admins vs operators vs viewers
+- Full OCSP signature verification, responder authorization, and certificate revocation status enforcement.
+- Nonce and advanced responder profile validation.
 
-### Anti-features
+### 3. CP/CPS/DPC Document Monitoring
 
-- dumping all configuration on one screen
-- using untranslated or overly technical field names in primary flows
-- making operators switch between multiple disconnected surfaces to finish one task
+**Table stakes**
 
-## Priority order from user guidance
+- Fetch discovered document URLs with the same SSRF, timeout, redirect, and byte-limit controls used for trust-list fetches.
+- Record HTTP status, content-type, duration, size, hash, and failure reason.
+- Store a snapshot of the document or bounded raw content where size permits.
+- Extract basic metadata: URL, content-type, size, hash, first-seen, last-seen, changed/unchanged, optional title/text excerpt when feasible.
+- Track document version changes by hash over time.
 
-1. visual redesign
-2. easier certificate / ZIP onboarding
-3. first-run platform-admin bootstrap in the web UI
-4. field-level hints and contextual guidance
-5. trust-list ingestion and re-import
-6. executive dashboards / summaries
+**Differentiators**
 
-## Sources
+- Extract bounded text from PDF/HTML/text documents for future AI analysis.
+- Preserve policy OID and certificate provenance next to document snapshots.
 
-- EU trusted lists overview: https://ec.europa.eu/digital-building-blocks/sites/display/DIGITAL/Trusted+Lists
-- GOV.UK file upload: https://design-system.service.gov.uk/components/file-upload/
-- GOV.UK text input: https://design-system.service.gov.uk/components/text-input/
-- Material text fields: https://m3.material.io/components/text-fields/overview
-- Microsoft Power BI dashboard design guidance: https://learn.microsoft.com/power-bi/create-reports/service-dashboards-design-tips
+**Defer/out of scope**
+
+- Determining whether the document content is compliant.
+- Mapping document obligations to certificate fields.
+- Robust multilingual semantic parsing.
+
+### 4. Reporting and Executive Visibility
+
+**Table stakes**
+
+- Operational reporting shows source kind (`crl`, `certificate`, `trust-list`, `ocsp`, `policy-document`) and health.
+- Operators can drill into recent OCSP/document check events and evidence metadata.
+- Executive summary adds simple aggregate cards for OCSP health and policy-document availability/change risk.
+- Existing group-scoped authorization remains enforced through the parent certificate/target visibility.
+
+**Differentiators**
+
+- Show document change count and stale/unavailable document count as management signals.
+- Link document/OCSP evidence back to parent certificate and trust-list source.
+
+**Defer/out of scope**
+
+- Separate monitoring-source application area.
+- Complex SLO/burn-rate analytics for these new sources.
+
+## Anti-Features for v1.3
+
+- Do not create another independent inventory that operators must reconcile manually.
+- Do not block certificate import because OCSP/doc documents are absent; absence is evidence, not import failure.
+- Do not label an OCSP response as semantically valid unless full validation exists.
+- Do not store unbounded document bodies or extraction text.
+- Do not let document fetches reach private/internal networks.
+
+## Requirement Implications
+
+- Requirements should separate discovery, evidence capture, polling, reporting, and limits.
+- Requirements should explicitly state that AI compliance analysis is future scope.
+- Requirements should define healthy/unhealthy semantics per source kind.

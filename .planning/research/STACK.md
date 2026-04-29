@@ -1,69 +1,105 @@
-# v1.2 Research: STACK
+# v1.3 Research: Stack Additions for OCSP and CP/CPS/DPC Monitoring
 
-**Research date:** 2026-04-13
-**Milestone focus:** ETSI trust-list ingestion, executive summaries, and simpler operator UX
+**Milestone:** v1.3 Monitoring Source Expansion  
+**Date:** 2026-04-28  
+**Scope:** stack changes only for automatically derived OCSP and CP/CPS/DPC monitoring sources in the existing TypeScript/Next.js/Postgres/Docker runtime.
 
-## Current stack fit
+## Existing Stack Fit
 
-The current product is a good fit for a TypeScript-first v1.2:
-- Next.js + React for product UI
-- Postgres for persistent operational state
-- Node runtime for polling/import workers
-- existing certificate/ZIP import pipeline in `src/inventory/certificate-admin.ts`
-- existing i18n surface and settings/admin pages ready for UX expansion
+The current stack is sufficient for v1.3 if we keep the milestone bounded:
 
-The main constraint is to keep v1.2 native to this stack. Pulling in a Java-based DSS runtime or a second UI stack would raise operational cost without matching the current product shape.
+- TypeScript/Node worker can perform HTTP(S) availability checks, OCSP POST/GET probes, document downloads, hashing, and metadata extraction.
+- Postgres is already the runtime source of truth and should also store derived-source definitions, poll events, document snapshot metadata, and bounded extracted text.
+- Existing certificate-first import and trust-list projection flows are the correct derivation points; v1.3 should not introduce a separate source-of-truth.
+- Existing SSRF protections in `src/trust-lists/sync.ts` should be generalized/reused for document downloads and OCSP responder URLs.
 
-## Recommended additions
+## Primary Standards and References
 
-### Trust-list ingestion
+- RFC 6960 defines OCSP request/response behavior, including DER encoded request/response bodies and the `application/ocsp-request` and `application/ocsp-response` content types: https://www.rfc-editor.org/rfc/rfc6960
+- RFC 5280 defines AIA `id-ad-ocsp` as the location of an OCSP responder and Certificate Policies CPS Pointer qualifiers as URI pointers to CPS documents: https://www.ietf.org/rfc/rfc5280.html
+- CA/Browser Forum Baseline Requirements define current operational expectations for public TLS OCSP/CRL services and CPS disclosure practices: https://cabforum.org/working-groups/server/baseline-requirements/requirements/
+- ETSI EN 319 411-1 explains CP/CPS roles for TSP certificate services; CP describes what is adhered to, CPS how the TSP adheres to it: https://www.etsi.org/deliver/etsi_en/319400_319499/31941101/01.04.01_60/en_31941101v010401p.pdf
 
-- **XML parsing:** stay in Node/TypeScript with a streaming-safe XML parser rather than introducing a second runtime.
-- **Digest/signature verification:** add a focused XML signature validation capability for ETSI trust lists instead of treating trust-list XML as untrusted metadata.
-- **Fetch + cache discipline:** persist trust-list source metadata such as territory, sequence number, issue date, next update, and digest values.
-- **Change detection:** use sequence-number / next-update semantics from the trust-list model first, with digest-based fallback for safety.
+## Recommended Stack Additions
 
-### Executive dashboards
+### OCSP encoding/parsing
 
-- do not introduce a BI tool dependency for v1.2
-- keep executive surfaces in the existing app and PDF/export path
-- build summary read models inside the current reporting layer, reusing the same authorization and evidence sources
+Use Node's built-in `crypto.X509Certificate` where possible for basic certificate fields, but it will not be enough for full extension parsing or OCSP DER construction.
 
-### UX / operator workflow
+Recommended approach:
 
-- stay inside the current Next.js app
-- invest in design-system-like primitives inside the codebase: consistent cards, spacing, field help, onboarding steps, and empty states
-- avoid a major external component library migration during the same milestone as trust-list ingestion
+1. Add a small ASN.1/PKI library only if needed for parsing AIA/Certificate Policies and constructing OCSP requests.
+2. Prefer an established JS PKI library over custom ASN.1 encoders.
+3. Keep v1.3 OCSP validation technical: build request, send to responder, store response status/content-type/bytes/hash/timing. Full signature/status validation can be a later milestone.
 
-## Stack recommendation
+Candidate libraries to evaluate during implementation:
 
-### Keep
+- `pkijs` + `asn1js`: strong ASN.1/X.509 model in JS, useful for AIA, certificate policies, and OCSP structures.
+- `@peculiar/x509`: ergonomic X.509 parsing on WebCrypto primitives, useful for certificate extension extraction; verify OCSP support before adopting.
 
-- Next.js / React / TypeScript / Postgres / Tailwind
-- in-process worker model
-- current CSV/PDF export foundation
+Avoid:
 
-### Add carefully
+- Shelling out to `openssl` in the packaged runtime; it creates host/runtime dependency drift.
+- Implementing full ASN.1 DER encoders manually unless a tiny targeted encoder is demonstrably simpler.
 
-- one XML parser with namespace support
-- one XML signature validation path appropriate for ETSI trust-list signatures
-- stronger UI primitives and form patterns in the app itself
+### Document download and extraction
 
-### Avoid in v1.2
+For CP/CPS/DPC documents, v1.3 should store raw bytes or a bounded text extraction artifact plus metadata. Do not add a heavyweight document processing pipeline yet.
 
-- introducing a second backend runtime just for trust lists
-- introducing a full BI platform
-- introducing a new frontend framework or heavy component dependency migration
+Recommended approach:
 
-## Source-backed notes
+- Use existing `fetch`/Buffer/hash flow with strict timeout, byte limits, redirect validation, content-type capture, and snapshot hashing.
+- Store raw document snapshots either in Postgres bytea/text for bounded sizes or as future-ready metadata with content retained in Postgres for now. Given the current compose stack, Postgres storage is acceptable for bounded proof/demo scope.
+- Add PDF text extraction only if the dependency remains lightweight and build-safe in Docker. If not, store the raw PDF + hash and defer deep extraction.
 
-- ETSI TS 119 612 defines sequence-numbered trust-service status lists and update metadata; ingestion should respect those semantics rather than treating feeds as generic XML blobs.
-- The EU list-of-lists model means LOTL -> territory TSL discovery is a first-class concern, not a side detail.
-- GOV.UK and Material guidance both reinforce concise supporting/help text close to fields rather than long explanatory pages for routine form entry.
+Candidate libraries:
 
-## Sources
+- Existing `pdf` skill used local tooling for review, but the app should not depend on host Poppler.
+- For in-app extraction, evaluate `pdf-parse` or `pdfjs-dist` only if package/build compatibility is confirmed. Otherwise implement metadata capture first.
 
-- ETSI TS 119 612 catalogue entry: https://standards.iteh.ai/catalog/standards/etsi/a3a0a50d-2b1d-4707-b772-7f8bb5d2a09d/etsi-ts-119-612-v1-2-1-2018-10
-- EU LOTL / trusted lists overview: https://ec.europa.eu/digital-building-blocks/sites/display/DIGITAL/Trusted+Lists
-- GOV.UK guidance and hints: https://design-system.service.gov.uk/components/text-input/
-- Material text fields / supporting text: https://m3.material.io/components/text-fields/overview
+### Storage and retention
+
+Add new Postgres-backed tables under the runtime store:
+
+- `monitoring_sources`: derived OCSP/document source definitions tied to certificate/provenance/group visibility.
+- `monitoring_source_events`: poll/check events with status, duration, failure reason, content hash, size, and timestamps.
+- `document_snapshots`: document-specific snapshots with content-type, size, sha256, extracted text excerpt/metadata, and source URL.
+- Optional `ocsp_response_snapshots`: OCSP response bytes/hash/status metadata if separating OCSP payload evidence from generic events simplifies later validation.
+
+Keep source derivation deterministic to avoid duplicates:
+
+- source key = certificate id or fingerprint + source kind + normalized URL + optional policy OID/document role.
+
+### Configuration
+
+Add environment-configurable limits:
+
+- `MONITORING_SOURCE_FETCH_TIMEOUT_MS`
+- `MONITORING_SOURCE_MAX_DOCUMENT_BYTES`
+- `MONITORING_SOURCE_MAX_EXTRACTED_TEXT_BYTES`
+- `MONITORING_SOURCE_MAX_REDIRECTS`
+- `OCSP_MAX_RESPONSE_BYTES`
+
+Default conservatively; document in README/operators.
+
+## Integration Points
+
+- Certificate import: derive OCSP and CPS URI candidates immediately after certificate parse.
+- Trust-list sync/projection: reuse certificate-first import path so sources are derived from imported/projection certificates.
+- Worker loop: add a monitor pass for enabled derived sources, ideally after existing CRL/certificate polling.
+- Reporting read models: aggregate source kinds into operational detail and executive cards.
+- Authorization: source visibility follows the parent certificate/target group shares.
+
+## What Not To Add in v1.3
+
+- No manual source-management UI unless derivation gaps make the milestone impossible.
+- No AI document analysis or policy conformance scoring yet.
+- No full OCSP signature/status conformance gate yet.
+- No distributed object store unless document size requirements exceed bounded Postgres storage.
+
+## Requirement Implications
+
+- Requirements need explicit derivation behavior for OCSP and CP/CPS/DPC sources.
+- Requirements need evidence retention: raw/hash/timing/status and document snapshot metadata.
+- Requirements need operational limits and SSRF controls.
+- Requirements need reporting integration but not a separate new product area.

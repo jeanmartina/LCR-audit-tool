@@ -1,109 +1,71 @@
-# v1.2 Research: PITFALLS
+# v1.3 Research: Pitfalls for OCSP and CP/CPS/DPC Monitoring
 
-**Research date:** 2026-04-13
-**Milestone focus:** ETSI trust-list ingestion, executive summaries, and simpler operator UX
+**Milestone:** v1.3 Monitoring Source Expansion  
+**Date:** 2026-04-28
 
-## Trust-list ingestion pitfalls
+## Pitfall 1: Treating OCSP reachability as revocation validity
 
-### Treating trust lists as plain XML imports
+**Risk:** A responder can be reachable while the response is stale, unauthorized, malformed, or semantically `unknown`.  
+**Prevention:** Label v1.3 OCSP as technical monitoring/evidence capture. Do not claim full revocation validation until signature, responder authorization, `thisUpdate`/`nextUpdate`, and status semantics are implemented.  
+**Phase control:** OCSP polling phase.
 
-Risk:
-- parsing XML without signature validation or update semantics creates false trust in the source
+## Pitfall 2: Failing when OCSP issuer context is missing
 
-Prevention:
-- validate signature and preserve sequence/update metadata before certificate extraction
-- record sync failure states explicitly instead of partially accepting untrusted data
+**Risk:** OCSP request construction needs issuer name/key hash and serial context. Imported certificates may not always include the issuer certificate.  
+**Prevention:** Store derived OCSP URL separately from checkability. Emit `issuer-context-missing` as an evidence state, not an outage.  
+**Phase control:** Source derivation/storage phase.
 
-### Creating a second onboarding model
+## Pitfall 3: SSRF through document or OCSP URLs
 
-Risk:
-- trust-list assets behave differently from certificate-import assets, multiplying operator confusion
+**Risk:** Certificate-controlled URLs can point to private/internal networks, metadata services, or redirect chains.  
+**Prevention:** Reuse/generalize trust-list URL controls: HTTPS for deployed URLs, private/link-local/multicast block, redirect validation, timeout, size limits.  
+**Phase control:** Shared fetch safety phase before polling.
 
-Prevention:
-- keep one certificate inventory model and add provenance/source metadata on top
-- reuse the existing certificate import/run abstraction where possible
+## Pitfall 4: Unbounded document storage
 
-### Over-importing everything on every sync
+**Risk:** CP/CPS/DPC PDFs and HTML can be large or malicious. Keeping every raw body unbounded will grow Postgres and can exhaust memory.  
+**Prevention:** Add byte limits, hash-first metadata, bounded extracted text, truncation flags, and retention decisions.  
+**Phase control:** Document snapshot phase.
 
-Risk:
-- full re-imports every cycle create noisy audit trails, wasted work, and confusing asset churn
+## Pitfall 5: Assuming DPC is discoverable everywhere
 
-Prevention:
-- use sequence number / digest / snapshot comparison to identify real changes first
-- design re-import around changed source snapshots, not blind periodic rebuilds
+**Risk:** DPC terminology and publication practices vary by jurisdiction/ecosystem; certificates may only contain CPS pointers or policy OIDs.  
+**Prevention:** Model document roles as `cps`, `cp`, `dpc`, `terms`, `unknown-policy-document`; record `not discovered` explicitly.  
+**Phase control:** Requirements and derivation phase.
 
-## Executive dashboard pitfalls
+## Pitfall 6: Web crawling CA sites
 
-### Building operator dashboards with executive labels
+**Risk:** Crawling expands scope, increases SSRF/legal/operational risk, and creates noisy evidence.  
+**Prevention:** v1.3 should only use URLs explicitly present in certificates, trust-list/provenance fields, or already parsed metadata.  
+**Phase control:** Requirements gate.
 
-Risk:
-- leadership still gets too much detail and cannot quickly answer “Are we safe?”
+## Pitfall 7: Breaking the operator UX with a new inventory silo
 
-Prevention:
-- keep executive summaries small: current status, top risks, trend, and required attention
-- move investigation detail behind links to the operator surface
+**Risk:** Operators already have certificate/trust-list flows. A separate monitoring-source app area would fragment the model.  
+**Prevention:** Treat OCSP/doc sources as child evidence under certificate/trust-list provenance and expose them in existing reporting/admin detail.  
+**Phase control:** Architecture and reporting phases.
 
-### Too many charts
+## Pitfall 8: Over-promising AI compliance readiness
 
-Risk:
-- visual noise and false precision make the product harder to trust
+**Risk:** Storing documents is necessary but not sufficient for AI analysis. The future agent will need provenance, policy OIDs, certificate fields, document version history, and extracted text quality flags.  
+**Prevention:** Store structured provenance and extraction metadata now; explicitly defer compliance interpretation.  
+**Phase control:** Document snapshot phase and requirements wording.
 
-Prevention:
-- prefer fewer cards, concise tables, and one or two trend visuals with clear interpretation
+## Pitfall 9: Incorrect executive aggregation
 
-## UX pitfalls
+**Risk:** Mixing CRL, OCSP, document availability, and certificate health into one health number can mislead leadership.  
+**Prevention:** Add simple separate cards for OCSP and policy documents, plus top risks; do not merge into existing SLA until semantics are mature.  
+**Phase control:** Reporting phase.
 
-### Redesign without workflow simplification
+## Pitfall 10: Content-type trust
 
-Risk:
-- the product looks newer but still requires too many steps and too much domain knowledge
+**Risk:** Servers may send PDFs as `application/octet-stream`, HTML as text, or incorrect types.  
+**Prevention:** Store declared content-type and sniff only enough to choose safe extraction. Never execute/render fetched HTML.  
+**Phase control:** Document snapshot phase.
 
-Prevention:
-- evaluate redesign success by task completion friction, not just appearance
-- redesign onboarding paths before polishing isolated screens
+## Requirement Implications
 
-### Hint text that turns into documentation dumps
-
-Risk:
-- users ignore large help blocks; forms become harder to scan
-
-Prevention:
-- keep help text short, example-oriented, and adjacent to the field
-- use progressive disclosure for deeper guidance
-
-### First-run bootstrap mixed with normal admin settings
-
-Risk:
-- setup becomes confusing because initial-system concerns and ongoing-operations concerns are different tasks
-
-Prevention:
-- treat first-run bootstrap as a dedicated guided flow with a clear finish line
-
-## Milestone risk
-
-v1.2 spans:
-- new ingestion source type
-- executive read models
-- substantial UX redesign
-
-That is enough scope to drift. Requirements should protect against trying to ship:
-- Entra/OIDC live proof
-- OCSP
-- trust-list ingestion
-- redesign
-- onboarding simplification
-- executive analytics
-
-all at the same depth in one milestone.
-
-Recommended discipline:
-- make trust-list ingestion + operator UX the core delivery
-- keep executive summaries intentionally simple in v1.2
-- defer deep executive analytics / burn-rate sophistication until the trust-list model is stable
-
-## Sources
-
-- ETSI TS 119 612 entry: https://standards.iteh.ai/catalog/standards/etsi/a3a0a50d-2b1d-4707-b772-7f8bb5d2a09d/etsi-ts-119-612-v1-2-1-2018-10
-- EU trusted lists overview: https://ec.europa.eu/digital-building-blocks/sites/display/DIGITAL/Trusted+Lists
-- GOV.UK text input guidance: https://design-system.service.gov.uk/components/text-input/
-- Microsoft dashboard design tips: https://learn.microsoft.com/power-bi/create-reports/service-dashboards-design-tips
+- Require explicit source states: healthy, degraded, unavailable, not discovered, not checkable.
+- Require shared fetch safety for every URL derived from certificates.
+- Require bounded document retention and extraction metadata.
+- Require future-AI readiness through provenance, not AI analysis in v1.3.

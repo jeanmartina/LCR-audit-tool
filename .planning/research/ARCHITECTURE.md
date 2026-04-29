@@ -1,103 +1,145 @@
-# v1.2 Research: ARCHITECTURE
+# v1.3 Research: Architecture for OCSP and CP/CPS/DPC Monitoring
 
-**Research date:** 2026-04-13
-**Milestone focus:** ETSI trust-list ingestion, executive summaries, and simpler operator UX
+**Milestone:** v1.3 Monitoring Source Expansion  
+**Date:** 2026-04-28
 
-## Recommended architectural direction
+## Architectural Direction
 
-### 1. Trust-list ingestion as a first-class source type
+Extend the current certificate-first model with a generic derived monitoring-source layer. OCSP responders and CP/CPS/DPC documents should be children of certificates or trust-list-derived certificate projections, not standalone top-level assets disconnected from authorization/provenance.
 
-Add a new inventory source type alongside the existing certificate import modes:
-- manual certificate upload
-- ZIP certificate upload
-- trust-list URL source
+## Proposed Data Flow
 
-This keeps one inventory system with multiple source types rather than splitting the product into separate ingest subsystems.
+1. Certificate import or trust-list projection produces/updates a certificate record.
+2. A source-derivation helper parses certificate extensions and provenance fields.
+3. The helper upserts deterministic `monitoring_sources` records for OCSP and policy-document candidates.
+4. Worker polls enabled monitoring sources:
+   - OCSP: construct request, POST/GET responder, store response evidence.
+   - Document: fetch URL, hash/store snapshot, extract bounded metadata/text.
+5. Reporting read models join source health through parent certificate/group visibility.
+6. Executive summary aggregates source health into simple cards.
 
-### 2. LOTL / TSL sync pipeline
+## New Components
 
-Recommended stages:
-1. register trust-list source URL and operator metadata
-2. fetch LOTL / TSL document
-3. validate XML signature and structural metadata
-4. record source snapshot (digest, sequence number, issue date, next update)
-5. detect change vs previous snapshot
-6. extract affected certificates / services
-7. feed extracted certificates into the existing certificate-admin import pipeline
-8. write import and sync audit events
-9. project resulting monitored assets into reporting
+### `src/monitoring-sources/derive.ts`
 
-### 3. Extend, do not replace, current certificate import
+Responsibilities:
 
-The current certificate pipeline already knows how to:
-- normalize PEM / DER
-- fingerprint certificates
-- derive CRL URLs
-- create batch import runs
-- project runtime targets
+- Extract AIA OCSP responder URLs.
+- Extract CPS Pointer URIs and policy OIDs.
+- Accept optional CP/DPC candidates from trust-list/provenance when available.
+- Normalize URLs and produce deterministic source keys.
 
-That should remain the central path. Trust-list ingestion should supply certificate payloads into that pipeline and add source metadata around it.
+### `src/monitoring-sources/poll.ts`
 
-### 4. New persisted entities likely needed
+Responsibilities:
 
-- trust-list sources
-- trust-list snapshots
-- trust-list sync runs
-- trust-list extracted certificate mappings
-- source-to-certificate provenance records
+- Poll a source by kind.
+- Apply shared URL safety checks and limits.
+- Record events and snapshots.
+- Return structured health status.
 
-Core fields to persist:
-- source URL
-- source type (`lotl`, `tsl`)
-- territory / scheme information
-- sequence number
-- issue date
-- next update
-- digest / canonical identity
-- sync status and failure reason
-- last successful sync timestamp
+### `src/monitoring-sources/ocsp.ts`
 
-### 5. Executive reporting path
+Responsibilities:
 
-Do not build executive summaries as a second analytics engine.
-Build them as:
-- summary read models over existing monitoring evidence
-- role-safe, group-scoped executive views
-- executive-focused PDF/export variants if needed
+- Build minimal OCSP request from target certificate and issuer context.
+- Perform bounded HTTP request.
+- Store response evidence.
+- Optionally parse envelope metadata if safe.
 
-A good split is:
-- operator reporting = investigation and action
-- executive reporting = current risk, trend, and exposure summary
+### `src/monitoring-sources/documents.ts`
 
-### 6. UX architecture direction
+Responsibilities:
 
-Use progressive disclosure:
-- step-based first-run admin bootstrap
-- guided onboarding wizard for certificate / ZIP / trust-list source creation
-- advanced settings collapsed behind an explicit reveal
-- inline help and examples attached to the field itself
+- Fetch CP/CPS/DPC documents.
+- Store hash/snapshot metadata.
+- Extract bounded text/metadata when feasible.
+- Identify changed vs unchanged snapshots.
 
-Avoid mixing:
-- platform setup
-- group defaults
-- source onboarding
-- advanced monitoring overrides
+### Runtime store additions
 
-into the same initial screen.
+Add database-backed helpers for:
 
-## Suggested build order
+- upsert/list monitoring sources
+- record source events
+- record document snapshots
+- load source health for reporting
 
-1. trust-list source persistence and sync metadata
-2. trust-list fetch / validation / change-detection pipeline
-3. certificate extraction into existing import pipeline
-4. operator sync visibility and failure states
-5. executive summary read models
-6. redesign + onboarding flow consolidation
-7. first-run bootstrap and field guidance pass
+## Modified Components
 
-## Sources
+### Certificate admin/import
 
-- EU LOTL / trusted lists overview: https://ec.europa.eu/digital-building-blocks/sites/display/DIGITAL/Trusted+Lists
-- DSS trusted lists and validation docs: https://ec.europa.eu/digital-building-blocks/DSS/webapp-demo/doc/dss-documentation.html#_trusted_lists
-- Microsoft dashboard design tips: https://learn.microsoft.com/power-bi/create-reports/service-dashboards-design-tips
-- GOV.UK progressive disclosure patterns: https://design-system.service.gov.uk/
+After certificate parse/import:
+
+- call derivation helper
+- upsert derived monitoring sources
+- preserve source derivation warnings as non-blocking results
+
+### Trust-list sync
+
+After certificate projection/import:
+
+- call the same derivation helper
+- preserve trust-list source/snapshot/run provenance on derived sources
+
+### Worker
+
+Add a polling pass for monitoring sources. Keep it simple:
+
+- same process as current worker
+- bounded per-source timeout
+- no parallel fan-out until needed
+- no new service in v1.3
+
+### Reporting read models
+
+Add derived-source health to existing principal-scoped read models. The authorization rule should be: if the principal can see the parent certificate/target, they can see child source status/evidence.
+
+### Executive summary
+
+Add aggregate counts only:
+
+- OCSP healthy/degraded/unavailable/not discovered
+- policy documents available/changed/unavailable/not discovered
+- top source risks with links to operational evidence
+
+## Storage Shape
+
+Suggested tables:
+
+```text
+monitoring_sources(
+  id, source_key, source_type, certificate_id, trust_list_source_id,
+  trust_list_snapshot_id, url, policy_oid, document_role,
+  enabled, created_at, updated_at
+)
+
+monitoring_source_events(
+  id, source_id, status, status_label, duration_ms, http_status,
+  content_type, content_length, content_sha256, failure_reason,
+  checked_at
+)
+
+document_snapshots(
+  id, source_id, event_id, url, content_type, size_bytes,
+  sha256, title, extracted_text, metadata_json, captured_at
+)
+```
+
+OCSP payloads can either use a separate table or event metadata. If raw OCSP bodies are stored, enforce a small byte limit.
+
+## Build Order
+
+1. Source derivation and storage schema.
+2. Document fetch/snapshot pipeline with safety limits.
+3. OCSP technical request/evidence pipeline.
+4. Worker integration and lifecycle events.
+5. Reporting/executive integration.
+6. Docs/validation.
+
+## Architectural Risks
+
+- Issuer context may be required for real OCSP request construction. If unavailable, source should become `discovered-but-not-checkable` with reason, not a false outage.
+- DPC may not be consistently discoverable from certificates. Treat it as best-effort derived evidence.
+- Raw document storage can grow quickly. Enforce strict defaults and record truncation/extraction state.
+- Do not introduce manual URL entry as a workaround unless explicitly planned.

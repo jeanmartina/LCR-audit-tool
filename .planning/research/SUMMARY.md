@@ -1,77 +1,75 @@
-# v1.2 Research Summary
+# v1.3 Research Summary: Monitoring Source Expansion
 
-**Research date:** 2026-04-13
-**Milestone:** v1.2 Trust Lists, Executive Visibility, and Operator UX
+**Date:** 2026-04-28  
+**Milestone:** v1.3 Monitoring Source Expansion
 
-## Executive summary
+## Stack Additions
 
-The highest-value v1.2 direction is coherent:
-- trust-list ingestion should be added as a new source type in the existing certificate inventory model
-- executive reporting should stay intentionally simple and reuse existing evidence/read-model foundations
-- UX work should target workflow friction first, not visual polish alone
+- Existing TypeScript/Node/Postgres/Docker stack is sufficient for v1.3.
+- Add a lightweight PKI/ASN.1 parsing path only if current certificate parsing cannot extract AIA OCSP and Certificate Policies CPS URIs reliably.
+- Prefer `pkijs`/`asn1js` or `@peculiar/x509` evaluation over hand-written ASN.1 or shelling out to `openssl`.
+- Reuse/generalize existing SSRF-safe fetch behavior from trust-list sync for all certificate-derived URLs.
+- Add bounded document snapshot storage and optional bounded text extraction; do not add object storage or AI analysis yet.
 
-The strongest architectural constraint is consistency. Trust-list ingestion must not create a second product inside the product. The strongest UX constraint is simplicity. The redesign must reduce steps, reduce ambiguity, and give users field-level help exactly where decisions are made.
+## Feature Table Stakes
 
-## Recommended product shape
+1. **Derived source discovery**
+   - OCSP URLs from AIA `id-ad-ocsp`.
+   - CPS URLs from RFC 5280 Certificate Policies CPS Pointer URIs.
+   - CP/DPC best-effort only when discoverable from existing parsed certificate/trust-list/provenance data.
 
-### Trust lists
+2. **OCSP technical monitoring**
+   - Bounded request to responder.
+   - Persist HTTP/content-type/timing/size/hash/failure evidence.
+   - Store response evidence for future full validation.
+   - Do not claim full revocation validation in v1.3.
 
-Build ETSI TS 119 612 support around:
-- trust-list URL registration
-- source snapshot persistence
-- sequence/update-aware sync
-- extracted certificate projection into the current certificate pipeline
-- operator-visible sync status, change summaries, and failures
+3. **Document monitoring**
+   - Fetch CP/CPS/DPC URLs safely.
+   - Store snapshots, hashes, basic metadata, change history, and bounded extracted text when feasible.
+   - Preserve policy OIDs and certificate/trust-list provenance for future AI compliance analysis.
 
-### Executive visibility
+4. **Reporting**
+   - Operational detail for new source kinds.
+   - Simple executive aggregate cards for OCSP and policy-document availability/change risk.
+   - Visibility inherited from parent certificate/group authorization.
 
-Keep v1.2 executive reporting intentionally narrow:
-- overall healthy / degraded / down summary
-- top current risks
-- upcoming expiration / publication-risk summary
-- short trend snapshot
-- direct links into operator reporting for investigation
+## Recommended Architecture
 
-### UX/operator workflow
+Create a generic child `monitoring_sources` layer tied to certificate/provenance records:
 
-Prioritize these in order:
-1. redesign visual system around clearer hierarchy and calmer forms
-2. simplify certificate and ZIP onboarding into guided, low-friction flows
-3. add a dedicated first-run platform-admin bootstrap flow
-4. add concise field-level hints and examples on settings/admin forms
+- `monitoring_sources` for derived source definitions.
+- `monitoring_source_events` for check outcomes.
+- `document_snapshots` for CP/CPS/DPC evidence.
+- Optional OCSP response snapshot metadata if raw payloads should be separated.
 
-## Implementation guidance
+Build order:
 
-### What to build first
+1. Source derivation and schema.
+2. Shared safe fetch and document snapshot pipeline.
+3. OCSP technical polling pipeline.
+4. Worker integration.
+5. Reporting and executive summary integration.
+6. Operator documentation and validators.
 
-1. trust-list source model and sync metadata
-2. trust-list validation / change-detection pipeline
-3. projection into current certificate import
-4. operator sync status and provenance UI
-5. simple executive summary read models
-6. redesign and onboarding consolidation
-7. first-run bootstrap and field guidance pass
+## Watch Out For
 
-### What to keep simple in v1.2
+- OCSP reachability is not OCSP semantic validity.
+- Issuer context may be missing; represent as `not checkable`, not outage.
+- Certificate-derived URLs are attacker-controlled inputs for SSRF purposes.
+- DPC may not be consistently discoverable.
+- Document storage must be bounded.
+- Do not introduce crawling or manual source UI in v1.3.
+- Future AI readiness means provenance and clean snapshots now, not AI interpretation now.
 
-- executive analytics depth
-- chart count
-- number of onboarding entry paths
-- advanced settings exposed during first-run flows
+## Requirement Implications
 
-## Watch-outs
+Requirements should cover:
 
-- do not treat trust-list XML as generic import data; validation and update semantics matter
-- do not build a separate admin surface for trust-list assets
-- do not confuse a prettier UI with a simpler workflow
-- do not over-scope executive analytics before trust-list ingestion is stable
-
-## Source list
-
-- ETSI TS 119 612 entry: https://standards.iteh.ai/catalog/standards/etsi/a3a0a50d-2b1d-4707-b772-7f8bb5d2a09d/etsi-ts-119-612-v1-2-1-2018-10
-- EU trusted lists / LOTL overview: https://ec.europa.eu/digital-building-blocks/sites/display/DIGITAL/Trusted+Lists
-- DSS trusted lists documentation: https://ec.europa.eu/digital-building-blocks/DSS/webapp-demo/doc/dss-documentation.html#_trusted_lists
-- GOV.UK Design System text input: https://design-system.service.gov.uk/components/text-input/
-- GOV.UK Design System file upload: https://design-system.service.gov.uk/components/file-upload/
-- Material 3 text fields: https://m3.material.io/components/text-fields/overview
-- Microsoft dashboard design tips: https://learn.microsoft.com/power-bi/create-reports/service-dashboards-design-tips
+- automatic derivation from imported/trust-list certificates;
+- explicit source states including `not discovered` and `not checkable`;
+- OCSP technical evidence capture;
+- CP/CPS/DPC document snapshot/hash/metadata/text capture;
+- operational and executive reporting;
+- safety limits, SSRF protection, and docs;
+- AI compliance analysis explicitly deferred to a future milestone.
