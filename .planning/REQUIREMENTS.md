@@ -77,31 +77,31 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SRC-05 | TBD | Pending |
-| SRC-06 | TBD | Pending |
-| SRC-07 | TBD | Pending |
-| SRC-08 | TBD | Pending |
-| OCSP-01 | TBD | Pending |
-| OCSP-02 | TBD | Pending |
-| OCSP-03 | TBD | Pending |
-| OCSP-04 | TBD | Pending |
-| DOCS-01 | TBD | Pending |
-| DOCS-02 | TBD | Pending |
-| DOCS-03 | TBD | Pending |
-| DOCS-04 | TBD | Pending |
-| DOCS-05 | TBD | Pending |
-| REP-04 | TBD | Pending |
-| REP-05 | TBD | Pending |
-| REP-06 | TBD | Pending |
-| OPS-07 | TBD | Pending |
-| OPS-08 | TBD | Pending |
-| SEC-01 | TBD | Pending |
+| SRC-05 | Phase 22 | Pending |
+| SRC-06 | Phase 22 | Pending |
+| SRC-07 | Phase 22 | Pending |
+| SRC-08 | Phase 22 | Pending |
+| OCSP-01 | Phase 24 | Pending |
+| OCSP-02 | Phase 24 | Pending |
+| OCSP-03 | Phase 24 | Pending |
+| OCSP-04 | Phase 24 | Pending |
+| DOCS-01 | Phase 23 | Pending |
+| DOCS-02 | Phase 23 | Pending |
+| DOCS-03 | Phase 23 | Pending |
+| DOCS-04 | Phase 23 | Pending |
+| DOCS-05 | Phase 23 | Pending |
+| REP-04 | Phase 25 | Pending |
+| REP-05 | Phase 25 | Pending |
+| REP-06 | Phase 25 | Pending |
+| OPS-07 | Phase 26 | Pending |
+| OPS-08 | Phase 26 | Pending |
+| SEC-01 | Phase 23 | Pending |
 
 **Coverage:**
 - v1.3 requirements: 19 total
-- Mapped to phases: 0
-- Unmapped: 19
+- Mapped to phases: 19
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-28*  
-*Last updated: 2026-04-28 after requirements definition*
+*Last updated: 2026-04-28 after roadmap creation*
