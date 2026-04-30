@@ -46,4 +46,27 @@ for (const literal of [
   assert(store.includes(literal), `${literal} must be in runtime store`);
 }
 
+const derivePath = "src/monitoring-sources/derive.ts";
+const packageJsonPath = "package.json";
+assert(fs.existsSync(derivePath), "monitoring source derive module must exist");
+const derive = read(derivePath);
+const packageJson = read(packageJsonPath);
+for (const literal of [
+  "deriveMonitoringSourceCandidatesFromCertificate",
+  "aia-ocsp",
+  "certificate-policies-cps-uri",
+  "aia-ocsp-missing",
+  "policy-document-url-missing",
+  "certificate-extension-parse-failed",
+]) {
+  assert(derive.includes(literal), `${literal} must be in monitoring source derivation`);
+}
+for (const forbidden of ["fetch(", "http.request", "https.request"]) {
+  assert(!derive.includes(forbidden), `${forbidden} must not be used in monitoring source derivation`);
+}
+assert(
+  packageJson.includes("@peculiar/x509") || packageJson.includes("pkijs"),
+  "package.json must include a selected X.509/ASN.1 dependency"
+);
+
 console.log("Derived monitoring source validation passed");

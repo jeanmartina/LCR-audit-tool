@@ -11,6 +11,7 @@
     "quality": "npm run build && npm run typecheck && npm run validate"
   },
   "dependencies": {
+    "@peculiar/x509": "^2.0.0",
     "@xmldom/xmldom": "^0.9.10",
     "fflate": "^0.8.2",
     "next": "^16.2.2",
