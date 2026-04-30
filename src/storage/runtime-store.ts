@@ -1,4 +1,12 @@
 import { Pool } from "pg";
+import { buildMonitoringSourceKey } from "../monitoring-sources/model";
+import type {
+  MonitoringSourceProvenanceInput,
+  MonitoringSourceRecord,
+  MonitoringSourceState,
+  MonitoringSourceType,
+  PolicyDocumentRole,
+} from "../monitoring-sources/types";
 
 export interface TargetRecord {
   id: string;
@@ -431,6 +439,7 @@ const cache = {
   certificateGroupOverrides: [] as CertificateGroupOverrideRecord[],
   certificateChangeEvents: [] as CertificateChangeEventRecord[],
   certificateTemplates: [] as CertificateTemplateRecord[],
+  monitoringSources: [] as MonitoringSourceRecord[],
   platformSettings: [] as PlatformSettingsRecord[],
   providerVerificationStatuses: [] as ProviderVerificationStatusRecord[],
   predictiveEvents: [] as PredictiveEventRecord[],
@@ -710,6 +719,25 @@ type TrustListCertificateProjectionRow = {
     | "duplicate-in-run";
   failure_reason: string | null;
   created_at: Date;
+};
+
+type MonitoringSourceRow = {
+  id: string;
+  source_key: string;
+  certificate_id: string;
+  fingerprint: string;
+  source_type: MonitoringSourceType;
+  source_url: string | null;
+  normalized_url: string | null;
+  document_role: PolicyDocumentRole | null;
+  policy_oid: string | null;
+  state: MonitoringSourceState;
+  derivation_reason: string;
+  trust_list_source_id: string | null;
+  trust_list_snapshot_id: string | null;
+  trust_list_run_id: string | null;
+  created_at: Date;
+  updated_at: Date;
 };
 
 function hasDatabase(): boolean {
@@ -1070,6 +1098,29 @@ export const RUNTIME_SQL_SCHEMA = {
       created_at timestamptz not null
     );
   `,
+  monitoringSources: `
+    create table if not exists monitoring_sources (
+      id text primary key,
+      source_key text not null unique,
+      certificate_id text not null,
+      fingerprint text not null,
+      source_type text not null,
+      source_url text null,
+      normalized_url text null,
+      document_role text null,
+      policy_oid text null,
+      state text not null,
+      derivation_reason text not null,
+      trust_list_source_id text null,
+      trust_list_snapshot_id text null,
+      trust_list_run_id text null,
+      created_at timestamptz not null,
+      updated_at timestamptz not null
+    );
+
+    create unique index if not exists monitoring_sources_source_key_uidx
+      on monitoring_sources (source_key);
+  `,
   predictive: `
     create table if not exists predictive_events (
       id text primary key,
@@ -1179,6 +1230,7 @@ export async function initializeRuntimeStoreSchema(): Promise<void> {
     await client.query(RUNTIME_SQL_SCHEMA.events);
     await client.query(RUNTIME_SQL_SCHEMA.access);
     await client.query(RUNTIME_SQL_SCHEMA.certificateAdmin);
+    await client.query(RUNTIME_SQL_SCHEMA.monitoringSources);
     await client.query(RUNTIME_SQL_SCHEMA.predictive);
     await client.query(RUNTIME_SQL_SCHEMA.trustLists);
     await client.query(
@@ -1308,13 +1360,34 @@ function mapTrustListCertificateProjectionRow(
   };
 }
 
+function mapMonitoringSourceRow(row: MonitoringSourceRow): MonitoringSourceRecord {
+  return {
+    id: row.id,
+    sourceKey: row.source_key,
+    certificateId: row.certificate_id,
+    fingerprint: row.fingerprint,
+    sourceType: row.source_type,
+    sourceUrl: row.source_url,
+    normalizedUrl: row.normalized_url,
+    documentRole: row.document_role,
+    policyOid: row.policy_oid,
+    state: row.state,
+    derivationReason: row.derivation_reason,
+    trustListSourceId: row.trust_list_source_id,
+    trustListSnapshotId: row.trust_list_snapshot_id,
+    trustListRunId: row.trust_list_run_id,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+  };
+}
+
 export async function reloadRuntimeStoreCache(): Promise<void> {
   if (!hasDatabase()) {
     return;
   }
 
   const currentPool = getPool();
-  const [targets, polls, coverageGaps, validations, alerts, snapshots, users, userSettings, authAccounts, authTransactions, authSessions, groups, groupSettings, memberships, invites, passwordResets, mfaMethods, auditEvents, targetGroupShares, platformSettings, providerVerificationStatuses, predictiveEvents, trustListSources, trustListSnapshots, trustListSyncRuns, trustListExtractedCertificates, trustListCertificateProjections] = await Promise.all([
+  const [targets, polls, coverageGaps, validations, alerts, snapshots, users, userSettings, authAccounts, authTransactions, authSessions, groups, groupSettings, memberships, invites, passwordResets, mfaMethods, auditEvents, targetGroupShares, platformSettings, providerVerificationStatuses, predictiveEvents, monitoringSources, trustListSources, trustListSnapshots, trustListSyncRuns, trustListExtractedCertificates, trustListCertificateProjections] = await Promise.all([
     currentPool.query<TargetRow>(
       `
         select
@@ -1440,6 +1513,9 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
     ),
     currentPool.query<PredictiveEventRow>(
       `select id, target_id, certificate_id, group_id, predictive_type, severity, next_update, message, created_at, resolved_at from predictive_events order by created_at asc`
+    ),
+    currentPool.query<MonitoringSourceRow>(
+      `select id, source_key, certificate_id, fingerprint, source_type, source_url, normalized_url, document_role, policy_oid, state, derivation_reason, trust_list_source_id, trust_list_snapshot_id, trust_list_run_id, created_at, updated_at from monitoring_sources order by updated_at desc`
     ),
     currentPool.query<TrustListSourceRow>(
       `select id, label, url, enabled, group_ids, created_by_user_id, created_at, updated_at from trust_list_sources order by updated_at desc`
@@ -1650,6 +1726,7 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
     createdAt: new Date(row.created_at),
     resolvedAt: row.resolved_at ? new Date(row.resolved_at) : null,
   }));
+  cache.monitoringSources = monitoringSources.rows.map(mapMonitoringSourceRow);
   cache.trustListSources = trustListSources.rows.map(mapTrustListSourceRow);
   cache.trustListSnapshots = trustListSnapshots.rows.map(mapTrustListSnapshotRow);
   cache.trustListSyncRuns = trustListSyncRuns.rows.map(mapTrustListSyncRunRow);
@@ -3128,6 +3205,154 @@ export async function upsertCertificateRecord(input: {
   }
 
   return { record, operation: existing ? "updated" : "imported" };
+}
+
+function buildMonitoringSourceRecord(
+  input: MonitoringSourceProvenanceInput,
+  existing?: MonitoringSourceRecord
+): MonitoringSourceRecord {
+  const now = new Date();
+  const sourceKey = buildMonitoringSourceKey({
+    fingerprint: input.fingerprint,
+    sourceType: input.sourceType,
+    normalizedUrl: input.normalizedUrl,
+    documentRole: input.documentRole,
+    policyOid: input.policyOid,
+  });
+  return {
+    id: existing?.id ?? makeId("msrc"),
+    sourceKey,
+    certificateId: input.certificateId,
+    fingerprint: input.fingerprint,
+    sourceType: input.sourceType,
+    sourceUrl: input.sourceUrl,
+    normalizedUrl: input.normalizedUrl,
+    documentRole: input.documentRole,
+    policyOid: input.policyOid,
+    state: input.state,
+    derivationReason: input.derivationReason,
+    trustListSourceId: input.trustListSourceId ?? existing?.trustListSourceId ?? null,
+    trustListSnapshotId: input.trustListSnapshotId ?? existing?.trustListSnapshotId ?? null,
+    trustListRunId: input.trustListRunId ?? existing?.trustListRunId ?? null,
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now,
+  };
+}
+
+export async function upsertMonitoringSourceRecord(
+  input: MonitoringSourceProvenanceInput
+): Promise<MonitoringSourceRecord> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
+
+  const sourceKey = buildMonitoringSourceKey({
+    fingerprint: input.fingerprint,
+    sourceType: input.sourceType,
+    normalizedUrl: input.normalizedUrl,
+    documentRole: input.documentRole,
+    policyOid: input.policyOid,
+  });
+  const existing = cache.monitoringSources.find((item) => item.sourceKey === sourceKey);
+  const record = buildMonitoringSourceRecord(input, existing);
+  const cacheIndex = cache.monitoringSources.findIndex((item) => item.sourceKey === record.sourceKey);
+  cache.monitoringSources =
+    cacheIndex === -1
+      ? [...cache.monitoringSources, record]
+      : cache.monitoringSources.map((item, index) => (index === cacheIndex ? record : item));
+
+  if (hasDatabase()) {
+    const result = await getPool().query<MonitoringSourceRow>(
+      `
+        insert into monitoring_sources (
+          id, source_key, certificate_id, fingerprint, source_type, source_url, normalized_url,
+          document_role, policy_oid, state, derivation_reason, trust_list_source_id,
+          trust_list_snapshot_id, trust_list_run_id, created_at, updated_at
+        ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+        on conflict (source_key) do update set
+          certificate_id = excluded.certificate_id,
+          fingerprint = excluded.fingerprint,
+          source_type = excluded.source_type,
+          source_url = excluded.source_url,
+          normalized_url = excluded.normalized_url,
+          document_role = excluded.document_role,
+          policy_oid = excluded.policy_oid,
+          state = excluded.state,
+          derivation_reason = excluded.derivation_reason,
+          trust_list_source_id = excluded.trust_list_source_id,
+          trust_list_snapshot_id = excluded.trust_list_snapshot_id,
+          trust_list_run_id = excluded.trust_list_run_id,
+          updated_at = excluded.updated_at
+        returning id, source_key, certificate_id, fingerprint, source_type, source_url,
+          normalized_url, document_role, policy_oid, state, derivation_reason,
+          trust_list_source_id, trust_list_snapshot_id, trust_list_run_id, created_at, updated_at
+      `,
+      [
+        record.id,
+        record.sourceKey,
+        record.certificateId,
+        record.fingerprint,
+        record.sourceType,
+        record.sourceUrl,
+        record.normalizedUrl,
+        record.documentRole,
+        record.policyOid,
+        record.state,
+        record.derivationReason,
+        record.trustListSourceId,
+        record.trustListSnapshotId,
+        record.trustListRunId,
+        record.createdAt,
+        record.updatedAt,
+      ]
+    );
+    const stored = mapMonitoringSourceRow(result.rows[0]);
+    cache.monitoringSources = cache.monitoringSources.map((item) =>
+      item.sourceKey === stored.sourceKey ? stored : item
+    );
+    return stored;
+  }
+
+  return record;
+}
+
+export async function listMonitoringSourceRecords(): Promise<MonitoringSourceRecord[]> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<MonitoringSourceRow>(
+      `select id, source_key, certificate_id, fingerprint, source_type, source_url, normalized_url, document_role, policy_oid, state, derivation_reason, trust_list_source_id, trust_list_snapshot_id, trust_list_run_id, created_at, updated_at from monitoring_sources order by updated_at desc`
+    );
+    cache.monitoringSources = result.rows.map(mapMonitoringSourceRow);
+  }
+  return [...cache.monitoringSources];
+}
+
+export async function listMonitoringSourcesForCertificate(
+  certificateId: string
+): Promise<MonitoringSourceRecord[]> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<MonitoringSourceRow>(
+      `select id, source_key, certificate_id, fingerprint, source_type, source_url, normalized_url, document_role, policy_oid, state, derivation_reason, trust_list_source_id, trust_list_snapshot_id, trust_list_run_id, created_at, updated_at from monitoring_sources where certificate_id = $1 order by updated_at desc`,
+      [certificateId]
+    );
+    return result.rows.map(mapMonitoringSourceRow);
+  }
+  return cache.monitoringSources.filter((item) => item.certificateId === certificateId);
+}
+
+export async function findMonitoringSourceByKey(
+  sourceKey: string
+): Promise<MonitoringSourceRecord | null> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<MonitoringSourceRow>(
+      `select id, source_key, certificate_id, fingerprint, source_type, source_url, normalized_url, document_role, policy_oid, state, derivation_reason, trust_list_source_id, trust_list_snapshot_id, trust_list_run_id, created_at, updated_at from monitoring_sources where source_key = $1 limit 1`,
+      [sourceKey]
+    );
+    return result.rows[0] ? mapMonitoringSourceRow(result.rows[0]) : null;
+  }
+  return cache.monitoringSources.find((item) => item.sourceKey === sourceKey) ?? null;
 }
 
 export async function listCertificateRecords(): Promise<CertificateRecord[]> {
