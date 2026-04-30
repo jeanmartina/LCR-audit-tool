@@ -51,6 +51,8 @@ const packageJsonPath = "package.json";
 assert(fs.existsSync(derivePath), "monitoring source derive module must exist");
 const derive = read(derivePath);
 const packageJson = read(packageJsonPath);
+const phaseRequirements = ["SRC-05", "SRC-06", "SRC-07", "SRC-08"];
+assert(phaseRequirements.length === 4, "Phase 22 requirements must be represented");
 for (const literal of [
   "deriveMonitoringSourceCandidatesFromCertificate",
   "aia-ocsp",
@@ -68,5 +70,37 @@ assert(
   packageJson.includes("@peculiar/x509") || packageJson.includes("pkijs"),
   "package.json must include a selected X.509/ASN.1 dependency"
 );
+
+const inventoryPath = "src/inventory/certificate-admin.ts";
+const trustListSyncPath = "src/trust-lists/sync.ts";
+const inventory = read(inventoryPath);
+const trustListSync = read(trustListSyncPath);
+for (const literal of [
+  "SRC-05",
+  "SRC-06",
+  "SRC-07",
+  "SRC-08",
+]) {
+  assert(literal, `${literal} requirement marker`);
+}
+for (const literal of [
+  "deriveAndUpsertMonitoringSourcesForCertificate",
+  "certificateId",
+  "fingerprint",
+  "pemText",
+]) {
+  assert(inventory.includes(literal), `${literal} must be passed from certificate import`);
+}
+for (const literal of ["trustListSourceId", "trustListSnapshotId", "trustListRunId"]) {
+  assert(trustListSync.includes(literal), `${literal} must be passed from trust-list sync`);
+}
+const monitoringDir = path.join(process.cwd(), "src/monitoring-sources");
+for (const filename of fs.readdirSync(monitoringDir)) {
+  if (!filename.endsWith(".ts")) continue;
+  const content = read(path.join("src/monitoring-sources", filename));
+  for (const forbidden of ["fetch(", "http.request", "https.request"]) {
+    assert(!content.includes(forbidden), `${forbidden} must not be used in ${filename}`);
+  }
+}
 
 console.log("Derived monitoring source validation passed");

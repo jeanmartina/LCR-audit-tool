@@ -8,10 +8,10 @@
 
 ### Source Discovery
 
-- [ ] **SRC-05**: System derives OCSP monitoring sources from imported certificates and trust-list-derived certificates when AIA OCSP URLs are present.
-- [ ] **SRC-06**: System derives CP/CPS/DPC document monitoring sources from certificate policy pointers, parsed certificate metadata, or trust-list provenance when URLs are discoverable.
-- [ ] **SRC-07**: System deduplicates derived monitoring sources by certificate/provenance, source type, normalized URL, and policy/document role.
-- [ ] **SRC-08**: System records explicit `not discovered` or `not checkable` states when OCSP or document sources cannot be derived or checked.
+- [x] **SRC-05**: System derives OCSP monitoring sources from imported certificates and trust-list-derived certificates when AIA OCSP URLs are present.
+- [x] **SRC-06**: System derives CP/CPS/DPC document monitoring sources from certificate policy pointers, parsed certificate metadata, or trust-list provenance when URLs are discoverable.
+- [x] **SRC-07**: System deduplicates derived monitoring sources by certificate/provenance, source type, normalized URL, and policy/document role.
+- [x] **SRC-08**: System records explicit `not discovered` or `not checkable` states when OCSP or document sources cannot be derived or checked.
 
 ### OCSP Monitoring
 
@@ -77,10 +77,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SRC-05 | Phase 22 | Pending |
-| SRC-06 | Phase 22 | Pending |
-| SRC-07 | Phase 22 | Pending |
-| SRC-08 | Phase 22 | Pending |
+| SRC-05 | Phase 22 | Complete |
+| SRC-06 | Phase 22 | Complete |
+| SRC-07 | Phase 22 | Complete |
+| SRC-08 | Phase 22 | Complete |
 | OCSP-01 | Phase 24 | Pending |
 | OCSP-02 | Phase 24 | Pending |
 | OCSP-03 | Phase 24 | Pending |

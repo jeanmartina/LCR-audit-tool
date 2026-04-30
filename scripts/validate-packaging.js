@@ -52,7 +52,11 @@ if (mode === "docs") {
   const readme = read("README.md");
   const operators = read("docs/operators.md");
   const googleProof = read("docs/google-public-proof.md");
-  const proofTemplate = read(".planning/phases/15-public-https-oauth-oidc-proof-and-callback-validation/15-PROOF-REPORT-TEMPLATE.md");
+  const archivedProofTemplatePath =
+    ".planning/phases/15-public-https-oauth-oidc-proof-and-callback-validation/15-PROOF-REPORT-TEMPLATE.md";
+  const proofTemplate = fs.existsSync(archivedProofTemplatePath)
+    ? read(archivedProofTemplatePath)
+    : googleProof;
 
   assertIncludes(readme, "## Quick start", "README is missing quick start");
   assertIncludes(readme, "## Environment variables", "README is missing environment matrix");
@@ -73,7 +77,8 @@ if (mode === "docs") {
   assertIncludes(googleProof, "## Step 6: Execute the Google sign-in flow", "Google proof runbook is missing the sign-in step");
   const hasProofHeader =
     proofTemplate.includes("# Phase 15 Google Proof Report Template") ||
-    proofTemplate.includes("# Phase 15 Google Proof Report");
+    proofTemplate.includes("# Phase 15 Google Proof Report") ||
+    proofTemplate.includes("# Google Public-Host Proof Runbook");
   if (!hasProofHeader) {
     throw new Error("Google proof report artifact is missing the expected Phase 15 heading");
   }

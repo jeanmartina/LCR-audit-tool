@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { unzipSync } from "fflate";
 import type { AuthenticatedPrincipal } from "../auth/authorization";
+import { deriveAndUpsertMonitoringSourcesForCertificate } from "../monitoring-sources/derive";
 import {
   createCertificateImportRun,
   listCertificateGroupIds,
@@ -270,7 +271,12 @@ export async function importCertificate(
   actor: AuthenticatedPrincipal,
   input: CertificateInput,
   sourceType: CertificateRecord["sourceType"],
-  filename = "certificate.pem"
+  filename = "certificate.pem",
+  provenance: {
+    trustListSourceId?: string | null;
+    trustListSnapshotId?: string | null;
+    trustListRunId?: string | null;
+  } = {}
 ): Promise<{ certificateId: string; result: "imported" | "updated"; urls: string[] }> {
   for (const groupId of input.groupIds) {
     if (!canManageGroup(actor, groupId)) {
@@ -294,6 +300,15 @@ export async function importCertificate(
     status: input.status,
     sourceType,
     createdByUserId: actor.userId,
+  });
+
+  await deriveAndUpsertMonitoringSourcesForCertificate({
+    certificateId: record.id,
+    fingerprint,
+    pemText: input.pemText,
+    trustListSourceId: provenance.trustListSourceId ?? null,
+    trustListSnapshotId: provenance.trustListSnapshotId ?? null,
+    trustListRunId: provenance.trustListRunId ?? null,
   });
 
   for (const groupId of input.groupIds) {

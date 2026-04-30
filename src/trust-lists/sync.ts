@@ -409,6 +409,11 @@ export async function syncTrustListSource(source: TrustListSourceRecord): Promis
           },
           "trust-list",
           `${source.id}-${candidate.ordinal}.pem`,
+          {
+            trustListSourceId: source.id,
+            trustListSnapshotId: snapshot.id,
+            trustListRunId: run.id,
+          },
         );
         importedCount += 1;
         const extracted = await recordTrustListExtractedCertificate({
