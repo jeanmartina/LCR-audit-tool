@@ -248,6 +248,21 @@ The trust-list page now maps common failures to explicit operator actions.
 - `XML parse failed`: confirm the URL returns XML and points directly to the trust-list document.
 - `Unmapped failure`: capture the raw error and extend recovery mapping if the issue repeats.
 
+## Policy document monitoring limits
+
+The worker checks discovered CP/CPS/DPC policy-document sources and stores raw evidence only when the document hash changes.
+
+Default limits:
+
+- `MONITORING_SOURCE_FETCH_TIMEOUT_MS=30000`
+- `MONITORING_SOURCE_MAX_DOCUMENT_BYTES=5242880`
+- `MONITORING_SOURCE_MAX_EXTRACTED_TEXT_BYTES=200000`
+- `MONITORING_SOURCE_MAX_REDIRECTS=3`
+- `MONITORING_SOURCE_DOCUMENT_INTERVAL_SECONDS=3600`
+- `MONITORING_SOURCE_ALLOW_LOCALHOST=false`
+
+Public `http://` and `https://` policy-document URLs are accepted because CA policy documents are often published over public HTTP. Private, loopback, link-local, multicast, and internal Docker/network addresses remain blocked by default. Set `MONITORING_SOURCE_ALLOW_LOCALHOST=true` only for local development fixtures.
+
 ## Executive summary in the packaged stack
 
 The packaged stack now exposes a management-facing summary at `/reporting/executive` for any authenticated user whose groups authorize the underlying certificates/CRLs.

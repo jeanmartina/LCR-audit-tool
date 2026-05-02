@@ -14,16 +14,36 @@ function assert(condition, message) {
 const fetchSafetyPath = "src/monitoring-sources/fetch-safety.ts";
 const documentTypesPath = "src/monitoring-sources/document-types.ts";
 const documentsPath = "src/monitoring-sources/documents.ts";
+const workerPath = "src/monitoring-sources/worker.ts";
 const storePath = "src/storage/runtime-store.ts";
+const runWorkerPath = "scripts/run-worker.js";
+const envExamplePath = ".env.example";
+const composePath = "compose.yaml";
+const operatorsPath = "docs/operators.md";
 
-for (const filePath of [fetchSafetyPath, documentTypesPath, documentsPath, storePath]) {
+for (const filePath of [
+  fetchSafetyPath,
+  documentTypesPath,
+  documentsPath,
+  workerPath,
+  storePath,
+  runWorkerPath,
+  envExamplePath,
+  composePath,
+  operatorsPath,
+]) {
   assert(fs.existsSync(filePath), `${filePath} must exist`);
 }
 
 const fetchSafety = read(fetchSafetyPath);
 const documentTypes = read(documentTypesPath);
 const documents = read(documentsPath);
+const worker = read(workerPath);
 const store = read(storePath);
+const runWorker = read(runWorkerPath);
+const envExample = read(envExamplePath);
+const compose = read(composePath);
+const operators = read(operatorsPath);
 const phaseRequirements = ["DOCS-02", "DOCS-03", "DOCS-04", "DOCS-05"];
 
 for (const literal of [
@@ -70,6 +90,55 @@ for (const literal of [
 }
 
 assert(!documents.includes("dangerouslySetInnerHTML"), "document extraction must not render HTML");
+
+for (const literal of [
+  "runScheduledDocumentSourceChecks",
+  "getMonitoringSourceDocumentIntervalSeconds",
+  "MONITORING_SOURCE_DOCUMENT_INTERVAL_SECONDS",
+  "listMonitoringSourceRecords",
+  "checkPolicyDocumentSource",
+  'source.sourceType === "policy-document"',
+]) {
+  assert(worker.includes(literal), `${literal} must be in document source worker`);
+}
+
+assert(!worker.includes('source.sourceType === "ocsp"'), "document worker must not process OCSP sources");
+
+for (const literal of [
+  "src/monitoring-sources/worker.ts",
+  "runScheduledDocumentSourceChecks export is required",
+  "await runScheduledDocumentSourceChecks();",
+  "[worker] document source cycle failed:",
+]) {
+  assert(runWorker.includes(literal), `${literal} must be wired into worker runtime`);
+}
+
+for (const literal of [
+  "MONITORING_SOURCE_FETCH_TIMEOUT_MS=30000",
+  "MONITORING_SOURCE_MAX_DOCUMENT_BYTES=5242880",
+  "MONITORING_SOURCE_MAX_EXTRACTED_TEXT_BYTES=200000",
+  "MONITORING_SOURCE_MAX_REDIRECTS=3",
+  "MONITORING_SOURCE_DOCUMENT_INTERVAL_SECONDS=3600",
+  "MONITORING_SOURCE_ALLOW_LOCALHOST=false",
+]) {
+  assert(envExample.includes(literal), `${literal} must be documented in .env.example`);
+}
+
+for (const literal of [
+  "MONITORING_SOURCE_FETCH_TIMEOUT_MS",
+  "MONITORING_SOURCE_MAX_DOCUMENT_BYTES",
+  "MONITORING_SOURCE_MAX_EXTRACTED_TEXT_BYTES",
+  "MONITORING_SOURCE_MAX_REDIRECTS",
+  "MONITORING_SOURCE_DOCUMENT_INTERVAL_SECONDS",
+  "MONITORING_SOURCE_ALLOW_LOCALHOST",
+]) {
+  assert(compose.includes(literal), `${literal} must be wired in compose.yaml`);
+}
+
+assert(
+  operators.includes("## Policy document monitoring limits"),
+  "operators guide must document policy document monitoring limits"
+);
 
 for (const status of [
   "available",

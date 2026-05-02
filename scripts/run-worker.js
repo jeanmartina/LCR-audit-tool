@@ -25,19 +25,24 @@ function loadWorkerModules() {
   return {
     scheduler: require(path.join(process.cwd(), "src/polling/scheduler.ts")),
     trustLists: require(path.join(process.cwd(), "src/trust-lists/sync.ts")),
+    monitoringSources: require(path.join(process.cwd(), "src/monitoring-sources/worker.ts")),
   };
 }
 
 async function main() {
-  const { scheduler, trustLists } = loadWorkerModules();
+  const { scheduler, trustLists, monitoringSources } = loadWorkerModules();
   const runScheduledPolls = scheduler.runScheduledPolls;
   const syncEnabledTrustListSources = trustLists.syncEnabledTrustListSources;
+  const runScheduledDocumentSourceChecks = monitoringSources.runScheduledDocumentSourceChecks;
 
   if (typeof runScheduledPolls !== "function") {
     throw new Error("runScheduledPolls export is required");
   }
   if (typeof syncEnabledTrustListSources !== "function") {
     throw new Error("syncEnabledTrustListSources export is required");
+  }
+  if (typeof runScheduledDocumentSourceChecks !== "function") {
+    throw new Error("runScheduledDocumentSourceChecks export is required");
   }
 
   let stopped = false;
@@ -61,6 +66,13 @@ async function main() {
     } catch (error) {
       const message = error instanceof Error ? error.stack ?? error.message : String(error);
       console.error(`[worker] trust-list sync cycle failed: ${message}`);
+    }
+
+    try {
+      await runScheduledDocumentSourceChecks();
+    } catch (error) {
+      const message = error instanceof Error ? error.stack ?? error.message : String(error);
+      console.error(`[worker] document source cycle failed: ${message}`);
     }
 
     if (stopped) {
