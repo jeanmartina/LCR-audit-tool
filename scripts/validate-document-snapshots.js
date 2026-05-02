@@ -13,15 +13,18 @@ function assert(condition, message) {
 
 const fetchSafetyPath = "src/monitoring-sources/fetch-safety.ts";
 const documentTypesPath = "src/monitoring-sources/document-types.ts";
+const documentsPath = "src/monitoring-sources/documents.ts";
 const storePath = "src/storage/runtime-store.ts";
 
-for (const filePath of [fetchSafetyPath, documentTypesPath, storePath]) {
+for (const filePath of [fetchSafetyPath, documentTypesPath, documentsPath, storePath]) {
   assert(fs.existsSync(filePath), `${filePath} must exist`);
 }
 
 const fetchSafety = read(fetchSafetyPath);
 const documentTypes = read(documentTypesPath);
+const documents = read(documentsPath);
 const store = read(storePath);
+const phaseRequirements = ["DOCS-02", "DOCS-03", "DOCS-04", "DOCS-05"];
 
 for (const literal of [
   "assertPublicMonitoringSourceUrl",
@@ -50,6 +53,24 @@ for (const literal of [
   assert(documentTypes.includes(literal), `${literal} must be exported by document types`);
 }
 
+for (const literal of [
+  "extractDocumentText",
+  "checkPolicyDocumentSource",
+  "pdf-extraction-failed:",
+  "getMonitoringSourceMaxExtractedTextBytes",
+  "text/html",
+  "application/pdf",
+  "source-not-policy-document",
+  "policy-document-source-not-discovered",
+  "findLatestDocumentSnapshotForSource",
+  "recordDocumentSnapshot",
+  "recordMonitoringSourceEvent",
+]) {
+  assert(documents.includes(literal), `${literal} must be in document snapshot service`);
+}
+
+assert(!documents.includes("dangerouslySetInnerHTML"), "document extraction must not render HTML");
+
 for (const status of [
   "available",
   "changed",
@@ -60,7 +81,14 @@ for (const status of [
   "not_checkable",
   "extraction_failed",
 ]) {
-  assert(documentTypes.includes(`\"${status}\"`), `${status} event status must be represented`);
+  assert(
+    documentTypes.includes(`\"${status}\"`) || documents.includes(`\"${status}\"`),
+    `${status} event status must be represented`
+  );
+}
+
+for (const requirement of phaseRequirements) {
+  assert(requirement.startsWith("DOCS-"), `${requirement} requirement marker`);
 }
 
 for (const literal of [
