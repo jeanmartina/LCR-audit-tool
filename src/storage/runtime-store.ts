@@ -7,6 +7,12 @@ import type {
   MonitoringSourceType,
   PolicyDocumentRole,
 } from "../monitoring-sources/types";
+import type {
+  DocumentExtractionStatus,
+  DocumentSnapshotRecord,
+  MonitoringSourceEventRecord,
+  MonitoringSourceEventStatus,
+} from "../monitoring-sources/document-types";
 
 export interface TargetRecord {
   id: string;
@@ -440,6 +446,8 @@ const cache = {
   certificateChangeEvents: [] as CertificateChangeEventRecord[],
   certificateTemplates: [] as CertificateTemplateRecord[],
   monitoringSources: [] as MonitoringSourceRecord[],
+  monitoringSourceEvents: [] as MonitoringSourceEventRecord[],
+  documentSnapshots: [] as DocumentSnapshotRecord[],
   platformSettings: [] as PlatformSettingsRecord[],
   providerVerificationStatuses: [] as ProviderVerificationStatusRecord[],
   predictiveEvents: [] as PredictiveEventRecord[],
@@ -738,6 +746,49 @@ type MonitoringSourceRow = {
   trust_list_run_id: string | null;
   created_at: Date;
   updated_at: Date;
+};
+
+type MonitoringSourceEventRow = {
+  id: string;
+  source_id: string;
+  source_key: string;
+  source_type: MonitoringSourceType;
+  status: MonitoringSourceEventStatus;
+  status_label: string | null;
+  checked_at: Date;
+  duration_ms: number;
+  http_status: number | null;
+  content_type: string | null;
+  content_length: number | null;
+  content_sha256: string | null;
+  failure_reason: string | null;
+  snapshot_id: string | null;
+};
+
+type DocumentSnapshotRow = {
+  id: string;
+  source_id: string;
+  source_key: string;
+  certificate_id: string;
+  fingerprint: string;
+  source_url: string | null;
+  normalized_url: string | null;
+  final_url: string;
+  policy_oid: string | null;
+  document_role: PolicyDocumentRole | null;
+  trust_list_source_id: string | null;
+  trust_list_snapshot_id: string | null;
+  trust_list_run_id: string | null;
+  content_type: string | null;
+  size_bytes: number;
+  sha256: string;
+  raw_body: Buffer;
+  extracted_text: string | null;
+  extracted_text_truncated: boolean;
+  extraction_status: DocumentExtractionStatus;
+  extraction_failure_reason: string | null;
+  metadata_json: Record<string, unknown> | string;
+  captured_at: Date;
 };
 
 function hasDatabase(): boolean {
@@ -1121,6 +1172,58 @@ export const RUNTIME_SQL_SCHEMA = {
     create unique index if not exists monitoring_sources_source_key_uidx
       on monitoring_sources (source_key);
   `,
+  documentMonitoring: `
+    create table if not exists monitoring_source_events (
+      id text primary key,
+      source_id text not null,
+      source_key text not null,
+      source_type text not null,
+      status text not null,
+      status_label text null,
+      checked_at timestamptz not null,
+      duration_ms integer not null,
+      http_status integer null,
+      content_type text null,
+      content_length integer null,
+      content_sha256 text null,
+      failure_reason text null,
+      snapshot_id text null
+    );
+
+    create index if not exists monitoring_source_events_source_checked_idx
+      on monitoring_source_events (source_id, checked_at desc);
+
+    create table if not exists document_snapshots (
+      id text primary key,
+      source_id text not null,
+      source_key text not null,
+      certificate_id text not null,
+      fingerprint text not null,
+      source_url text null,
+      normalized_url text null,
+      final_url text not null,
+      policy_oid text null,
+      document_role text null,
+      trust_list_source_id text null,
+      trust_list_snapshot_id text null,
+      trust_list_run_id text null,
+      content_type text null,
+      size_bytes integer not null,
+      sha256 text not null,
+      raw_body bytea not null,
+      extracted_text text null,
+      extracted_text_truncated boolean not null,
+      extraction_status text not null,
+      extraction_failure_reason text null,
+      metadata_json jsonb not null,
+      captured_at timestamptz not null
+    );
+
+    create index if not exists document_snapshots_source_captured_idx
+      on document_snapshots (source_id, captured_at desc);
+    create unique index if not exists document_snapshots_source_hash_uidx
+      on document_snapshots (source_id, sha256);
+  `,
   predictive: `
     create table if not exists predictive_events (
       id text primary key,
@@ -1231,6 +1334,7 @@ export async function initializeRuntimeStoreSchema(): Promise<void> {
     await client.query(RUNTIME_SQL_SCHEMA.access);
     await client.query(RUNTIME_SQL_SCHEMA.certificateAdmin);
     await client.query(RUNTIME_SQL_SCHEMA.monitoringSources);
+    await client.query(RUNTIME_SQL_SCHEMA.documentMonitoring);
     await client.query(RUNTIME_SQL_SCHEMA.predictive);
     await client.query(RUNTIME_SQL_SCHEMA.trustLists);
     await client.query(
@@ -1381,13 +1485,64 @@ function mapMonitoringSourceRow(row: MonitoringSourceRow): MonitoringSourceRecor
   };
 }
 
+function mapMonitoringSourceEventRow(row: MonitoringSourceEventRow): MonitoringSourceEventRecord {
+  return {
+    id: row.id,
+    sourceId: row.source_id,
+    sourceKey: row.source_key,
+    sourceType: row.source_type,
+    status: row.status,
+    statusLabel: row.status_label,
+    checkedAt: new Date(row.checked_at),
+    durationMs: row.duration_ms,
+    httpStatus: row.http_status,
+    contentType: row.content_type,
+    contentLength: row.content_length,
+    contentSha256: row.content_sha256,
+    failureReason: row.failure_reason,
+    snapshotId: row.snapshot_id,
+  };
+}
+
+function parseMetadataJson(value: Record<string, unknown> | string): Record<string, unknown> {
+  return typeof value === "string" ? JSON.parse(value) : value;
+}
+
+function mapDocumentSnapshotRow(row: DocumentSnapshotRow): DocumentSnapshotRecord {
+  return {
+    id: row.id,
+    sourceId: row.source_id,
+    sourceKey: row.source_key,
+    certificateId: row.certificate_id,
+    fingerprint: row.fingerprint,
+    sourceUrl: row.source_url,
+    normalizedUrl: row.normalized_url,
+    finalUrl: row.final_url,
+    policyOid: row.policy_oid,
+    documentRole: row.document_role,
+    trustListSourceId: row.trust_list_source_id,
+    trustListSnapshotId: row.trust_list_snapshot_id,
+    trustListRunId: row.trust_list_run_id,
+    contentType: row.content_type,
+    sizeBytes: row.size_bytes,
+    sha256: row.sha256,
+    rawBodyBase64: Buffer.from(row.raw_body).toString("base64"),
+    extractedText: row.extracted_text,
+    extractedTextTruncated: row.extracted_text_truncated,
+    extractionStatus: row.extraction_status,
+    extractionFailureReason: row.extraction_failure_reason,
+    metadataJson: parseMetadataJson(row.metadata_json),
+    capturedAt: new Date(row.captured_at),
+  };
+}
+
 export async function reloadRuntimeStoreCache(): Promise<void> {
   if (!hasDatabase()) {
     return;
   }
 
   const currentPool = getPool();
-  const [targets, polls, coverageGaps, validations, alerts, snapshots, users, userSettings, authAccounts, authTransactions, authSessions, groups, groupSettings, memberships, invites, passwordResets, mfaMethods, auditEvents, targetGroupShares, platformSettings, providerVerificationStatuses, predictiveEvents, monitoringSources, trustListSources, trustListSnapshots, trustListSyncRuns, trustListExtractedCertificates, trustListCertificateProjections] = await Promise.all([
+  const [targets, polls, coverageGaps, validations, alerts, snapshots, users, userSettings, authAccounts, authTransactions, authSessions, groups, groupSettings, memberships, invites, passwordResets, mfaMethods, auditEvents, targetGroupShares, platformSettings, providerVerificationStatuses, predictiveEvents, monitoringSources, monitoringSourceEvents, documentSnapshots, trustListSources, trustListSnapshots, trustListSyncRuns, trustListExtractedCertificates, trustListCertificateProjections] = await Promise.all([
     currentPool.query<TargetRow>(
       `
         select
@@ -1516,6 +1671,12 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
     ),
     currentPool.query<MonitoringSourceRow>(
       `select id, source_key, certificate_id, fingerprint, source_type, source_url, normalized_url, document_role, policy_oid, state, derivation_reason, trust_list_source_id, trust_list_snapshot_id, trust_list_run_id, created_at, updated_at from monitoring_sources order by updated_at desc`
+    ),
+    currentPool.query<MonitoringSourceEventRow>(
+      `select id, source_id, source_key, source_type, status, status_label, checked_at, duration_ms, http_status, content_type, content_length, content_sha256, failure_reason, snapshot_id from monitoring_source_events order by checked_at desc`
+    ),
+    currentPool.query<DocumentSnapshotRow>(
+      `select id, source_id, source_key, certificate_id, fingerprint, source_url, normalized_url, final_url, policy_oid, document_role, trust_list_source_id, trust_list_snapshot_id, trust_list_run_id, content_type, size_bytes, sha256, raw_body, extracted_text, extracted_text_truncated, extraction_status, extraction_failure_reason, metadata_json, captured_at from document_snapshots order by captured_at desc`
     ),
     currentPool.query<TrustListSourceRow>(
       `select id, label, url, enabled, group_ids, created_by_user_id, created_at, updated_at from trust_list_sources order by updated_at desc`
@@ -1727,6 +1888,8 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
     resolvedAt: row.resolved_at ? new Date(row.resolved_at) : null,
   }));
   cache.monitoringSources = monitoringSources.rows.map(mapMonitoringSourceRow);
+  cache.monitoringSourceEvents = monitoringSourceEvents.rows.map(mapMonitoringSourceEventRow);
+  cache.documentSnapshots = documentSnapshots.rows.map(mapDocumentSnapshotRow);
   cache.trustListSources = trustListSources.rows.map(mapTrustListSourceRow);
   cache.trustListSnapshots = trustListSnapshots.rows.map(mapTrustListSnapshotRow);
   cache.trustListSyncRuns = trustListSyncRuns.rows.map(mapTrustListSyncRunRow);
@@ -3353,6 +3516,231 @@ export async function findMonitoringSourceByKey(
     return result.rows[0] ? mapMonitoringSourceRow(result.rows[0]) : null;
   }
   return cache.monitoringSources.find((item) => item.sourceKey === sourceKey) ?? null;
+}
+
+type MonitoringSourceEventInput = Omit<MonitoringSourceEventRecord, "id" | "checkedAt"> & {
+  id?: string;
+  checkedAt?: Date;
+};
+
+type DocumentSnapshotInput = Omit<DocumentSnapshotRecord, "id" | "capturedAt"> & {
+  id?: string;
+  capturedAt?: Date;
+};
+
+function buildMonitoringSourceEventRecord(
+  input: MonitoringSourceEventInput
+): MonitoringSourceEventRecord {
+  return {
+    id: input.id ?? makeId("msrc-event"),
+    sourceId: input.sourceId,
+    sourceKey: input.sourceKey,
+    sourceType: input.sourceType,
+    status: input.status,
+    statusLabel: input.statusLabel,
+    checkedAt: input.checkedAt ?? new Date(),
+    durationMs: input.durationMs,
+    httpStatus: input.httpStatus,
+    contentType: input.contentType,
+    contentLength: input.contentLength,
+    contentSha256: input.contentSha256,
+    failureReason: input.failureReason,
+    snapshotId: input.snapshotId,
+  };
+}
+
+export async function recordMonitoringSourceEvent(
+  input: MonitoringSourceEventInput
+): Promise<MonitoringSourceEventRecord> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
+
+  const record = buildMonitoringSourceEventRecord(input);
+  cache.monitoringSourceEvents = upsertInCache(cache.monitoringSourceEvents, record);
+
+  if (hasDatabase()) {
+    const result = await getPool().query<MonitoringSourceEventRow>(
+      `
+        insert into monitoring_source_events (
+          id, source_id, source_key, source_type, status, status_label, checked_at,
+          duration_ms, http_status, content_type, content_length, content_sha256,
+          failure_reason, snapshot_id
+        ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+        returning id, source_id, source_key, source_type, status, status_label,
+          checked_at, duration_ms, http_status, content_type, content_length,
+          content_sha256, failure_reason, snapshot_id
+      `,
+      [
+        record.id,
+        record.sourceId,
+        record.sourceKey,
+        record.sourceType,
+        record.status,
+        record.statusLabel,
+        record.checkedAt,
+        record.durationMs,
+        record.httpStatus,
+        record.contentType,
+        record.contentLength,
+        record.contentSha256,
+        record.failureReason,
+        record.snapshotId,
+      ]
+    );
+    const stored = mapMonitoringSourceEventRow(result.rows[0]);
+    cache.monitoringSourceEvents = upsertInCache(cache.monitoringSourceEvents, stored);
+    return stored;
+  }
+
+  return record;
+}
+
+function buildDocumentSnapshotRecord(input: DocumentSnapshotInput): DocumentSnapshotRecord {
+  return {
+    id: input.id ?? makeId("doc-snapshot"),
+    sourceId: input.sourceId,
+    sourceKey: input.sourceKey,
+    certificateId: input.certificateId,
+    fingerprint: input.fingerprint,
+    sourceUrl: input.sourceUrl,
+    normalizedUrl: input.normalizedUrl,
+    finalUrl: input.finalUrl,
+    policyOid: input.policyOid,
+    documentRole: input.documentRole,
+    trustListSourceId: input.trustListSourceId,
+    trustListSnapshotId: input.trustListSnapshotId,
+    trustListRunId: input.trustListRunId,
+    contentType: input.contentType,
+    sizeBytes: input.sizeBytes,
+    sha256: input.sha256,
+    rawBodyBase64: input.rawBodyBase64,
+    extractedText: input.extractedText,
+    extractedTextTruncated: input.extractedTextTruncated,
+    extractionStatus: input.extractionStatus,
+    extractionFailureReason: input.extractionFailureReason,
+    metadataJson: input.metadataJson,
+    capturedAt: input.capturedAt ?? new Date(),
+  };
+}
+
+export async function recordDocumentSnapshot(
+  input: DocumentSnapshotInput
+): Promise<DocumentSnapshotRecord> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
+
+  const record = buildDocumentSnapshotRecord(input);
+  cache.documentSnapshots = upsertInCache(cache.documentSnapshots, record);
+
+  if (hasDatabase()) {
+    const result = await getPool().query<DocumentSnapshotRow>(
+      `
+        insert into document_snapshots (
+          id, source_id, source_key, certificate_id, fingerprint, source_url,
+          normalized_url, final_url, policy_oid, document_role, trust_list_source_id,
+          trust_list_snapshot_id, trust_list_run_id, content_type, size_bytes, sha256,
+          raw_body, extracted_text, extracted_text_truncated, extraction_status,
+          extraction_failure_reason, metadata_json, captured_at
+        ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
+        on conflict (source_id, sha256) do update set
+          extracted_text = excluded.extracted_text,
+          extracted_text_truncated = excluded.extracted_text_truncated,
+          extraction_status = excluded.extraction_status,
+          extraction_failure_reason = excluded.extraction_failure_reason,
+          metadata_json = excluded.metadata_json
+        returning id, source_id, source_key, certificate_id, fingerprint, source_url,
+          normalized_url, final_url, policy_oid, document_role, trust_list_source_id,
+          trust_list_snapshot_id, trust_list_run_id, content_type, size_bytes, sha256,
+          raw_body, extracted_text, extracted_text_truncated, extraction_status,
+          extraction_failure_reason, metadata_json, captured_at
+      `,
+      [
+        record.id,
+        record.sourceId,
+        record.sourceKey,
+        record.certificateId,
+        record.fingerprint,
+        record.sourceUrl,
+        record.normalizedUrl,
+        record.finalUrl,
+        record.policyOid,
+        record.documentRole,
+        record.trustListSourceId,
+        record.trustListSnapshotId,
+        record.trustListRunId,
+        record.contentType,
+        record.sizeBytes,
+        record.sha256,
+        Buffer.from(record.rawBodyBase64, "base64"),
+        record.extractedText,
+        record.extractedTextTruncated,
+        record.extractionStatus,
+        record.extractionFailureReason,
+        JSON.stringify(record.metadataJson),
+        record.capturedAt,
+      ]
+    );
+    const stored = mapDocumentSnapshotRow(result.rows[0]);
+    cache.documentSnapshots = upsertInCache(cache.documentSnapshots, stored);
+    return stored;
+  }
+
+  return record;
+}
+
+export async function findLatestDocumentSnapshotForSource(
+  sourceId: string
+): Promise<DocumentSnapshotRecord | null> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<DocumentSnapshotRow>(
+      `select id, source_id, source_key, certificate_id, fingerprint, source_url, normalized_url, final_url, policy_oid, document_role, trust_list_source_id, trust_list_snapshot_id, trust_list_run_id, content_type, size_bytes, sha256, raw_body, extracted_text, extracted_text_truncated, extraction_status, extraction_failure_reason, metadata_json, captured_at from document_snapshots where source_id = $1 order by captured_at desc limit 1`,
+      [sourceId]
+    );
+    return result.rows[0] ? mapDocumentSnapshotRow(result.rows[0]) : null;
+  }
+
+  return (
+    cache.documentSnapshots
+      .filter((item) => item.sourceId === sourceId)
+      .sort((left, right) => right.capturedAt.getTime() - left.capturedAt.getTime())[0] ?? null
+  );
+}
+
+export async function listDocumentSnapshotsForSource(
+  sourceId: string
+): Promise<DocumentSnapshotRecord[]> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<DocumentSnapshotRow>(
+      `select id, source_id, source_key, certificate_id, fingerprint, source_url, normalized_url, final_url, policy_oid, document_role, trust_list_source_id, trust_list_snapshot_id, trust_list_run_id, content_type, size_bytes, sha256, raw_body, extracted_text, extracted_text_truncated, extraction_status, extraction_failure_reason, metadata_json, captured_at from document_snapshots where source_id = $1 order by captured_at desc`,
+      [sourceId]
+    );
+    return result.rows.map(mapDocumentSnapshotRow);
+  }
+
+  return cache.documentSnapshots
+    .filter((item) => item.sourceId === sourceId)
+    .sort((left, right) => right.capturedAt.getTime() - left.capturedAt.getTime());
+}
+
+export async function listMonitoringSourceEventsForSource(
+  sourceId: string
+): Promise<MonitoringSourceEventRecord[]> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<MonitoringSourceEventRow>(
+      `select id, source_id, source_key, source_type, status, status_label, checked_at, duration_ms, http_status, content_type, content_length, content_sha256, failure_reason, snapshot_id from monitoring_source_events where source_id = $1 order by checked_at desc`,
+      [sourceId]
+    );
+    return result.rows.map(mapMonitoringSourceEventRow);
+  }
+
+  return cache.monitoringSourceEvents
+    .filter((item) => item.sourceId === sourceId)
+    .sort((left, right) => right.checkedAt.getTime() - left.checkedAt.getTime());
 }
 
 export async function listCertificateRecords(): Promise<CertificateRecord[]> {

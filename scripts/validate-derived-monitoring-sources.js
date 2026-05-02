@@ -94,13 +94,8 @@ for (const literal of [
 for (const literal of ["trustListSourceId", "trustListSnapshotId", "trustListRunId"]) {
   assert(trustListSync.includes(literal), `${literal} must be passed from trust-list sync`);
 }
-const monitoringDir = path.join(process.cwd(), "src/monitoring-sources");
-for (const filename of fs.readdirSync(monitoringDir)) {
-  if (!filename.endsWith(".ts")) continue;
-  const content = read(path.join("src/monitoring-sources", filename));
-  for (const forbidden of ["fetch(", "http.request", "https.request"]) {
-    assert(!content.includes(forbidden), `${forbidden} must not be used in ${filename}`);
-  }
+for (const forbidden of ["fetch(", "http.request", "https.request"]) {
+  assert(!derive.includes(forbidden), `${forbidden} must not be used in source derivation`);
 }
 
 console.log("Derived monitoring source validation passed");
