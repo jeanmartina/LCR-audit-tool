@@ -13,6 +13,12 @@ import type {
   MonitoringSourceEventRecord,
   MonitoringSourceEventStatus,
 } from "../monitoring-sources/document-types";
+import type {
+  OcspCheckEventRecord,
+  OcspCheckEventStatus,
+  OcspParseStatus,
+  OcspResponseEvidenceRecord,
+} from "../monitoring-sources/ocsp-types";
 
 export interface TargetRecord {
   id: string;
@@ -448,6 +454,8 @@ const cache = {
   monitoringSources: [] as MonitoringSourceRecord[],
   monitoringSourceEvents: [] as MonitoringSourceEventRecord[],
   documentSnapshots: [] as DocumentSnapshotRecord[],
+  ocspCheckEvents: [] as OcspCheckEventRecord[],
+  ocspResponseEvidence: [] as OcspResponseEvidenceRecord[],
   platformSettings: [] as PlatformSettingsRecord[],
   providerVerificationStatuses: [] as ProviderVerificationStatusRecord[],
   predictiveEvents: [] as PredictiveEventRecord[],
@@ -789,6 +797,46 @@ type DocumentSnapshotRow = {
   extraction_failure_reason: string | null;
   metadata_json: Record<string, unknown> | string;
   captured_at: Date;
+};
+
+type OcspCheckEventRow = {
+  id: string;
+  source_id: string;
+  source_key: string;
+  status: OcspCheckEventStatus;
+  status_label: string | null;
+  checked_at: Date;
+  duration_ms: number;
+  http_status: number | null;
+  content_type: string | null;
+  response_size_bytes: number | null;
+  response_sha256: string | null;
+  failure_reason: string | null;
+  evidence_id: string | null;
+};
+
+type OcspResponseEvidenceRow = {
+  id: string;
+  source_id: string;
+  source_key: string;
+  certificate_id: string;
+  certificate_fingerprint: string;
+  issuer_certificate_id: string;
+  issuer_fingerprint: string;
+  responder_url: string;
+  final_url: string;
+  request_body: Buffer;
+  request_sha256: string;
+  request_size_bytes: number;
+  response_body: Buffer | null;
+  response_sha256: string | null;
+  response_size_bytes: number | null;
+  http_status: number | null;
+  content_type: string | null;
+  parse_status: OcspParseStatus;
+  parse_failure_reason: string | null;
+  metadata_json: Record<string, unknown> | string;
+  checked_at: Date;
 };
 
 function hasDatabase(): boolean {
@@ -1224,6 +1272,53 @@ export const RUNTIME_SQL_SCHEMA = {
     create unique index if not exists document_snapshots_source_hash_uidx
       on document_snapshots (source_id, sha256);
   `,
+  ocspMonitoring: `
+    create table if not exists ocsp_check_events (
+      id text primary key,
+      source_id text not null,
+      source_key text not null,
+      status text not null,
+      status_label text null,
+      checked_at timestamptz not null,
+      duration_ms integer not null,
+      http_status integer null,
+      content_type text null,
+      response_size_bytes integer null,
+      response_sha256 text null,
+      failure_reason text null,
+      evidence_id text null
+    );
+
+    create index if not exists ocsp_check_events_source_checked_idx
+      on ocsp_check_events (source_id, checked_at desc);
+
+    create table if not exists ocsp_response_evidence (
+      id text primary key,
+      source_id text not null,
+      source_key text not null,
+      certificate_id text not null,
+      certificate_fingerprint text not null,
+      issuer_certificate_id text not null,
+      issuer_fingerprint text not null,
+      responder_url text not null,
+      final_url text not null,
+      request_body bytea not null,
+      request_sha256 text not null,
+      request_size_bytes integer not null,
+      response_body bytea null,
+      response_sha256 text null,
+      response_size_bytes integer null,
+      http_status integer null,
+      content_type text null,
+      parse_status text not null,
+      parse_failure_reason text null,
+      metadata_json jsonb not null,
+      checked_at timestamptz not null
+    );
+
+    create index if not exists ocsp_response_evidence_source_checked_idx
+      on ocsp_response_evidence (source_id, checked_at desc);
+  `,
   predictive: `
     create table if not exists predictive_events (
       id text primary key,
@@ -1335,6 +1430,7 @@ export async function initializeRuntimeStoreSchema(): Promise<void> {
     await client.query(RUNTIME_SQL_SCHEMA.certificateAdmin);
     await client.query(RUNTIME_SQL_SCHEMA.monitoringSources);
     await client.query(RUNTIME_SQL_SCHEMA.documentMonitoring);
+    await client.query(RUNTIME_SQL_SCHEMA.ocspMonitoring);
     await client.query(RUNTIME_SQL_SCHEMA.predictive);
     await client.query(RUNTIME_SQL_SCHEMA.trustLists);
     await client.query(
@@ -1536,13 +1632,57 @@ function mapDocumentSnapshotRow(row: DocumentSnapshotRow): DocumentSnapshotRecor
   };
 }
 
+function mapOcspCheckEventRow(row: OcspCheckEventRow): OcspCheckEventRecord {
+  return {
+    id: row.id,
+    sourceId: row.source_id,
+    sourceKey: row.source_key,
+    status: row.status,
+    statusLabel: row.status_label,
+    checkedAt: new Date(row.checked_at),
+    durationMs: row.duration_ms,
+    httpStatus: row.http_status,
+    contentType: row.content_type,
+    responseSizeBytes: row.response_size_bytes,
+    responseSha256: row.response_sha256,
+    failureReason: row.failure_reason,
+    evidenceId: row.evidence_id,
+  };
+}
+
+function mapOcspResponseEvidenceRow(row: OcspResponseEvidenceRow): OcspResponseEvidenceRecord {
+  return {
+    id: row.id,
+    sourceId: row.source_id,
+    sourceKey: row.source_key,
+    certificateId: row.certificate_id,
+    certificateFingerprint: row.certificate_fingerprint,
+    issuerCertificateId: row.issuer_certificate_id,
+    issuerFingerprint: row.issuer_fingerprint,
+    responderUrl: row.responder_url,
+    finalUrl: row.final_url,
+    requestBodyBase64: Buffer.from(row.request_body).toString("base64"),
+    requestSha256: row.request_sha256,
+    requestSizeBytes: row.request_size_bytes,
+    responseBodyBase64: row.response_body ? Buffer.from(row.response_body).toString("base64") : null,
+    responseSha256: row.response_sha256,
+    responseSizeBytes: row.response_size_bytes,
+    httpStatus: row.http_status,
+    contentType: row.content_type,
+    parseStatus: row.parse_status,
+    parseFailureReason: row.parse_failure_reason,
+    metadataJson: parseMetadataJson(row.metadata_json),
+    checkedAt: new Date(row.checked_at),
+  };
+}
+
 export async function reloadRuntimeStoreCache(): Promise<void> {
   if (!hasDatabase()) {
     return;
   }
 
   const currentPool = getPool();
-  const [targets, polls, coverageGaps, validations, alerts, snapshots, users, userSettings, authAccounts, authTransactions, authSessions, groups, groupSettings, memberships, invites, passwordResets, mfaMethods, auditEvents, targetGroupShares, platformSettings, providerVerificationStatuses, predictiveEvents, monitoringSources, monitoringSourceEvents, documentSnapshots, trustListSources, trustListSnapshots, trustListSyncRuns, trustListExtractedCertificates, trustListCertificateProjections] = await Promise.all([
+  const [targets, polls, coverageGaps, validations, alerts, snapshots, users, userSettings, authAccounts, authTransactions, authSessions, groups, groupSettings, memberships, invites, passwordResets, mfaMethods, auditEvents, targetGroupShares, platformSettings, providerVerificationStatuses, predictiveEvents, monitoringSources, monitoringSourceEvents, documentSnapshots, ocspCheckEvents, ocspResponseEvidence, trustListSources, trustListSnapshots, trustListSyncRuns, trustListExtractedCertificates, trustListCertificateProjections] = await Promise.all([
     currentPool.query<TargetRow>(
       `
         select
@@ -1677,6 +1817,12 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
     ),
     currentPool.query<DocumentSnapshotRow>(
       `select id, source_id, source_key, certificate_id, fingerprint, source_url, normalized_url, final_url, policy_oid, document_role, trust_list_source_id, trust_list_snapshot_id, trust_list_run_id, content_type, size_bytes, sha256, raw_body, extracted_text, extracted_text_truncated, extraction_status, extraction_failure_reason, metadata_json, captured_at from document_snapshots order by captured_at desc`
+    ),
+    currentPool.query<OcspCheckEventRow>(
+      `select id, source_id, source_key, status, status_label, checked_at, duration_ms, http_status, content_type, response_size_bytes, response_sha256, failure_reason, evidence_id from ocsp_check_events order by checked_at desc`
+    ),
+    currentPool.query<OcspResponseEvidenceRow>(
+      `select id, source_id, source_key, certificate_id, certificate_fingerprint, issuer_certificate_id, issuer_fingerprint, responder_url, final_url, request_body, request_sha256, request_size_bytes, response_body, response_sha256, response_size_bytes, http_status, content_type, parse_status, parse_failure_reason, metadata_json, checked_at from ocsp_response_evidence order by checked_at desc`
     ),
     currentPool.query<TrustListSourceRow>(
       `select id, label, url, enabled, group_ids, created_by_user_id, created_at, updated_at from trust_list_sources order by updated_at desc`
@@ -1890,6 +2036,8 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
   cache.monitoringSources = monitoringSources.rows.map(mapMonitoringSourceRow);
   cache.monitoringSourceEvents = monitoringSourceEvents.rows.map(mapMonitoringSourceEventRow);
   cache.documentSnapshots = documentSnapshots.rows.map(mapDocumentSnapshotRow);
+  cache.ocspCheckEvents = ocspCheckEvents.rows.map(mapOcspCheckEventRow);
+  cache.ocspResponseEvidence = ocspResponseEvidence.rows.map(mapOcspResponseEvidenceRow);
   cache.trustListSources = trustListSources.rows.map(mapTrustListSourceRow);
   cache.trustListSnapshots = trustListSnapshots.rows.map(mapTrustListSnapshotRow);
   cache.trustListSyncRuns = trustListSyncRuns.rows.map(mapTrustListSyncRunRow);
@@ -3739,6 +3887,200 @@ export async function listMonitoringSourceEventsForSource(
   }
 
   return cache.monitoringSourceEvents
+    .filter((item) => item.sourceId === sourceId)
+    .sort((left, right) => right.checkedAt.getTime() - left.checkedAt.getTime());
+}
+
+type OcspCheckEventInput = Omit<OcspCheckEventRecord, "id" | "checkedAt"> & {
+  id?: string;
+  checkedAt?: Date;
+};
+
+type OcspResponseEvidenceInput = Omit<OcspResponseEvidenceRecord, "id" | "checkedAt"> & {
+  id?: string;
+  checkedAt?: Date;
+};
+
+function buildOcspCheckEventRecord(input: OcspCheckEventInput): OcspCheckEventRecord {
+  return {
+    id: input.id ?? makeId("ocsp-event"),
+    sourceId: input.sourceId,
+    sourceKey: input.sourceKey,
+    status: input.status,
+    statusLabel: input.statusLabel,
+    checkedAt: input.checkedAt ?? new Date(),
+    durationMs: input.durationMs,
+    httpStatus: input.httpStatus,
+    contentType: input.contentType,
+    responseSizeBytes: input.responseSizeBytes,
+    responseSha256: input.responseSha256,
+    failureReason: input.failureReason,
+    evidenceId: input.evidenceId,
+  };
+}
+
+function buildOcspResponseEvidenceRecord(
+  input: OcspResponseEvidenceInput
+): OcspResponseEvidenceRecord {
+  return {
+    id: input.id ?? makeId("ocsp-evidence"),
+    sourceId: input.sourceId,
+    sourceKey: input.sourceKey,
+    certificateId: input.certificateId,
+    certificateFingerprint: input.certificateFingerprint,
+    issuerCertificateId: input.issuerCertificateId,
+    issuerFingerprint: input.issuerFingerprint,
+    responderUrl: input.responderUrl,
+    finalUrl: input.finalUrl,
+    requestBodyBase64: input.requestBodyBase64,
+    requestSha256: input.requestSha256,
+    requestSizeBytes: input.requestSizeBytes,
+    responseBodyBase64: input.responseBodyBase64,
+    responseSha256: input.responseSha256,
+    responseSizeBytes: input.responseSizeBytes,
+    httpStatus: input.httpStatus,
+    contentType: input.contentType,
+    parseStatus: input.parseStatus,
+    parseFailureReason: input.parseFailureReason,
+    metadataJson: input.metadataJson,
+    checkedAt: input.checkedAt ?? new Date(),
+  };
+}
+
+export async function recordOcspCheckEvent(
+  input: OcspCheckEventInput
+): Promise<OcspCheckEventRecord> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
+
+  const record = buildOcspCheckEventRecord(input);
+  cache.ocspCheckEvents = upsertInCache(cache.ocspCheckEvents, record);
+
+  if (hasDatabase()) {
+    const result = await getPool().query<OcspCheckEventRow>(
+      `
+        insert into ocsp_check_events (
+          id, source_id, source_key, status, status_label, checked_at, duration_ms,
+          http_status, content_type, response_size_bytes, response_sha256,
+          failure_reason, evidence_id
+        ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+        returning id, source_id, source_key, status, status_label, checked_at,
+          duration_ms, http_status, content_type, response_size_bytes,
+          response_sha256, failure_reason, evidence_id
+      `,
+      [
+        record.id,
+        record.sourceId,
+        record.sourceKey,
+        record.status,
+        record.statusLabel,
+        record.checkedAt,
+        record.durationMs,
+        record.httpStatus,
+        record.contentType,
+        record.responseSizeBytes,
+        record.responseSha256,
+        record.failureReason,
+        record.evidenceId,
+      ]
+    );
+    const stored = mapOcspCheckEventRow(result.rows[0]);
+    cache.ocspCheckEvents = upsertInCache(cache.ocspCheckEvents, stored);
+    return stored;
+  }
+
+  return record;
+}
+
+export async function recordOcspResponseEvidence(
+  input: OcspResponseEvidenceInput
+): Promise<OcspResponseEvidenceRecord> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
+
+  const record = buildOcspResponseEvidenceRecord(input);
+  cache.ocspResponseEvidence = upsertInCache(cache.ocspResponseEvidence, record);
+
+  if (hasDatabase()) {
+    const result = await getPool().query<OcspResponseEvidenceRow>(
+      `
+        insert into ocsp_response_evidence (
+          id, source_id, source_key, certificate_id, certificate_fingerprint,
+          issuer_certificate_id, issuer_fingerprint, responder_url, final_url,
+          request_body, request_sha256, request_size_bytes, response_body,
+          response_sha256, response_size_bytes, http_status, content_type,
+          parse_status, parse_failure_reason, metadata_json, checked_at
+        ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+        returning id, source_id, source_key, certificate_id, certificate_fingerprint,
+          issuer_certificate_id, issuer_fingerprint, responder_url, final_url,
+          request_body, request_sha256, request_size_bytes, response_body,
+          response_sha256, response_size_bytes, http_status, content_type,
+          parse_status, parse_failure_reason, metadata_json, checked_at
+      `,
+      [
+        record.id,
+        record.sourceId,
+        record.sourceKey,
+        record.certificateId,
+        record.certificateFingerprint,
+        record.issuerCertificateId,
+        record.issuerFingerprint,
+        record.responderUrl,
+        record.finalUrl,
+        Buffer.from(record.requestBodyBase64, "base64"),
+        record.requestSha256,
+        record.requestSizeBytes,
+        record.responseBodyBase64 ? Buffer.from(record.responseBodyBase64, "base64") : null,
+        record.responseSha256,
+        record.responseSizeBytes,
+        record.httpStatus,
+        record.contentType,
+        record.parseStatus,
+        record.parseFailureReason,
+        JSON.stringify(record.metadataJson),
+        record.checkedAt,
+      ]
+    );
+    const stored = mapOcspResponseEvidenceRow(result.rows[0]);
+    cache.ocspResponseEvidence = upsertInCache(cache.ocspResponseEvidence, stored);
+    return stored;
+  }
+
+  return record;
+}
+
+export async function listOcspCheckEventsForSource(
+  sourceId: string
+): Promise<OcspCheckEventRecord[]> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<OcspCheckEventRow>(
+      `select id, source_id, source_key, status, status_label, checked_at, duration_ms, http_status, content_type, response_size_bytes, response_sha256, failure_reason, evidence_id from ocsp_check_events where source_id = $1 order by checked_at desc`,
+      [sourceId]
+    );
+    return result.rows.map(mapOcspCheckEventRow);
+  }
+
+  return cache.ocspCheckEvents
+    .filter((item) => item.sourceId === sourceId)
+    .sort((left, right) => right.checkedAt.getTime() - left.checkedAt.getTime());
+}
+
+export async function listOcspResponseEvidenceForSource(
+  sourceId: string
+): Promise<OcspResponseEvidenceRecord[]> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<OcspResponseEvidenceRow>(
+      `select id, source_id, source_key, certificate_id, certificate_fingerprint, issuer_certificate_id, issuer_fingerprint, responder_url, final_url, request_body, request_sha256, request_size_bytes, response_body, response_sha256, response_size_bytes, http_status, content_type, parse_status, parse_failure_reason, metadata_json, checked_at from ocsp_response_evidence where source_id = $1 order by checked_at desc`,
+      [sourceId]
+    );
+    return result.rows.map(mapOcspResponseEvidenceRow);
+  }
+
+  return cache.ocspResponseEvidence
     .filter((item) => item.sourceId === sourceId)
     .sort((left, right) => right.checkedAt.getTime() - left.checkedAt.getTime());
 }
