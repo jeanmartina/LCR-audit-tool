@@ -14,7 +14,7 @@
 
 | Phase | Name | Goal | Requirements |
 |-------|------|------|--------------|
-| 22 | 3/3 | Complete    | 2026-04-30 |
+| 22 | Derived Monitoring Source Foundation | Add a deterministic derived-source layer for OCSP and policy-document candidates tied to existing certificates and trust-list provenance. | SRC-05, SRC-06, SRC-07, SRC-08 |
 | 23 | CP/CPS/DPC Document Snapshot Monitoring | Safely fetch, snapshot, hash, and extract bounded metadata/text from discovered policy documents. | DOCS-01, DOCS-02, DOCS-03, DOCS-04, DOCS-05, SEC-01 |
 | 24 | OCSP Technical Evidence Monitoring | Check derived OCSP responders technically and retain evidence without claiming full revocation validation. | OCSP-01, OCSP-02, OCSP-03, OCSP-04 |
 | 25 | Monitoring Source Reporting and Executive Visibility | Expose derived-source health in operator drill-downs and simple executive aggregate cards under existing authorization. | REP-04, REP-05, REP-06 |
@@ -90,8 +90,8 @@
 ## Current Status
 
 - Active milestone: v1.3 Monitoring Source Expansion
-- Current stage: Phase 22 complete; ready to discuss/plan Phase 23
-- Next recommended step: `/gsd-discuss-phase 23`
+- Current stage: Phase 23 complete; ready to discuss/plan Phase 24
+- Next recommended step: `/gsd-discuss-phase 24`
 
 ## Backlog / Future
 

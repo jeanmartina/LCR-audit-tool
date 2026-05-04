@@ -22,11 +22,11 @@
 
 ### Policy Document Monitoring
 
-- [ ] **DOCS-01**: System fetches discovered CP/CPS/DPC document URLs with timeout, redirect, size, and private-network protections.
-- [ ] **DOCS-02**: System stores document snapshots or bounded raw content with content type, size, SHA-256 hash, source URL, and capture timestamp.
-- [ ] **DOCS-03**: System extracts basic document metadata and bounded text when feasible without executing or rendering fetched content.
-- [ ] **DOCS-04**: System detects document changes over time by hash and preserves historical snapshot metadata.
-- [ ] **DOCS-05**: System preserves certificate, policy OID, trust-list, and snapshot provenance with each document record for future AI compliance analysis.
+- [x] **DOCS-01**: System fetches discovered CP/CPS/DPC document URLs with timeout, redirect, size, and private-network protections.
+- [x] **DOCS-02**: System stores document snapshots or bounded raw content with content type, size, SHA-256 hash, source URL, and capture timestamp.
+- [x] **DOCS-03**: System extracts basic document metadata and bounded text when feasible without executing or rendering fetched content.
+- [x] **DOCS-04**: System detects document changes over time by hash and preserves historical snapshot metadata.
+- [x] **DOCS-05**: System preserves certificate, policy OID, trust-list, and snapshot provenance with each document record for future AI compliance analysis.
 
 ### Reporting
 
@@ -38,7 +38,7 @@
 
 - [ ] **OPS-07**: Compose and environment configuration expose limits for derived-source fetch timeout, document size, extracted text size, redirects, and OCSP response size.
 - [ ] **OPS-08**: Operator documentation explains OCSP/document source derivation, health states, retention limits, and the future AI-analysis boundary.
-- [ ] **SEC-01**: Derived-source fetches reject private/internal network targets and unsafe redirects, reusing the trust-list SSRF posture.
+- [x] **SEC-01**: Derived-source fetches reject private/internal network targets and unsafe redirects, reusing the trust-list SSRF posture.
 
 ## Future Requirements
 
@@ -85,17 +85,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OCSP-02 | Phase 24 | Pending |
 | OCSP-03 | Phase 24 | Pending |
 | OCSP-04 | Phase 24 | Pending |
-| DOCS-01 | Phase 23 | Pending |
-| DOCS-02 | Phase 23 | Pending |
-| DOCS-03 | Phase 23 | Pending |
-| DOCS-04 | Phase 23 | Pending |
-| DOCS-05 | Phase 23 | Pending |
+| DOCS-01 | Phase 23 | Complete |
+| DOCS-02 | Phase 23 | Complete |
+| DOCS-03 | Phase 23 | Complete |
+| DOCS-04 | Phase 23 | Complete |
+| DOCS-05 | Phase 23 | Complete |
 | REP-04 | Phase 25 | Pending |
 | REP-05 | Phase 25 | Pending |
 | REP-06 | Phase 25 | Pending |
 | OPS-07 | Phase 26 | Pending |
 | OPS-08 | Phase 26 | Pending |
-| SEC-01 | Phase 23 | Pending |
+| SEC-01 | Phase 23 | Complete |
 
 **Coverage:**
 - v1.3 requirements: 19 total
