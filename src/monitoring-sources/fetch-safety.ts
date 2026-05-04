@@ -5,10 +5,15 @@ const DEFAULT_FETCH_TIMEOUT_MS = 30000;
 const DEFAULT_MAX_DOCUMENT_BYTES = 5 * 1024 * 1024;
 const DEFAULT_MAX_EXTRACTED_TEXT_BYTES = 200000;
 const DEFAULT_MAX_REDIRECTS = 3;
+const DEFAULT_OCSP_MAX_RESPONSE_BYTES = 1024 * 1024;
 
 function envNumber(name: string, fallback: number): number {
   const value = Number(process.env[name] ?? fallback);
   return Number.isFinite(value) && value >= 0 ? value : fallback;
+}
+
+function toExactArrayBuffer(body: Buffer): ArrayBuffer {
+  return new Uint8Array(body).slice().buffer;
 }
 
 export function getMonitoringSourceFetchTimeoutMs(): number {
@@ -29,6 +34,22 @@ export function getMonitoringSourceMaxRedirects(): number {
 
 export function isMonitoringSourceLocalhostAllowed(): boolean {
   return process.env.MONITORING_SOURCE_ALLOW_LOCALHOST === "true";
+}
+
+export function getOcspFetchTimeoutMs(): number {
+  return envNumber("OCSP_FETCH_TIMEOUT_MS", DEFAULT_FETCH_TIMEOUT_MS);
+}
+
+export function getOcspMaxResponseBytes(): number {
+  return envNumber("OCSP_MAX_RESPONSE_BYTES", DEFAULT_OCSP_MAX_RESPONSE_BYTES);
+}
+
+export function getOcspMaxRedirects(): number {
+  return envNumber("OCSP_MAX_REDIRECTS", DEFAULT_MAX_REDIRECTS);
+}
+
+export function isOcspLocalhostAllowed(): boolean {
+  return process.env.OCSP_ALLOW_LOCALHOST === "true";
 }
 
 function isLocalhostName(hostname: string): boolean {
@@ -55,25 +76,33 @@ function isPrivateAddress(address: string): boolean {
   );
 }
 
-async function assertPublicHostname(parsed: URL): Promise<void> {
+async function assertPublicHostname(
+  parsed: URL,
+  allowLocalhost = isMonitoringSourceLocalhostAllowed(),
+  failurePrefix = "monitoring-source"
+): Promise<void> {
   if (isLocalhostName(parsed.hostname)) {
-    if (isMonitoringSourceLocalhostAllowed()) return;
-    throw new Error("monitoring-source-url-private-address-blocked");
+    if (allowLocalhost) return;
+    throw new Error(`${failurePrefix}-url-private-address-blocked`);
   }
   const records = isIP(parsed.hostname)
     ? [{ address: parsed.hostname }]
     : await lookup(parsed.hostname, { all: true, verbatim: true });
   if (records.some((record) => isPrivateAddress(record.address))) {
-    throw new Error("monitoring-source-url-private-address-blocked");
+    throw new Error(`${failurePrefix}-url-private-address-blocked`);
   }
 }
 
-export async function assertPublicMonitoringSourceUrl(url: string): Promise<URL> {
+export async function assertPublicMonitoringSourceUrl(
+  url: string,
+  allowLocalhost = isMonitoringSourceLocalhostAllowed(),
+  failurePrefix = "monitoring-source"
+): Promise<URL> {
   const parsed = new URL(url);
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    throw new Error("monitoring-source-url-invalid-scheme");
+    throw new Error(`${failurePrefix}-url-invalid-scheme`);
   }
-  await assertPublicHostname(parsed);
+  await assertPublicHostname(parsed, allowLocalhost, failurePrefix);
   return parsed;
 }
 
@@ -110,6 +139,68 @@ export async function fetchMonitoringSourceBytes(url: string): Promise<{
     if (declaredLength > maxBytes) throw new Error("monitoring-source-document-too-large");
     const body = Buffer.from(await response.arrayBuffer());
     if (body.byteLength > maxBytes) throw new Error("monitoring-source-document-too-large");
+    return {
+      finalUrl: currentUrl,
+      status: response.status,
+      contentType: response.headers.get("content-type"),
+      contentLength: body.byteLength,
+      body,
+      durationMs: Date.now() - startedAt,
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export async function fetchOcspResponseBytes(
+  url: string,
+  requestBody: Buffer
+): Promise<{
+  finalUrl: string;
+  status: number;
+  contentType: string | null;
+  contentLength: number;
+  body: Buffer;
+  durationMs: number;
+}> {
+  const startedAt = Date.now();
+  let currentUrl = url;
+  let response: Response | null = null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), getOcspFetchTimeoutMs());
+  try {
+    for (let redirects = 0; redirects <= getOcspMaxRedirects(); redirects += 1) {
+      const parsed = await assertPublicMonitoringSourceUrl(
+        currentUrl,
+        isOcspLocalhostAllowed(),
+        "ocsp"
+      );
+      response = await fetch(parsed, {
+        body: toExactArrayBuffer(requestBody),
+        headers: {
+          "Content-Type": "application/ocsp-request",
+          Accept: "application/ocsp-response",
+        },
+        method: "POST",
+        redirect: "manual",
+        signal: controller.signal,
+      });
+      if (![301, 302, 303, 307, 308].includes(response.status)) break;
+      const location = response.headers.get("location");
+      if (!location) throw new Error("ocsp-redirect-missing-location");
+      if (redirects === getOcspMaxRedirects()) {
+        throw new Error("ocsp-too-many-redirects");
+      }
+      currentUrl = new URL(location, parsed).toString();
+      await assertPublicMonitoringSourceUrl(currentUrl, isOcspLocalhostAllowed(), "ocsp");
+    }
+    if (!response) throw new Error("ocsp-fetch-failed");
+    if (!response.ok) throw new Error(`ocsp-fetch-failed:${response.status}`);
+    const maxBytes = getOcspMaxResponseBytes();
+    const declaredLength = Number(response.headers.get("content-length") ?? 0);
+    if (declaredLength > maxBytes) throw new Error("ocsp-response-too-large");
+    const body = Buffer.from(await response.arrayBuffer());
+    if (body.byteLength > maxBytes) throw new Error("ocsp-response-too-large");
     return {
       finalUrl: currentUrl,
       status: response.status,
