@@ -44,16 +44,28 @@ const runWorker = read(runWorkerPath);
 const envExample = read(envExamplePath);
 const compose = read(composePath);
 const operators = read(operatorsPath);
-const phaseRequirements = ["DOCS-02", "DOCS-03", "DOCS-04", "DOCS-05"];
+const validateAll = read("scripts/validate-all.js");
+const phaseRequirements = ["DOCS-01", "DOCS-02", "DOCS-03", "DOCS-04", "DOCS-05", "SEC-01"];
+
+function walkFiles(root) {
+  if (!fs.existsSync(root)) return [];
+  return fs.readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    const fullPath = path.join(root, entry.name);
+    return entry.isDirectory() ? walkFiles(fullPath) : [fullPath];
+  });
+}
 
 for (const literal of [
   "assertPublicMonitoringSourceUrl",
   "fetchMonitoringSourceBytes",
   "DEFAULT_MAX_DOCUMENT_BYTES",
+  "MONITORING_SOURCE_MAX_DOCUMENT_BYTES",
   "DEFAULT_MAX_REDIRECTS",
+  "MONITORING_SOURCE_MAX_REDIRECTS",
   "MONITORING_SOURCE_FETCH_TIMEOUT_MS",
   "MONITORING_SOURCE_MAX_DOCUMENT_BYTES",
   "MONITORING_SOURCE_ALLOW_LOCALHOST",
+  'parsed.protocol !== "http:" && parsed.protocol !== "https:"',
   "redirect: \"manual\"",
   "lookup(",
   "isIP(",
@@ -157,7 +169,7 @@ for (const status of [
 }
 
 for (const requirement of phaseRequirements) {
-  assert(requirement.startsWith("DOCS-"), `${requirement} requirement marker`);
+  assert(requirement.startsWith("DOCS-") || requirement === "SEC-01", `${requirement} requirement marker`);
 }
 
 for (const literal of [
@@ -167,7 +179,14 @@ for (const literal of [
   "document_snapshots_source_captured_idx",
   "document_snapshots_source_hash_uidx",
   "raw_body bytea not null",
+  "content_sha256 text null",
+  "extracted_text text null",
+  "extracted_text_truncated boolean not null",
+  "extraction_status text not null",
   "metadata_json jsonb not null",
+  "trust_list_source_id",
+  "trust_list_snapshot_id",
+  "trust_list_run_id",
   "recordMonitoringSourceEvent",
   "recordDocumentSnapshot",
   "findLatestDocumentSnapshotForSource",
@@ -176,5 +195,13 @@ for (const literal of [
 ]) {
   assert(store.includes(literal), `${literal} must be in runtime store`);
 }
+
+const validateAllHits = validateAll.match(/validate-document-snapshots\.js/g) ?? [];
+assert(validateAllHits.length === 1, "validate-all must include validate-document-snapshots.js exactly once");
+
+const adminManualSourceFiles = walkFiles(path.join(process.cwd(), "src/app/admin")).filter((filePath) =>
+  filePath.toLowerCase().includes("monitoring-source")
+);
+assert(adminManualSourceFiles.length === 0, "Phase 23 must not add manual monitoring-source admin UI routes");
 
 console.log("Document snapshot validation passed");

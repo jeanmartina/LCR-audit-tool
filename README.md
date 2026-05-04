@@ -86,6 +86,12 @@ The packaged local/staging stack runs four services:
 | `CERT_IMPORT_MAX_FILES` | Optional | Maximum certificate files accepted from one ZIP archive. |
 | `TRUST_LIST_FETCH_TIMEOUT_MS` | Optional | Server-side trust-list fetch timeout in milliseconds. |
 | `TRUST_LIST_MAX_XML_BYTES` | Optional | Maximum trust-list XML response size in bytes. |
+| `MONITORING_SOURCE_FETCH_TIMEOUT_MS` | Optional | Server-side policy-document fetch timeout in milliseconds. |
+| `MONITORING_SOURCE_MAX_DOCUMENT_BYTES` | Optional | Maximum raw CP/CPS/DPC document snapshot size in bytes. |
+| `MONITORING_SOURCE_MAX_EXTRACTED_TEXT_BYTES` | Optional | Maximum extracted document text retained per snapshot. |
+| `MONITORING_SOURCE_MAX_REDIRECTS` | Optional | Maximum policy-document redirects followed by the worker. |
+| `MONITORING_SOURCE_DOCUMENT_INTERVAL_SECONDS` | Optional | Worker cadence for policy-document checks. |
+| `MONITORING_SOURCE_ALLOW_LOCALHOST` | Optional | Allows localhost policy-document targets only for local development fixtures. |
 | `AUTH_GOOGLE_CLIENT_ID` | Optional | Google OAuth client ID. |
 | `AUTH_GOOGLE_CLIENT_SECRET` | Optional | Google OAuth client secret. |
 | `AUTH_ENTRA_CLIENT_ID` | Optional | Microsoft Entra application ID. |
@@ -149,6 +155,13 @@ To prove the packaged batch-import flow in the shipped compose stack:
 
 Corrupt archives should fail at the archive level with a top-level import-run error rather than item-by-item processing.
 
+## Policy document monitoring
+
+CP/CPS/DPC document sources are derived from certificate policy pointers and existing trust-list/certificate provenance. The worker checks discovered policy-document sources, records one monitoring event per check, and stores a new snapshot only when the raw document hash changes.
+
+Public HTTP and HTTPS document URLs can be checked because CA policy documents are commonly published over both schemes. Private/internal targets, loopback targets, unsafe redirects, and oversized responses are blocked by default.
+
+The system stores bounded raw document snapshots, SHA-256 hashes, metadata, extracted text when feasible, and source provenance for future compliance analysis. This phase does not perform AI compliance analysis, manual source crawling, or OCSP validation.
 
 ## Executive summary in the packaged stack
 

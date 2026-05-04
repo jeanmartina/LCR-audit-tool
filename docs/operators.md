@@ -263,6 +263,10 @@ Default limits:
 
 Public `http://` and `https://` policy-document URLs are accepted because CA policy documents are often published over public HTTP. Private, loopback, link-local, multicast, and internal Docker/network addresses remain blocked by default. Set `MONITORING_SOURCE_ALLOW_LOCALHOST=true` only for local development fixtures.
 
+### Evidence and future AI boundary
+
+Policy-document checks retain raw snapshots, hashes, extracted text when feasible, metadata, and certificate/trust-list provenance for future AI-assisted PKI compliance review. This milestone does not perform AI interpretation, compliance scoring, OCSP validation, manual source entry, or CA website crawling.
+
 ## Executive summary in the packaged stack
 
 The packaged stack now exposes a management-facing summary at `/reporting/executive` for any authenticated user whose groups authorize the underlying certificates/CRLs.
