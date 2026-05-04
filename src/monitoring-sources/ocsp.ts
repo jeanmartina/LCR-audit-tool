@@ -240,6 +240,8 @@ export async function checkOcspSource(
       parseFailureReason: parsed.parseFailureReason,
       metadataJson: {
         ...parsed.metadataJson,
+        requestContentType: "application/ocsp-request",
+        responseAccept: "application/ocsp-response",
         requestHashAlgorithm: "SHA-256",
       },
     });

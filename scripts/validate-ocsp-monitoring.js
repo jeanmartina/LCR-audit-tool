@@ -21,6 +21,8 @@ const runWorkerPath = "scripts/run-worker.js";
 const envExamplePath = ".env.example";
 const composePath = "compose.yaml";
 const operatorsPath = "docs/operators.md";
+const readmePath = "README.md";
+const proofPath = ".planning/phases/24-ocsp-technical-evidence-monitoring/24-PROOF.md";
 
 assert(fs.existsSync(path.join(process.cwd(), typesPath)), "OCSP type file is missing");
 
@@ -62,9 +64,14 @@ for (const forbidden of ['"good"', '"revoked"', '"unknown"']) {
 for (const literal of [
   "ocsp_check_events",
   "ocsp_response_evidence",
+  "request_body",
+  "response_body",
+  "request_sha256",
+  "response_sha256",
   "request_body bytea not null",
   "response_body bytea null",
   "issuer_fingerprint text not null",
+  "metadata_json",
   "recordOcspCheckEvent",
   "recordOcspResponseEvidence",
   "listOcspCheckEventsForSource",
@@ -87,6 +94,8 @@ for (const literal of [
   "issuer-certificate-not-found",
   "source-not-ocsp",
   "ocsp-source-not-discovered",
+  "application/ocsp-request",
+  "application/ocsp-response",
   "recordOcspResponseEvidence",
   "recordOcspCheckEvent",
   "malformed",
@@ -151,6 +160,7 @@ for (const key of [
 }
 
 const operators = read(operatorsPath);
+const readme = read(readmePath);
 assert(
   operators.includes("## OCSP technical monitoring limits"),
   "operators documentation must include OCSP limits"
@@ -159,5 +169,33 @@ assert(
   operators.includes("not treated as compliance health"),
   "operators documentation must explain semantic boundary"
 );
+
+for (const literal of [
+  "## OCSP technical monitoring",
+  "real OCSP requests",
+  "not_checkable",
+  "does not perform full semantic OCSP validation",
+  "not compliance health labels",
+]) {
+  assert(readme.includes(literal), `README.md must include ${literal}`);
+}
+
+const validateAll = read("scripts/validate-all.js");
+const validateAllHits = validateAll.match(/validate-ocsp-monitoring\.js/g) ?? [];
+assert(validateAllHits.length === 1, "validate-ocsp-monitoring.js exactly once in validate-all");
+
+if (fs.existsSync(path.join(process.cwd(), proofPath))) {
+  const proof = read(proofPath);
+  for (const literal of [
+    "OCSP-01",
+    "OCSP-04",
+    "node scripts/validate-ocsp-monitoring.js",
+    "node scripts/validate-all.js",
+    "npm run typecheck",
+    "npm run build",
+  ]) {
+    assert(proof.includes(literal), `Phase proof must include ${literal}`);
+  }
+}
 
 console.log("OCSP monitoring validation passed");

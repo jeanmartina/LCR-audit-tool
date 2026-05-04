@@ -279,7 +279,7 @@ Default limits:
 - `OCSP_CHECK_INTERVAL_SECONDS=3600`
 - `OCSP_ALLOW_LOCALHOST=false`
 
-The OCSP event health is technical only. OCSP responder values such as `good`, `revoked`, and `unknown` are not treated as compliance health in this milestone.
+The OCSP event health is technical only. This milestone does not perform full semantic OCSP validation. OCSP responder values such as `good`, `revoked`, and `unknown` are not treated as compliance health and are not compliance health labels in this milestone.
 
 Raw OCSP request and response evidence is retained within byte limits, including hashes and provenance, so a future milestone can perform full validation without losing source evidence. Private, internal, loopback, link-local, multicast, and internal Docker/network OCSP URLs remain blocked by default; set `OCSP_ALLOW_LOCALHOST=true` only for local development fixtures.
 

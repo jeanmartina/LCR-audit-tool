@@ -163,6 +163,14 @@ Public HTTP and HTTPS document URLs can be checked because CA policy documents a
 
 The system stores bounded raw document snapshots, SHA-256 hashes, metadata, extracted text when feasible, and source provenance for future compliance analysis. This phase does not perform AI compliance analysis, manual source crawling, or OCSP validation.
 
+## OCSP technical monitoring
+
+The worker sends real OCSP requests for discovered OCSP sources when issuer context exists in the certificate inventory. Missing target or issuer context is recorded as `not_checkable`, so the system avoids weak probes that would look authoritative without enough certificate context.
+
+Raw OCSP request and response evidence is retained within configured byte limits, including hashes, HTTP metadata, and source provenance for future validation work. This milestone does not perform full semantic OCSP validation: response signature verification, certificate status interpretation, and freshness evaluation remain future scope.
+
+OCSP responder values such as `good`, `revoked`, and `unknown` are not compliance health labels in this phase. Phase 24 reports only technical reachability/evidence health.
+
 ## Executive summary in the packaged stack
 
 The packaged deployment also includes a management-facing summary at `/reporting/executive`.
