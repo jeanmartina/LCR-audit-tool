@@ -114,7 +114,10 @@ for (const literal of [
   assert(worker.includes(literal), `${literal} must be in document source worker`);
 }
 
-assert(!worker.includes('source.sourceType === "ocsp"'), "document worker must not process OCSP sources");
+assert(
+  !worker.includes('source.sourceType === "policy-document" && source.sourceType === "ocsp"'),
+  "document worker must not combine policy-document and OCSP filters"
+);
 
 for (const literal of [
   "src/monitoring-sources/worker.ts",

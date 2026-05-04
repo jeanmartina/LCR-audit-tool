@@ -267,6 +267,22 @@ Public `http://` and `https://` policy-document URLs are accepted because CA pol
 
 Policy-document checks retain raw snapshots, hashes, extracted text when feasible, metadata, and certificate/trust-list provenance for future AI-assisted PKI compliance review. This milestone does not perform AI interpretation, compliance scoring, OCSP validation, manual source entry, or CA website crawling.
 
+## OCSP technical monitoring limits
+
+Phase 24 sends technical OCSP requests only when issuer certificate context exists in the inventory. Missing issuer context is recorded as not checkable instead of generating weak or misleading probes.
+
+Default limits:
+
+- `OCSP_FETCH_TIMEOUT_MS=30000`
+- `OCSP_MAX_RESPONSE_BYTES=1048576`
+- `OCSP_MAX_REDIRECTS=3`
+- `OCSP_CHECK_INTERVAL_SECONDS=3600`
+- `OCSP_ALLOW_LOCALHOST=false`
+
+The OCSP event health is technical only. OCSP responder values such as `good`, `revoked`, and `unknown` are not treated as compliance health in this milestone.
+
+Raw OCSP request and response evidence is retained within byte limits, including hashes and provenance, so a future milestone can perform full validation without losing source evidence. Private, internal, loopback, link-local, multicast, and internal Docker/network OCSP URLs remain blocked by default; set `OCSP_ALLOW_LOCALHOST=true` only for local development fixtures.
+
 ## Executive summary in the packaged stack
 
 The packaged stack now exposes a management-facing summary at `/reporting/executive` for any authenticated user whose groups authorize the underlying certificates/CRLs.

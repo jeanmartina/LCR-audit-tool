@@ -16,6 +16,11 @@ const storePath = "src/storage/runtime-store.ts";
 const ocspPath = "src/monitoring-sources/ocsp.ts";
 const fetchSafetyPath = "src/monitoring-sources/fetch-safety.ts";
 const packageJsonPath = "package.json";
+const workerPath = "src/monitoring-sources/worker.ts";
+const runWorkerPath = "scripts/run-worker.js";
+const envExamplePath = ".env.example";
+const composePath = "compose.yaml";
+const operatorsPath = "docs/operators.md";
 
 assert(fs.existsSync(path.join(process.cwd(), typesPath)), "OCSP type file is missing");
 
@@ -105,5 +110,54 @@ for (const literal of [
 ]) {
   assert(fetchSafety.includes(literal), `fetch safety must include ${literal}`);
 }
+
+const worker = read(workerPath);
+for (const literal of [
+  "runScheduledOcspSourceChecks",
+  "OCSP_CHECK_INTERVAL_SECONDS",
+  "lastOcspCheckAtBySourceId",
+  'source.sourceType === "ocsp"',
+  "checkOcspSource",
+  "[worker] ocsp source check failed:",
+]) {
+  assert(worker.includes(literal), `worker must include ${literal}`);
+}
+assert(
+  !worker.includes('source.sourceType === "policy-document" && source.sourceType === "ocsp"'),
+  "worker must not combine policy-document and ocsp filters impossibly"
+);
+
+const runWorker = read(runWorkerPath);
+for (const literal of [
+  "runScheduledOcspSourceChecks",
+  "runScheduledOcspSourceChecks export is required",
+  "await runScheduledOcspSourceChecks();",
+  "[worker] ocsp source cycle failed:",
+]) {
+  assert(runWorker.includes(literal), `run-worker must include ${literal}`);
+}
+
+const envExample = read(envExamplePath);
+const compose = read(composePath);
+for (const key of [
+  "OCSP_FETCH_TIMEOUT_MS",
+  "OCSP_MAX_RESPONSE_BYTES",
+  "OCSP_MAX_REDIRECTS",
+  "OCSP_CHECK_INTERVAL_SECONDS",
+  "OCSP_ALLOW_LOCALHOST",
+]) {
+  assert(envExample.includes(key), `.env.example must include ${key}`);
+  assert(compose.includes(key), `compose.yaml must include ${key}`);
+}
+
+const operators = read(operatorsPath);
+assert(
+  operators.includes("## OCSP technical monitoring limits"),
+  "operators documentation must include OCSP limits"
+);
+assert(
+  operators.includes("not treated as compliance health"),
+  "operators documentation must explain semantic boundary"
+);
 
 console.log("OCSP monitoring validation passed");

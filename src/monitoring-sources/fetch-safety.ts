@@ -6,6 +6,8 @@ const DEFAULT_MAX_DOCUMENT_BYTES = 5 * 1024 * 1024;
 const DEFAULT_MAX_EXTRACTED_TEXT_BYTES = 200000;
 const DEFAULT_MAX_REDIRECTS = 3;
 const DEFAULT_OCSP_MAX_RESPONSE_BYTES = 1024 * 1024;
+const MONITORING_SOURCE_PRIVATE_ADDRESS_ERROR = "monitoring-source-url-private-address-blocked";
+const MONITORING_SOURCE_INVALID_SCHEME_ERROR = "monitoring-source-url-invalid-scheme";
 
 function envNumber(name: string, fallback: number): number {
   const value = Number(process.env[name] ?? fallback);
@@ -52,6 +54,16 @@ export function isOcspLocalhostAllowed(): boolean {
   return process.env.OCSP_ALLOW_LOCALHOST === "true";
 }
 
+function prefixedError(failurePrefix: string, suffix: string): string {
+  if (failurePrefix === "monitoring-source" && suffix === "url-private-address-blocked") {
+    return MONITORING_SOURCE_PRIVATE_ADDRESS_ERROR;
+  }
+  if (failurePrefix === "monitoring-source" && suffix === "url-invalid-scheme") {
+    return MONITORING_SOURCE_INVALID_SCHEME_ERROR;
+  }
+  return `${failurePrefix}-${suffix}`;
+}
+
 function isLocalhostName(hostname: string): boolean {
   return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
 }
@@ -83,13 +95,13 @@ async function assertPublicHostname(
 ): Promise<void> {
   if (isLocalhostName(parsed.hostname)) {
     if (allowLocalhost) return;
-    throw new Error(`${failurePrefix}-url-private-address-blocked`);
+    throw new Error(prefixedError(failurePrefix, "url-private-address-blocked"));
   }
   const records = isIP(parsed.hostname)
     ? [{ address: parsed.hostname }]
     : await lookup(parsed.hostname, { all: true, verbatim: true });
   if (records.some((record) => isPrivateAddress(record.address))) {
-    throw new Error(`${failurePrefix}-url-private-address-blocked`);
+    throw new Error(prefixedError(failurePrefix, "url-private-address-blocked"));
   }
 }
 
@@ -100,7 +112,7 @@ export async function assertPublicMonitoringSourceUrl(
 ): Promise<URL> {
   const parsed = new URL(url);
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    throw new Error(`${failurePrefix}-url-invalid-scheme`);
+    throw new Error(prefixedError(failurePrefix, "url-invalid-scheme"));
   }
   await assertPublicHostname(parsed, allowLocalhost, failurePrefix);
   return parsed;

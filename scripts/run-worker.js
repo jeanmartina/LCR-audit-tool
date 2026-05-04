@@ -34,6 +34,7 @@ async function main() {
   const runScheduledPolls = scheduler.runScheduledPolls;
   const syncEnabledTrustListSources = trustLists.syncEnabledTrustListSources;
   const runScheduledDocumentSourceChecks = monitoringSources.runScheduledDocumentSourceChecks;
+  const runScheduledOcspSourceChecks = monitoringSources.runScheduledOcspSourceChecks;
 
   if (typeof runScheduledPolls !== "function") {
     throw new Error("runScheduledPolls export is required");
@@ -43,6 +44,9 @@ async function main() {
   }
   if (typeof runScheduledDocumentSourceChecks !== "function") {
     throw new Error("runScheduledDocumentSourceChecks export is required");
+  }
+  if (typeof runScheduledOcspSourceChecks !== "function") {
+    throw new Error("runScheduledOcspSourceChecks export is required");
   }
 
   let stopped = false;
@@ -73,6 +77,13 @@ async function main() {
     } catch (error) {
       const message = error instanceof Error ? error.stack ?? error.message : String(error);
       console.error(`[worker] document source cycle failed: ${message}`);
+    }
+
+    try {
+      await runScheduledOcspSourceChecks();
+    } catch (error) {
+      const message = error instanceof Error ? error.stack ?? error.message : String(error);
+      console.error(`[worker] ocsp source cycle failed: ${message}`);
     }
 
     if (stopped) {
