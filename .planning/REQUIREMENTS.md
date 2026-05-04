@@ -15,10 +15,10 @@
 
 ### OCSP Monitoring
 
-- [ ] **OCSP-01**: System performs bounded technical OCSP responder checks for derived OCSP sources when enough issuer context exists.
-- [ ] **OCSP-02**: System records OCSP check evidence including status, duration, HTTP status, content type, response size, response hash, and failure reason.
-- [ ] **OCSP-03**: System stores OCSP response evidence so future milestones can perform full semantic and signature validation.
-- [ ] **OCSP-04**: System avoids presenting OCSP reachability as full revocation-status validation.
+- [x] **OCSP-01**: System performs bounded technical OCSP responder checks for derived OCSP sources when enough issuer context exists.
+- [x] **OCSP-02**: System records OCSP check evidence including status, duration, HTTP status, content type, response size, response hash, and failure reason.
+- [x] **OCSP-03**: System stores OCSP response evidence so future milestones can perform full semantic and signature validation.
+- [x] **OCSP-04**: System avoids presenting OCSP reachability as full revocation-status validation.
 
 ### Policy Document Monitoring
 
@@ -81,10 +81,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SRC-06 | Phase 22 | Complete |
 | SRC-07 | Phase 22 | Complete |
 | SRC-08 | Phase 22 | Complete |
-| OCSP-01 | Phase 24 | Pending |
-| OCSP-02 | Phase 24 | Pending |
-| OCSP-03 | Phase 24 | Pending |
-| OCSP-04 | Phase 24 | Pending |
+| OCSP-01 | Phase 24 | Complete |
+| OCSP-02 | Phase 24 | Complete |
+| OCSP-03 | Phase 24 | Complete |
+| OCSP-04 | Phase 24 | Complete |
 | DOCS-01 | Phase 23 | Complete |
 | DOCS-02 | Phase 23 | Complete |
 | DOCS-03 | Phase 23 | Complete |
