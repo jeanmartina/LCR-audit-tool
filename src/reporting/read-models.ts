@@ -3,7 +3,7 @@ import { AuthenticatedPrincipal } from "../auth/authorization";
 import { loadTargets, resolveRetentionPolicy, Target } from "../inventory/targets";
 import { calculateErrorBudget } from "../metrics/sla-metrics";
 import { evaluatePredictiveState, getEffectivePredictiveWindowDays, syncPredictiveState } from "./predictive";
-import { ReportFilters } from "./query-state";
+import { ReportFilters, withFilter } from "./query-state";
 import {
   CoverageGap,
   listCoverageGaps,
@@ -16,13 +16,21 @@ import {
 } from "../storage/coverage-records";
 import {
   findGroupSettingsByGroupId,
+  listDocumentSnapshotsForSource,
   listCertificateCrlLinks,
   listCertificateGroupIds,
   listCertificateGroupOverrides,
   listCertificateRecords,
+  listMonitoringSourceEventsForSource,
+  listMonitoringSourceRecords,
+  listOcspCheckEventsForSource,
+  listOcspResponseEvidenceForSource,
   listPredictiveEventsByCertificate,
   type CertificateRecord,
 } from "../storage/runtime-store";
+import type { DocumentSnapshotRecord, MonitoringSourceEventRecord, MonitoringSourceEventStatus } from "../monitoring-sources/document-types";
+import type { OcspCheckEventRecord, OcspCheckEventStatus, OcspResponseEvidenceRecord } from "../monitoring-sources/ocsp-types";
+import type { MonitoringSourceRecord, MonitoringSourceState, MonitoringSourceType, PolicyDocumentRole } from "../monitoring-sources/types";
 
 export type { ReportFilters } from "./query-state";
 
@@ -128,6 +136,10 @@ export interface ExecutiveSummary {
     pkis: ExecutiveBreakdownBucket[];
     jurisdictions: ExecutiveBreakdownBucket[];
   };
+  derivedSourceHealth: {
+    ocsp: DerivedSourceHealthSummary;
+    policyDocuments: DerivedSourceHealthSummary;
+  };
 }
 
 export interface DashboardFilterOptions {
@@ -189,7 +201,47 @@ export interface DetailEvidence {
   }>;
   snapshots: Array<SnapshotMetadata & { targetLabel: string }>;
   predictiveEvents: Awaited<ReturnType<typeof listPredictiveEventsByCertificate>>;
+  derivedSources: DerivedSourceDetail[];
 }
+
+export interface DerivedSourceHealthSummary {
+  total: number;
+  discovered: number;
+  available: number;
+  unavailable: number;
+  blocked: number;
+  notCheckable: number;
+  notDiscovered: number;
+  disabled: number;
+  changed: number;
+  unchanged: number;
+  oversized: number;
+  malformed: number;
+  extractionFailed: number;
+  latestEventAt: Date | null;
+  latestEventStatus: string | null;
+  latestEventReason: string | null;
+  evidenceHref: string | null;
+}
+
+export interface DerivedSourceDetail {
+  source: MonitoringSourceRecord;
+  historyHref: string;
+  historyEnabled: boolean;
+  latestEvent: DerivedSourceEventRecord | null;
+  latestEvidence: DerivedSourceEvidenceRecord | null;
+  historyEvents: DerivedSourceEventRecord[];
+  historyEvidence: DerivedSourceEvidenceRecord[];
+  displayStatus: DerivedSourceDisplayStatus;
+}
+
+type DerivedSourceDisplayStatus =
+  | MonitoringSourceState
+  | MonitoringSourceEventStatus
+  | OcspCheckEventStatus;
+
+type DerivedSourceEventRecord = MonitoringSourceEventRecord | OcspCheckEventRecord;
+type DerivedSourceEvidenceRecord = DocumentSnapshotRecord | OcspResponseEvidenceRecord;
 
 export interface DetailFilterOptions {
   httpStatuses: number[];
@@ -232,6 +284,217 @@ function matchesCertificateFilters(certificate: CertificateRecord, filters: Repo
     return false;
   }
   return true;
+}
+
+function getDerivedSourceDisplayStatus(
+  source: MonitoringSourceRecord,
+  latestEvent: DerivedSourceEventRecord | null
+): DerivedSourceDisplayStatus {
+  return latestEvent?.status ?? source.state;
+}
+
+function getDerivedSourceHistoryEnabled(
+  source: MonitoringSourceRecord,
+  displayStatus: DerivedSourceDisplayStatus,
+  latestEvent: DerivedSourceEventRecord | null
+): boolean {
+  if (!latestEvent) {
+    return false;
+  }
+  if (source.state === "not_discovered" || source.state === "not_checkable") {
+    return false;
+  }
+  return displayStatus !== "blocked" && displayStatus !== "not_checkable";
+}
+
+function buildDerivedSourceHistoryHref(certificateId: string, filters: ReportFilters): string {
+  return `/reporting/${certificateId}?${withFilter(filters, { tab: "sources" })}`;
+}
+
+function countDerivedSourceStatus(
+  summary: DerivedSourceHealthSummary,
+  status: DerivedSourceDisplayStatus
+): void {
+  if (status === "discovered") {
+    summary.discovered += 1;
+    return;
+  }
+  if (status === "available") {
+    summary.available += 1;
+    return;
+  }
+  if (status === "unavailable") {
+    summary.unavailable += 1;
+    return;
+  }
+  if (status === "blocked") {
+    summary.blocked += 1;
+    return;
+  }
+  if (status === "not_checkable") {
+    summary.notCheckable += 1;
+    return;
+  }
+  if (status === "not_discovered") {
+    summary.notDiscovered += 1;
+    return;
+  }
+  if (status === "disabled") {
+    summary.disabled += 1;
+    return;
+  }
+  if (status === "changed") {
+    summary.changed += 1;
+    return;
+  }
+  if (status === "unchanged") {
+    summary.unchanged += 1;
+    return;
+  }
+  if (status === "oversized") {
+    summary.oversized += 1;
+    return;
+  }
+  if (status === "malformed") {
+    summary.malformed += 1;
+    return;
+  }
+  if (status === "extraction_failed") {
+    summary.extractionFailed += 1;
+  }
+}
+
+function createDerivedSourceHealthSummary(): DerivedSourceHealthSummary {
+  return {
+    total: 0,
+    discovered: 0,
+    available: 0,
+    unavailable: 0,
+    blocked: 0,
+    notCheckable: 0,
+    notDiscovered: 0,
+    disabled: 0,
+    changed: 0,
+    unchanged: 0,
+    oversized: 0,
+    malformed: 0,
+    extractionFailed: 0,
+    latestEventAt: null,
+    latestEventStatus: null,
+    latestEventReason: null,
+    evidenceHref: null,
+  };
+}
+
+function updateDerivedSourceHealthSummary(
+  summary: DerivedSourceHealthSummary,
+  detail: DerivedSourceDetail
+): void {
+  summary.total += 1;
+  countDerivedSourceStatus(summary, detail.displayStatus);
+  const latestEvent = detail.latestEvent;
+  if (!latestEvent) {
+    return;
+  }
+  if (!summary.latestEventAt || latestEvent.checkedAt > summary.latestEventAt) {
+    summary.latestEventAt = latestEvent.checkedAt;
+    summary.latestEventStatus = detail.displayStatus;
+    summary.latestEventReason =
+      "failureReason" in latestEvent
+        ? latestEvent.failureReason
+        : detail.latestEvidence && "extractionFailureReason" in detail.latestEvidence
+          ? detail.latestEvidence.extractionFailureReason
+          : null;
+    summary.evidenceHref = detail.historyEnabled ? detail.historyHref : null;
+  }
+}
+
+async function loadDerivedSourceDetail(
+  source: MonitoringSourceRecord,
+  filters: ReportFilters,
+  certificateId: string
+): Promise<DerivedSourceDetail> {
+  const historyHref = buildDerivedSourceHistoryHref(certificateId, filters);
+  if (source.sourceType === "ocsp") {
+    const [historyEvents, historyEvidence] = await Promise.all([
+      listOcspCheckEventsForSource(source.id),
+      listOcspResponseEvidenceForSource(source.id),
+    ]);
+    const filteredEvents = historyEvents
+      .filter((event) => inRange(event.checkedAt, filters))
+      .sort((left, right) => right.checkedAt.getTime() - left.checkedAt.getTime());
+    const filteredEvidence = historyEvidence
+      .filter((event) => inRange(event.checkedAt, filters))
+      .sort((left, right) => right.checkedAt.getTime() - left.checkedAt.getTime());
+    const latestEvent = filteredEvents[0] ?? null;
+    const displayStatus = getDerivedSourceDisplayStatus(source, latestEvent);
+    return {
+      source,
+      historyHref,
+      historyEnabled: getDerivedSourceHistoryEnabled(source, displayStatus, latestEvent),
+      latestEvent,
+      latestEvidence: filteredEvidence[0] ?? null,
+      historyEvents: filteredEvents,
+      historyEvidence: filteredEvidence,
+      displayStatus,
+    };
+  }
+
+  const [historyEvents, historyEvidence] = await Promise.all([
+    listMonitoringSourceEventsForSource(source.id),
+    listDocumentSnapshotsForSource(source.id),
+  ]);
+  const filteredEvents = historyEvents
+    .filter((event) => inRange(event.checkedAt, filters))
+    .sort((left, right) => right.checkedAt.getTime() - left.checkedAt.getTime());
+  const filteredEvidence = historyEvidence
+    .filter((event) => inRange(event.capturedAt, filters))
+    .sort((left, right) => right.capturedAt.getTime() - left.capturedAt.getTime());
+  const latestEvent = filteredEvents[0] ?? null;
+  const displayStatus = getDerivedSourceDisplayStatus(source, latestEvent);
+  return {
+    source,
+    historyHref,
+    historyEnabled: getDerivedSourceHistoryEnabled(source, displayStatus, latestEvent),
+    latestEvent,
+    latestEvidence: filteredEvidence[0] ?? null,
+    historyEvents: filteredEvents,
+    historyEvidence: filteredEvidence,
+    displayStatus,
+  };
+}
+
+async function loadDerivedSourceDetailsForCertificate(
+  certificateId: string,
+  filters: ReportFilters
+): Promise<DerivedSourceDetail[]> {
+  const sources = (await listMonitoringSourceRecords()).filter((source) => source.certificateId === certificateId);
+  const orderedSources = sources.sort((left, right) => {
+    const typeOrder = left.sourceType.localeCompare(right.sourceType);
+    if (typeOrder !== 0) {
+      return typeOrder;
+    }
+    return left.sourceKey.localeCompare(right.sourceKey);
+  });
+  return Promise.all(orderedSources.map((source) => loadDerivedSourceDetail(source, filters, certificateId)));
+}
+
+function summarizeDerivedSourceDetails(details: DerivedSourceDetail[]): DerivedSourceHealthSummary {
+  const summary = createDerivedSourceHealthSummary();
+  for (const detail of details) {
+    updateDerivedSourceHealthSummary(summary, detail);
+  }
+  return summary;
+}
+
+async function loadDerivedSourceDetailsForCertificates(
+  certificateIds: string[],
+  filters: ReportFilters
+): Promise<DerivedSourceDetail[]> {
+  const details = await Promise.all(
+    certificateIds.map((certificateId) => loadDerivedSourceDetailsForCertificate(certificateId, filters))
+  );
+  return details.flat();
 }
 
 function getWindowMs(filters: ReportFilters): number {
@@ -718,6 +981,9 @@ export async function buildExecutiveSummary(
   const summary = await buildDashboardSummary(filters, principal);
   const rows = await buildDashboardRows(filters, principal);
   const certificateRows = rows.filter((row) => row.rowType === "certificate");
+  const visibleCertificates = await listVisibleCertificates(principal);
+  const certificateIds = visibleCertificates.map((item) => item.certificate.id);
+  const derivedSourceDetails = await loadDerivedSourceDetailsForCertificates(certificateIds, filters);
   const topRisks = [...certificateRows]
     .sort((left, right) => getRiskPriority(right) - getRiskPriority(left))
     .slice(0, 5)
@@ -749,6 +1015,12 @@ export async function buildExecutiveSummary(
       trustSources: buildBreakdownBuckets(rows, "trustSource"),
       pkis: buildBreakdownBuckets(rows, "pki"),
       jurisdictions: buildBreakdownBuckets(rows, "jurisdiction"),
+    },
+    derivedSourceHealth: {
+      ocsp: summarizeDerivedSourceDetails(derivedSourceDetails.filter((detail) => detail.source.sourceType === "ocsp")),
+      policyDocuments: summarizeDerivedSourceDetails(
+        derivedSourceDetails.filter((detail) => detail.source.sourceType === "policy-document")
+      ),
     },
   };
 }
@@ -818,6 +1090,7 @@ export async function buildDetailEvidence(
   const links = await listCertificateCrlLinks(certificateId);
   const targetLinks = links.filter((link) => link.runtimeTargetId);
   const targetIds = targetLinks.map((link) => link.runtimeTargetId as string);
+  const derivedSources = await loadDerivedSourceDetailsForCertificate(certificateId, filters);
   const pollHistory = targetIds.flatMap((targetId) =>
     getTargetPolls(targetId, filters).map((poll) => ({
       targetId,
@@ -931,29 +1204,31 @@ export async function buildDetailEvidence(
     ),
     snapshots: snapshots.sort((left, right) => left.occurredAt.getTime() - right.occurredAt.getTime()),
     predictiveEvents,
+    derivedSources,
   };
 }
 
 export async function buildDetailFilterOptions(
   certificateId: string,
-  principal?: AuthenticatedPrincipal
+  principal?: AuthenticatedPrincipal,
+  detail?: DetailEvidence | null
 ): Promise<DetailFilterOptions | null> {
-  const detail = await buildDetailEvidence(certificateId, {}, principal);
-  if (!detail) {
+  const resolvedDetail = detail ?? (await buildDetailEvidence(certificateId, {}, principal));
+  if (!resolvedDetail) {
     return null;
   }
 
   return {
-    httpStatuses: [...new Set(detail.pollHistory.map((poll) => poll.httpStatus))].sort((left, right) => left - right),
+    httpStatuses: [...new Set(resolvedDetail.pollHistory.map((poll) => poll.httpStatus))].sort((left, right) => left - right),
     severities: [
       ...new Set([
-        ...detail.alertHistory.map((alert) => alert.severity),
-        ...detail.predictiveEvents.map((event) => event.severity),
+        ...resolvedDetail.alertHistory.map((alert) => alert.severity),
+        ...resolvedDetail.predictiveEvents.map((event) => event.severity),
       ]),
     ].sort(),
     eventTypes: ["poll", "alert", "validation", "expiration", "recovery", "coverage-gap", "predictive"],
     snapshotHashes: [
-      ...new Set(detail.snapshots.map((snapshot) => snapshot.hash).filter(Boolean) as string[]),
+      ...new Set(resolvedDetail.snapshots.map((snapshot) => snapshot.hash).filter(Boolean) as string[]),
     ].sort(),
   };
 }

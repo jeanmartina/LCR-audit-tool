@@ -10,7 +10,8 @@ export type ReportTab =
   | "coverage-gaps"
   | "alerts"
   | "validation"
-  | "snapshots";
+  | "snapshots"
+  | "sources";
 
 export type TimelineFilterEventType =
   | "poll"
@@ -153,7 +154,8 @@ export function parseReportFilters(searchParams: SearchParamLike = {}): ReportFi
       tab === "coverage-gaps" ||
       tab === "alerts" ||
       tab === "validation" ||
-      tab === "snapshots"
+      tab === "snapshots" ||
+      tab === "sources"
         ? tab
         : "timeline",
     preset: resolvedPreset,
