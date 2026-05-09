@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { assertCertificatePermission } from "../../../auth/authorization";
+import { StatusPill } from "../../../components/ui/primitives";
 import { getPrincipalTranslator } from "../../../i18n";
 import {
   buildDetailEvidence,
@@ -22,6 +23,7 @@ const TABS = [
   { key: "alerts", label: "Alerts" },
   { key: "validation", label: "Validation" },
   { key: "snapshots", label: "Snapshots" },
+  { key: "sources", label: "Sources" },
 ] as const;
 
 const BOX = {
@@ -31,11 +33,227 @@ const BOX = {
   padding: "16px",
 } as const;
 
+function getDerivedTone(status: string): "success" | "warning" | "neutral" {
+  if (status === "available") {
+    return "success";
+  }
+  if (status === "unchanged" || status === "not_discovered" || status === "discovered") {
+    return "neutral";
+  }
+  return "warning";
+}
+
+function formatMaybeDate(value: Date | string | null | undefined): string {
+  if (!value) {
+    return "-";
+  }
+  return value instanceof Date ? value.toISOString() : value;
+}
+
+function isOcspEvidence(
+  evidence: NonNullable<Awaited<ReturnType<typeof buildDetailEvidence>>>["derivedSources"][number]["latestEvidence"]
+): evidence is Extract<
+  NonNullable<Awaited<ReturnType<typeof buildDetailEvidence>>>["derivedSources"][number]["latestEvidence"],
+  { requestSha256: string }
+> {
+  return Boolean(evidence && "requestSha256" in evidence);
+}
+
+function isDocumentEvidence(
+  evidence: NonNullable<Awaited<ReturnType<typeof buildDetailEvidence>>>["derivedSources"][number]["latestEvidence"]
+): evidence is Extract<
+  NonNullable<Awaited<ReturnType<typeof buildDetailEvidence>>>["derivedSources"][number]["latestEvidence"],
+  { sha256: string }
+> {
+  return Boolean(evidence && "sha256" in evidence);
+}
+
+function getDerivedStatusLabel(status: string, t: (key: string) => string): string {
+  if (status === "discovered") {
+    return t("reporting.derived.status.discovered");
+  }
+  if (status === "available") {
+    return t("reporting.derived.status.available");
+  }
+  if (status === "unavailable") {
+    return t("reporting.derived.status.unavailable");
+  }
+  if (status === "blocked") {
+    return t("reporting.derived.status.blocked");
+  }
+  if (status === "not_discovered") {
+    return t("reporting.derived.status.not_discovered");
+  }
+  if (status === "not_checkable") {
+    return t("reporting.derived.status.not_checkable");
+  }
+  if (status === "changed") {
+    return t("reporting.derived.status.changed");
+  }
+  if (status === "unchanged") {
+    return t("reporting.derived.status.unchanged");
+  }
+  if (status === "oversized") {
+    return t("reporting.derived.status.oversized");
+  }
+  if (status === "malformed") {
+    return t("reporting.derived.status.malformed");
+  }
+  if (status === "extraction_failed") {
+    return t("reporting.derived.status.extraction_failed");
+  }
+  if (status === "disabled") {
+    return t("reporting.derived.status.disabled");
+  }
+  return t(`reporting.derived.status.${status}`);
+}
+
+function renderDerivedEvidence(
+  detailItem: NonNullable<Awaited<ReturnType<typeof buildDetailEvidence>>>["derivedSources"][number],
+  t: (key: string) => string
+): ReactElement {
+  if (detailItem.source.sourceType === "ocsp") {
+    const evidence = detailItem.latestEvidence;
+    return (
+      <div style={{ display: "grid", gap: "4px" }}>
+        <div>{t("reporting.derived.rawEvidence")}</div>
+        <div style={{ color: "var(--muted-color)" }}>
+          {isOcspEvidence(evidence)
+            ? [
+                `request ${evidence.requestSha256}`,
+                `response ${evidence.responseSha256 ?? "-"}`,
+                `bytes ${evidence.responseSizeBytes ?? evidence.requestSizeBytes}`,
+              ].join(" · ")
+            : "-"}
+        </div>
+      </div>
+    );
+  }
+
+  const evidence = detailItem.latestEvidence;
+  return (
+    <div style={{ display: "grid", gap: "4px" }}>
+      <div>{t("reporting.derived.rawEvidence")}</div>
+      <div style={{ color: "var(--muted-color)" }}>
+        {isDocumentEvidence(evidence)
+          ? [
+              `sha ${evidence.sha256}`,
+              `bytes ${evidence.sizeBytes}`,
+              `capture ${evidence.capturedAt.toISOString()}`,
+            ].join(" · ")
+          : "-"}
+      </div>
+    </div>
+  );
+}
+
+function renderDerivedSourceList(
+  detailItem: NonNullable<Awaited<ReturnType<typeof buildDetailEvidence>>>["derivedSources"][number],
+  t: (key: string) => string
+): ReactElement {
+  const latestEvent = detailItem.latestEvent;
+  const sourceTypeLabel =
+    detailItem.source.sourceType === "ocsp"
+      ? t("reporting.derived.type.ocsp")
+      : t("reporting.derived.type.policyDocument");
+  return (
+    <article key={detailItem.source.id} id={detailItem.source.sourceKey} style={{ borderTop: "1px solid var(--panel-border)", paddingTop: "12px", display: "grid", gap: "10px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+        <strong>{sourceTypeLabel}</strong>
+        <StatusPill tone={getDerivedTone(detailItem.displayStatus)}>{getDerivedStatusLabel(detailItem.displayStatus, t)}</StatusPill>
+      </div>
+      <div style={{ display: "grid", gap: "4px" }}>
+        <span>
+          {t("reporting.derived.url")}: {detailItem.source.sourceUrl ?? detailItem.source.normalizedUrl ?? "-"}
+        </span>
+        <span>
+          {t("reporting.derived.lastChecked")}: {formatMaybeDate(latestEvent?.checkedAt ?? detailItem.source.updatedAt)}
+        </span>
+        <span>
+          {t("reporting.derived.failureReason")}: {latestEvent && "failureReason" in latestEvent ? latestEvent.failureReason ?? "-" : detailItem.source.derivationReason ?? "-"}
+        </span>
+        {renderDerivedEvidence(detailItem, t)}
+      </div>
+      <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+        {detailItem.historyEnabled ? (
+          <Link href={detailItem.historyHref} style={{ color: "var(--link-color)" }}>
+            {t("reporting.derived.history")}
+          </Link>
+        ) : (
+          <span style={{ color: "var(--muted-color)", pointerEvents: "none" }}>{t("reporting.derived.historyDisabled")}</span>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function renderDerivedSourceHistory(
+  detailItem: NonNullable<Awaited<ReturnType<typeof buildDetailEvidence>>>["derivedSources"][number],
+  t: (key: string) => string
+): ReactElement {
+  const sourceTypeLabel =
+    detailItem.source.sourceType === "ocsp"
+      ? t("reporting.derived.type.ocsp")
+      : t("reporting.derived.type.policyDocument");
+  return (
+    <article key={detailItem.source.id} id={detailItem.source.sourceKey} style={{ borderTop: "1px solid var(--panel-border)", paddingTop: "12px", display: "grid", gap: "10px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+        <strong>{sourceTypeLabel}</strong>
+        <StatusPill tone={getDerivedTone(detailItem.displayStatus)}>{getDerivedStatusLabel(detailItem.displayStatus, t)}</StatusPill>
+      </div>
+      <div style={{ display: "grid", gap: "8px" }}>
+        <div>
+          <strong>{t("reporting.derived.history")}</strong>
+          <ul style={{ margin: "8px 0 0" }}>
+            {detailItem.historyEvents.length > 0 ? (
+              detailItem.historyEvents.map((event) => (
+                <li key={`${detailItem.source.id}-${event.id}`}>
+                  {"requestSha256" in event
+                    ? `${event.checkedAt.toISOString()} - ${event.status} - ${event.httpStatus ?? "-"} - ${event.failureReason ?? "-"}`
+                    : `${event.checkedAt.toISOString()} - ${event.status} - ${event.httpStatus ?? "-"} - ${event.failureReason ?? "-"}`}
+                </li>
+              ))
+            ) : (
+              <li>{t("reporting.derived.historyEmpty")}</li>
+            )}
+          </ul>
+        </div>
+        <div>
+          <strong>{t("reporting.derived.evidenceHistory")}</strong>
+          <ul style={{ margin: "8px 0 0" }}>
+            {detailItem.historyEvidence.length > 0 ? (
+              detailItem.historyEvidence.map((evidence) => (
+                <li key={`${detailItem.source.id}-${evidence.id}`}>
+                  {"sha256" in evidence
+                    ? `${evidence.capturedAt.toISOString()} - ${evidence.sha256} - ${evidence.sizeBytes}`
+                    : `${evidence.checkedAt.toISOString()} - ${evidence.requestSha256} - ${evidence.responseSha256 ?? "-"}`}
+                </li>
+              ))
+            ) : (
+              <li>{t("reporting.derived.historyEmpty")}</li>
+            )}
+          </ul>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 function renderTabContent(
   tab: string,
   detail: NonNullable<Awaited<ReturnType<typeof buildDetailEvidence>>>,
-  timeline: Awaited<ReturnType<typeof buildAuditTimeline>>
+  timeline: Awaited<ReturnType<typeof buildAuditTimeline>>,
+  t: (key: string) => string
 ): ReactElement {
+  if (tab === "sources") {
+    return (
+      <div style={{ display: "grid", gap: "16px" }}>
+        <strong>{t("reporting.tab.sources")}</strong>
+        {detail.derivedSources.map((item) => renderDerivedSourceHistory(item, t))}
+      </div>
+    );
+  }
+
   if (tab === "polls") {
     return (
       <ul>
@@ -128,11 +346,11 @@ export default async function ReportingTargetPage({
   }
 
   const filters = parseReportFilters((await searchParams) ?? {});
-  const [detail, filterOptions, timeline] = await Promise.all([
+  const [detail, timeline] = await Promise.all([
     buildDetailEvidence(targetId, filters, principal),
-    buildDetailFilterOptions(targetId, principal),
     buildAuditTimeline(targetId, filters),
   ]);
+  const filterOptions = await buildDetailFilterOptions(targetId, principal, detail);
   const { t } = await getPrincipalTranslator(principal);
 
   if (!detail || !filterOptions) {
@@ -222,6 +440,20 @@ export default async function ReportingTargetPage({
         </div>
       </section>
 
+      <section style={BOX}>
+        <div style={{ display: "grid", gap: "8px" }}>
+          <strong>{t("reporting.detail.derivedSources")}</strong>
+          <p style={{ margin: 0, color: "var(--muted-color)" }}>{t("reporting.detail.derivedSourcesDescription")}</p>
+          <div style={{ display: "grid", gap: "12px" }}>
+            {detail.derivedSources.length > 0 ? (
+              detail.derivedSources.map((item) => renderDerivedSourceList(item, t))
+            ) : (
+              <p style={{ margin: 0, color: "var(--muted-color)" }}>{t("reporting.detail.derivedSourcesEmpty")}</p>
+            )}
+          </div>
+        </div>
+      </section>
+
       <form action={`/reporting/${targetId}`} method="get" style={{ ...BOX, display: "grid", gap: "12px" }}>
         <input type="hidden" name="tab" value={currentTab} />
         <div style={{ display: "grid", gap: "12px", gridTemplateColumns: "repeat(5, minmax(0, 1fr))" }}>
@@ -307,7 +539,7 @@ export default async function ReportingTargetPage({
         ))}
       </nav>
 
-      <section style={BOX}>{renderTabContent(currentTab, detail, timeline)}</section>
+      <section style={BOX}>{renderTabContent(currentTab, detail, timeline, t)}</section>
     </main>
   );
 }

@@ -14,6 +14,12 @@ const cardGridStyle = {
   gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
 };
 
+const sourceCardGridStyle = {
+  display: "grid",
+  gap: "16px",
+  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+};
+
 function statusTone(status: "healthy" | "degraded" | "offline"): "success" | "warning" | "neutral" {
   return status === "healthy" ? "success" : status === "offline" ? "warning" : "neutral";
 }
@@ -22,6 +28,66 @@ function formatMaybeDate(value: string | Date | null | undefined): string {
   if (!value) return "-";
   if (value instanceof Date) return value.toISOString();
   return value;
+}
+
+function renderSourceCard(
+  title: string,
+  summary: Awaited<ReturnType<typeof buildExecutiveSummary>>["derivedSourceHealth"]["ocsp"],
+  t: (key: string) => string
+): ReactElement {
+  const availability = [
+    [t("reporting.derived.status.discovered"), summary.discovered],
+    [t("reporting.derived.status.available"), summary.available],
+    [t("reporting.derived.status.unavailable"), summary.unavailable],
+    [t("reporting.derived.status.blocked"), summary.blocked],
+    [t("reporting.derived.status.not_discovered"), summary.notDiscovered],
+    [t("reporting.derived.status.not_checkable"), summary.notCheckable],
+    [t("reporting.derived.status.disabled"), summary.disabled],
+  ];
+  const risk = [
+    [t("reporting.derived.status.changed"), summary.changed],
+    [t("reporting.derived.status.unchanged"), summary.unchanged],
+    [t("reporting.derived.status.oversized"), summary.oversized],
+    [t("reporting.derived.status.malformed"), summary.malformed],
+    [t("reporting.derived.status.extraction_failed"), summary.extractionFailed],
+  ];
+
+  return (
+    <Panel compact>
+      <div style={{ display: "grid", gap: "8px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+          <strong>{title}</strong>
+          <span style={{ color: "var(--muted-color)" }}>{summary.total}</span>
+        </div>
+      <div style={{ display: "grid", gap: "4px" }}>
+        <span>{t("reporting.executive.sources.latestEvent")}: {formatMaybeDate(summary.latestEventAt)}</span>
+        <span>{t("reporting.executive.sources.latestStatus")}: {summary.latestEventStatus ? t(`reporting.derived.status.${summary.latestEventStatus}`) : "-"}</span>
+        <span>{t("reporting.executive.sources.latestReason")}: {summary.latestEventReason ?? "-"}</span>
+        {summary.evidenceHref ? (
+          <Link href={summary.evidenceHref} style={{ color: "var(--link-color)" }}>
+            {t("reporting.executive.sources.evidence")}
+            </Link>
+          ) : (
+            <span style={{ color: "var(--muted-color)" }}>{t("reporting.executive.sources.evidence")}</span>
+          )}
+        </div>
+          <div style={{ display: "grid", gap: "12px", gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+        <div style={{ display: "grid", gap: "4px" }}>
+            <strong>{t("reporting.executive.sources.availability")}</strong>
+            {availability.map(([label, value]) => (
+              <span key={`${title}-${label}`}>{label}: {value}</span>
+            ))}
+          </div>
+          <div style={{ display: "grid", gap: "4px" }}>
+            <strong>{t("reporting.executive.sources.risk")}</strong>
+            {risk.map(([label, value]) => (
+              <span key={`${title}-${label}`}>{label}: {value}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
 }
 
 export default async function ExecutiveReportingPage({
@@ -91,9 +157,14 @@ export default async function ExecutiveReportingPage({
         ].map(([label, value]) => (
           <Panel key={String(label)} compact>
             <div style={{ color: "var(--muted-color)", fontSize: "12px" }}>{label}</div>
-            <strong style={{ fontSize: "28px" }}>{value}</strong>
-          </Panel>
+          <strong style={{ fontSize: "28px" }}>{value}</strong>
+        </Panel>
         ))}
+      </section>
+
+      <section style={sourceCardGridStyle}>
+        {renderSourceCard(t("reporting.executive.sources.ocsp"), summary.derivedSourceHealth.ocsp, t)}
+        {renderSourceCard(t("reporting.executive.sources.policyDocuments"), summary.derivedSourceHealth.policyDocuments, t)}
       </section>
 
       <section style={{ display: "grid", gap: "16px", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
