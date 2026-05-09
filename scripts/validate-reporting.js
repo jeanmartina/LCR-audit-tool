@@ -33,6 +33,8 @@ function validateReadModels() {
   assertIncludes(readModels, 'predictiveSeverity', "Missing predictive state in dashboard rows");
   assertIncludes(readModels, 'structuredTags: StructuredTags', "Missing structured tag support");
   assertIncludes(readModels, 'buildCrlDashboardRows', "Missing CRL reporting projection");
+  assertIncludes(readModels, "derivedSourceHealth", "Missing derived source executive summary");
+  assertIncludes(readModels, "derivedSources: DerivedSourceDetail[]", "Missing derived source detail model");
   assertIncludes(timeline, 'type: "predictive"', "Timeline is missing predictive events");
   console.log("Reporting read models ready");
 }
@@ -63,6 +65,12 @@ function validateDetail() {
 
   assertIncludes(detail, 't("reporting.detail.predictiveState")', "Detail summary block missing predictive state");
   assertIncludes(detail, 't("reporting.detail.derivedCrls")', "Derived CRLs section missing");
+  assertIncludes(detail, 't("reporting.detail.derivedSources")', "Derived sources section missing");
+  assertIncludes(detail, 't("reporting.derived.type.ocsp")', "Derived source OCSP label missing");
+  assertIncludes(detail, 't("reporting.derived.type.policyDocument")', "Derived source policy-document label missing");
+  assertIncludes(detail, 't("reporting.derived.status.discovered")', "Derived source discovered status missing");
+  assertIncludes(detail, 't("reporting.tab.sources")', "Derived sources tab missing");
+  assertIncludes(detail, 't("reporting.derived.historyDisabled")', "Disabled derived-source history state missing");
   assertIncludes(detail, 't("common.actions.apply")', "Detail Apply action missing");
   assertIncludes(detail, 't("common.actions.clear")', "Detail Clear action missing");
   assertIncludes(detail, 't(`reporting.tab.${tab.key}`)', "Timeline tab missing");
@@ -100,11 +108,15 @@ function validateExecutive() {
 
   assertIncludes(readModels, "export interface ExecutiveSummary", "Executive summary type missing");
   assertIncludes(readModels, "buildExecutiveSummary", "Executive read model builder missing");
+  assertIncludes(readModels, "derivedSourceHealth", "Executive derived-source summary missing");
   assertIncludes(executivePage, 'buildExecutiveSummary(filters, principal)', "Executive page is not using principal-scoped executive summary data");
   assertIncludes(executivePage, 't("reporting.executive.title")', "Executive title missing");
   assertIncludes(executivePage, 't("reporting.executive.topRisks.title")', "Top risks section missing");
   assertIncludes(executivePage, 't("reporting.executive.trend.title")', "Trend section missing");
   assertIncludes(executivePage, 't("reporting.executive.breakdowns.title")', "Breakdowns section missing");
+  assertIncludes(executivePage, 't("reporting.executive.sources.ocsp")', "OCSP executive card missing");
+  assertIncludes(executivePage, 't("reporting.executive.sources.policyDocuments")', "Policy-document executive card missing");
+  assertIncludes(executivePage, 't("reporting.derived.status.discovered")', "Discovered derived-source status missing");
   assertIncludes(printButton, 'window.print()', "Executive print support missing");
   assertIncludes(dashboard, 't("reporting.executive.open")', "Operational dashboard is missing executive navigation");
   assertIncludes(pdfModule, "buildExecutiveSummary(filters, principal)", "Executive PDF is not using the richer executive summary model");
