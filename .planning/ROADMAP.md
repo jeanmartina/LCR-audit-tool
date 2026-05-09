@@ -90,8 +90,8 @@
 ## Current Status
 
 - Active milestone: v1.3 Monitoring Source Expansion
-- Current stage: Phase 23 complete; ready to discuss/plan Phase 24
-- Next recommended step: `/gsd-discuss-phase 24`
+- Current stage: Phase 25 complete; ready to discuss/plan Phase 26
+- Next recommended step: `/gsd-discuss-phase 26`
 
 ## Backlog / Future
 
