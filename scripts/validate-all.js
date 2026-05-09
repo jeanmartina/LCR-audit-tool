@@ -38,6 +38,7 @@ const commands = [
   ["node", ["scripts/validate-packaging.js", "artifacts"]],
   ["node", ["scripts/validate-packaging.js", "compose"]],
   ["node", ["scripts/validate-packaging.js", "docs"]],
+  ["node", ["scripts/validate-operations-closure.js"]],
 ];
 
 for (const [bin, args] of commands) {

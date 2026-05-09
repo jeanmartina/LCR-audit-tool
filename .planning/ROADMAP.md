@@ -5,6 +5,7 @@
 - [x] **v1.0** — Shipped the LCR audit tool across Phases 1-7 with end-to-end monitoring, validation, alerting, reporting, real PDF export, and production-readiness hardening. See `.planning/milestones/v1.0-ROADMAP.md`.
 - [x] **v1.1** — Shipped the multi-user product layer across Phases 8-15 with invitation-only access, certificate-first onboarding, group-scoped reporting, internationalization, Docker/Caddy packaging, and Google public-host proof. See `.planning/milestones/v1.1-ROADMAP.md`.
 - [x] **v1.2** — Shipped trust-list ingestion, trust-list operator UX, executive summary reporting, first-run/bootstrap improvements, guided onboarding, and a published auth-entry landing across Phases 16-21.1. See `.planning/milestones/v1.2-ROADMAP.md`.
+- [x] **v1.3** — Shipped monitoring source expansion across Phases 22-26 with derived OCSP/policy-document evidence, reporting visibility, and packaged closure validation. See `.planning/milestones/v1.3-ROADMAP.md`.
 
 ## Active Milestone: v1.3 Monitoring Source Expansion
 
@@ -90,8 +91,8 @@
 ## Current Status
 
 - Active milestone: v1.3 Monitoring Source Expansion
-- Current stage: Phase 25 complete; ready to discuss/plan Phase 26
-- Next recommended step: `/gsd-discuss-phase 26`
+- Current stage: Phase 26 complete; milestone audit passed
+- Next recommended step: `/gsd-complete-milestone 1.3`
 
 ## Backlog / Future
 

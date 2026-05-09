@@ -196,6 +196,17 @@ Use the volume-removal form only when you explicitly want to discard local datab
 - `CERT_IMPORT_MAX_FILES`
 - `TRUST_LIST_FETCH_TIMEOUT_MS`
 - `TRUST_LIST_MAX_XML_BYTES`
+- `MONITORING_SOURCE_FETCH_TIMEOUT_MS`
+- `MONITORING_SOURCE_MAX_DOCUMENT_BYTES`
+- `MONITORING_SOURCE_MAX_EXTRACTED_TEXT_BYTES`
+- `MONITORING_SOURCE_MAX_REDIRECTS`
+- `MONITORING_SOURCE_DOCUMENT_INTERVAL_SECONDS`
+- `MONITORING_SOURCE_ALLOW_LOCALHOST`
+- `OCSP_FETCH_TIMEOUT_MS`
+- `OCSP_MAX_RESPONSE_BYTES`
+- `OCSP_MAX_REDIRECTS`
+- `OCSP_CHECK_INTERVAL_SECONDS`
+- `OCSP_ALLOW_LOCALHOST`
 - all provider-specific OAuth/OIDC variables
 
 ## Security boundary for this phase
@@ -282,6 +293,62 @@ Default limits:
 The OCSP event health is technical only. This milestone does not perform full semantic OCSP validation. OCSP responder values such as `good`, `revoked`, and `unknown` are not treated as compliance health and are not compliance health labels in this milestone.
 
 Raw OCSP request and response evidence is retained within byte limits, including hashes and provenance, so a future milestone can perform full validation without losing source evidence. Private, internal, loopback, link-local, multicast, and internal Docker/network OCSP URLs remain blocked by default; set `OCSP_ALLOW_LOCALHOST=true` only for local development fixtures.
+
+## Phase 26 operations, configuration, and proof closure
+
+Phase 26 closes the milestone by making the derived-source runtime limits explicit, documenting the operational boundary in one place, and proving that the packaged stack enforces the same safety posture that the docs describe.
+
+### Canonical runtime limits
+
+The packaged stack exposes the same knobs in `.env.example` and `compose.yaml` for both `web` and `worker`.
+
+- Policy-document checks use:
+  - `MONITORING_SOURCE_FETCH_TIMEOUT_MS=30000`
+  - `MONITORING_SOURCE_MAX_DOCUMENT_BYTES=5242880`
+  - `MONITORING_SOURCE_MAX_EXTRACTED_TEXT_BYTES=200000`
+  - `MONITORING_SOURCE_MAX_REDIRECTS=3`
+  - `MONITORING_SOURCE_DOCUMENT_INTERVAL_SECONDS=3600`
+  - `MONITORING_SOURCE_ALLOW_LOCALHOST=false`
+- OCSP checks use:
+  - `OCSP_FETCH_TIMEOUT_MS=30000`
+  - `OCSP_MAX_RESPONSE_BYTES=1048576`
+  - `OCSP_MAX_REDIRECTS=3`
+  - `OCSP_CHECK_INTERVAL_SECONDS=3600`
+  - `OCSP_ALLOW_LOCALHOST=false`
+
+These defaults stay conservative on purpose. The phase keeps the limits visible in the packaged runtime instead of hiding them in code.
+
+### Health-state interpretation
+
+- Policy-document `available` means the fetch completed and the latest snapshot/evidence was stored or confirmed unchanged.
+- Policy-document `changed` means a new document hash was observed and a new snapshot was captured.
+- Policy-document `unchanged` means the document stayed the same and the last stored evidence remained valid.
+- Policy-document `unavailable`, `blocked`, `oversized`, and `extraction_failed` mean the operator should inspect transport, target safety, size limits, or extraction behavior.
+- Policy-document `not_checkable` means the source was not discovered or did not contain enough usable metadata to fetch safely.
+- OCSP `available` means the technical request/response path worked within the configured limits.
+- OCSP `unavailable`, `blocked`, `oversized`, `malformed`, and `not_checkable` mean the operator should treat the result as technical evidence only, not as semantic revocation validation.
+
+### Safety and retention boundary
+
+- Private, loopback, link-local, multicast, and internal Docker/network targets remain blocked by default.
+- `MONITORING_SOURCE_ALLOW_LOCALHOST=true` and `OCSP_ALLOW_LOCALHOST=true` stay reserved for local development fixtures.
+- The worker retains raw snapshots, hashes, metadata, and provenance within the configured byte limits so future analysis has evidence to inspect later.
+- Phase 26 does not perform future AI-assisted PKI policy analysis yet; it only preserves the evidence and makes the boundary explicit.
+
+### Validation and proof closure
+
+Run these commands to confirm the closure contract:
+
+```bash
+node scripts/validate-operations-closure.js
+node scripts/validate-packaging.js compose
+node scripts/validate-packaging.js docs
+node scripts/validate-all.js
+npm run typecheck
+npm run build
+```
+
+When these checks pass, capture the phase proof and verification artifacts in the phase directory so the milestone closure is auditable.
 
 ## Executive summary in the packaged stack
 

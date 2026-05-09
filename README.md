@@ -92,6 +92,11 @@ The packaged local/staging stack runs four services:
 | `MONITORING_SOURCE_MAX_REDIRECTS` | Optional | Maximum policy-document redirects followed by the worker. |
 | `MONITORING_SOURCE_DOCUMENT_INTERVAL_SECONDS` | Optional | Worker cadence for policy-document checks. |
 | `MONITORING_SOURCE_ALLOW_LOCALHOST` | Optional | Allows localhost policy-document targets only for local development fixtures. |
+| `OCSP_FETCH_TIMEOUT_MS` | Optional | Server-side OCSP fetch timeout in milliseconds. |
+| `OCSP_MAX_RESPONSE_BYTES` | Optional | Maximum raw OCSP response size in bytes. |
+| `OCSP_MAX_REDIRECTS` | Optional | Maximum OCSP redirects followed by the worker. |
+| `OCSP_CHECK_INTERVAL_SECONDS` | Optional | Worker cadence for OCSP checks. |
+| `OCSP_ALLOW_LOCALHOST` | Optional | Allows localhost OCSP targets only for local development fixtures. |
 | `AUTH_GOOGLE_CLIENT_ID` | Optional | Google OAuth client ID. |
 | `AUTH_GOOGLE_CLIENT_SECRET` | Optional | Google OAuth client secret. |
 | `AUTH_ENTRA_CLIENT_ID` | Optional | Microsoft Entra application ID. |
@@ -170,6 +175,16 @@ The worker sends real OCSP requests for discovered OCSP sources when issuer cont
 Raw OCSP request and response evidence is retained within configured byte limits, including hashes, HTTP metadata, and source provenance for future validation work. This milestone does not perform full semantic OCSP validation: response signature verification, certificate status interpretation, and freshness evaluation remain future scope.
 
 OCSP responder values such as `good`, `revoked`, and `unknown` are not compliance health labels in this phase. Phase 24 reports only technical reachability/evidence health.
+
+## Phase 26 runtime limits and closure boundary
+
+The packaged stack exposes the derived-source and OCSP limits explicitly in `.env.example` and `compose.yaml`. The defaults are conservative:
+
+- policy-document checks use a 30 second fetch timeout, a 5 MiB document cap, a 200 KiB extracted-text cap, a 3 redirect cap, and a 1 hour worker cadence
+- OCSP checks use a 30 second fetch timeout, a 1 MiB response cap, a 3 redirect cap, and a 1 hour worker cadence
+- localhost targets stay opt-in through `MONITORING_SOURCE_ALLOW_LOCALHOST=false` and `OCSP_ALLOW_LOCALHOST=false`
+
+The milestone preserves raw evidence, hashes, metadata, and provenance for future AI-assisted PKI policy analysis, but it does not run that analysis yet. Use `docs/operators.md` for the operator procedure, safety boundary, and closure validation path.
 
 ## Executive summary in the packaged stack
 

@@ -8,8 +8,8 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 
 ## Current State
 
-- **Shipped version:** `v1.2` on 2026-04-24
-- **Monitoring runtime:** database-backed inventory, per-target polling with configurable interval/timeout, and persisted polls, coverage gaps, snapshots, validation events, and alerts
+- **Shipped version:** `v1.3` on 2026-05-09
+- **Monitoring runtime:** database-backed inventory, per-target polling with configurable interval/timeout, derived OCSP and CP/CPS/DPC monitoring sources, persisted polls, coverage gaps, snapshots, validation events, alerts, and packaged closure validation
 - **Integrity path:** signature/hash validation, invalid artifact rejection, retained audit evidence, and blocking trust-list XMLDSig validation
 - **Reporting:** dashboard with filters, target drill-down, audit timeline, CSV exports, executive/operational PDFs, predictive views, executive summary route, print support, and group-scoped authorization
 - **Identity and access:** invitation-only local auth, Google invite-gated login proof on a real public host, sessions, audit events, groups, memberships, backend-enforced reporting/export boundaries, and a published root landing/auth entry path
@@ -18,16 +18,16 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 - **Internationalization:** canonical English dictionaries with `pt-BR` and `es` translations, locale-aware auth/reporting/settings/admin surfaces, and localized CSV/PDF exports
 - **Packaging and operations:** Docker packaging for `web` and `worker`, compose topology for `web + worker + postgres + caddy`, HTTPS ingress through Caddy, README/operator docs, and a public-host Google proof runbook
 
-## Current Milestone: v1.3 Monitoring Source Expansion
+## Shipped Milestone: v1.3 Monitoring Source Expansion
 
-**Goal:** expand monitoring beyond CRL/certificate/trust-list availability into OCSP and CP/CPS/DPC document sources while preserving audit evidence for future PKI compliance analysis.
+**Outcome:** expanded monitoring beyond CRL/certificate/trust-list availability into OCSP and CP/CPS/DPC document sources, then closed the packaged runtime with explicit operational limits, safety controls, and proof artifacts for future PKI compliance analysis.
 
-**Target features:**
-- Derive OCSP and CP/CPS/DPC monitoring sources automatically from imported certificates and trust-list-derived certificates, without a new manual-source UI in this milestone.
-- Monitor OCSP endpoints with technical availability checks and persisted response evidence suitable for fuller semantic validation later.
+**Delivered scope:**
+- Derived OCSP and CP/CPS/DPC monitoring sources automatically from imported certificates and trust-list-derived certificates, without a new manual-source UI in this milestone.
+- Technical OCSP endpoint checks with persisted response evidence suitable for fuller semantic validation later.
 - Download, snapshot, hash, and extract basic metadata/content from CP/CPS/DPC documents when URLs are discoverable.
-- Preserve document evidence as historical input for a future AI-assisted PKI policy/conformance analysis milestone.
-- Expose operational detail and simple executive aggregate cards for the new monitoring-source categories.
+- Historical evidence retention for a future AI-assisted PKI policy/conformance analysis milestone.
+- Operational detail and simple executive aggregate cards for the new monitoring-source categories.
 
 ## Requirements
 
@@ -106,13 +106,13 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 - [External notification integrations] — alerts are email-only for now; SMS/push are out of scope.
 - [Dedicated mobile app] — access is through the web dashboard and table-driven operator flows.
 
-## Research Focus for v1.3
+## Future Milestone Goals
 
-- identify robust OCSP availability/evidence practices that fit the current TypeScript/Postgres worker runtime
-- identify reliable ways to discover CP/CPS/DPC document URLs from certificates and trust-list-derived provenance
-- define safe document download, snapshot, hashing, size limits, content extraction, and retention boundaries
-- determine the smallest reporting additions that expose OCSP/document-source health without overwhelming the v1.2 operator UX
-- preserve enough evidence for a later AI-assisted PKI compliance analysis without implementing that analysis in v1.3
+- identify robust OCSP semantic-validation practices that fit the current TypeScript/Postgres worker runtime
+- identify a safe path for manual OCSP/document source management if automatic derivation proves insufficient
+- define worker-scaling and multi-region probe strategies for higher target counts
+- expose SLOs, burn rates, and historical error budgets for derived source categories when the reporting model is ready
+- preserve enough evidence for later AI-assisted PKI compliance analysis while keeping the runtime boundary explicit
 
 <details>
 <summary>v1.1 shipped milestone snapshot</summary>
@@ -133,7 +133,7 @@ The original scope started from a compliance/engineering dashboard with backgrou
 - The domain must handle European TSL-driven ecosystems and standalone certificates while always validating signature/hash and preserving downloaded CRL history for future document-verification use cases.
 - The stack now spans Postgres-backed monitoring, multi-user access control, localized user-facing surfaces, and Docker/Caddy deployment.
 - The product has proven the Google invite-gated flow on a real public HTTPS host; Entra ID and generic OIDC still require the same level of proof.
-- v1.2 materially improved operator/admin UX; v1.3 now focuses on broader source coverage while keeping those operator flows simple.
+- v1.2 materially improved operator/admin UX; v1.3 broadened source coverage and then closed the packaged runtime with explicit safety and proof boundaries.
 
 ## Constraints
 - **Interface**: configurable, table-first operator workflows for engineering/compliance; no dedicated mobile design or heavy animation requirements.
@@ -148,7 +148,7 @@ The original scope started from a compliance/engineering dashboard with backgrou
 - **Invitation-only access**: users enter through invites, not public sign-up.
 - **Internationalization**: every new interface must be translatable and initially support English, Portuguese, and Spanish.
 - **Documentation language**: default code and technical documentation remain in English.
-- **External provider scope**: Google is proven; Entra ID and generic OIDC remain deferred while v1.3 prioritizes monitoring-source expansion.
+- **External provider scope**: Google is proven; Entra ID and generic OIDC remain deferred while future milestones decide whether to resume provider work.
 
 ## Key Decisions
 | Decision | Rationale | Outcome |
@@ -170,6 +170,9 @@ The original scope started from a compliance/engineering dashboard with backgrou
 | Treat trust-list XMLDSig validation as blocking | Prevents unverified trust-list data from mutating inventory or reports | ✓ Good |
 | Keep executive reporting summary-oriented and principal-scoped | Preserves evidence boundaries while giving leadership a simpler view | ✓ Good |
 | Fix published-root auth discoverability before closing v1.2 | A shipped deployment cannot rely on hidden auth routes or a 404 root path | ✓ Good |
+| Keep derived-source runtime limits explicit in env and compose | Operators need to see the enforced safety boundary without reading code | ✓ Good |
+| Treat evidence retention as the boundary for future AI-assisted PKI policy analysis | v1.3 preserves evidence and provenance without pretending semantic analysis already exists | ✓ Good |
+| Require validator, docs, typecheck, and build parity before closure | Milestone closure should be auditable and repeatable, not implied by code alone | ✓ Good |
 
 ## Evolution
 This document evolves with each phase and milestone transition.
@@ -188,4 +191,4 @@ This document evolves with each phase and milestone transition.
 4. Update context with the current operational state and any active risk signals.
 
 ---
-*Last updated: 2026-04-28 after starting v1.3 milestone*
+*Last updated: 2026-05-09 after v1.3 milestone*
