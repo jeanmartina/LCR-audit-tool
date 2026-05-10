@@ -15,35 +15,40 @@ affects:
   - phase 31
   - phase 33
 requirements-completed: [UI-01]
-duration: 0min
-completed: 2026-05-09
+duration: implementation + validation
+completed: 2026-05-10
 ---
 
 # Phase 27: Public Shell and Identity Summary
 
-Shared public-shell planning for `/` and `/auth`, with direct login visibility, enabled-provider-only public entry, and a compact top-left locale selector.
+Shared public-shell implementation for `/` and `/auth`, with direct login visibility, enabled-provider-only public entry, and a compact top-left locale selector.
 
 ## Performance
 
-- **Duration:** planning only
+- **Duration:** implementation + validation
 - **Started:** 2026-05-09T21:39:26-0300
-- **Completed:** 2026-05-09T21:39:26-0300
+- **Completed:** 2026-05-10T01:10:06.060Z
 - **Tasks:** 3
-- **Files modified:** 3
+- **Files modified:** 5
 
 ## Accomplishments
 
-- Defined a shared public shell for the root landing page and auth page.
+- Created a reusable shared public shell for the root landing page and auth page.
 - Preserved direct local username/password login on `/auth`.
-- Locked public identity-provider visibility to enabled providers only.
+- Filtered public identity providers down to enabled deployments only.
+- Removed callback URLs and other operator-only provider diagnostics from the public shell.
+- Added the authenticated redirect guard to `/auth` so signed-in users leave the public entry.
+- Refreshed public-entry copy to make the product front door feel official and non-technical.
 
 ## Files Created/Modified
 
-- `.planning/phases/27-public-shell-and-identity/27-CONTEXT.md` - user decisions captured for the phase
-- `.planning/phases/27-public-shell-and-identity/27-RESEARCH.md` - implementation research and stack guidance
-- `.planning/phases/27-public-shell-and-identity/27-01-PLAN.md` - executable plan for Phase 27
+- `src/components/public-shell.tsx` - shared public shell composition for `/` and `/auth`
+- `src/app/page.tsx` - official landing page using the shared shell
+- `src/app/auth/page.tsx` - direct login page with visible local credentials form
+- `src/i18n/index.ts` - refreshed public-entry copy in English, pt-BR, and es
+- `.planning/STATE.md` - phase status updated to ready/executed state
 
-## Decisions Made
+## Decisions Applied
 
 - Use one shared public shell for `/` and `/auth` instead of duplicating login chrome.
 - Keep the login form visible directly on `/auth`.
@@ -53,17 +58,18 @@ Shared public-shell planning for `/` and `/auth`, with direct login visibility, 
 
 ## Deviations from Plan
 
-None - planning completed as written.
+None. The implementation followed the planed shell composition and public-entry filtering strategy.
 
-## Issues Encountered
+## Validation
 
-- The phase did not have a pre-existing `CONTEXT.md`, so discussion was required before planning.
-- Research returned the current entry split and confirmed the shared-shell approach.
+- `npm run typecheck`
+- `npm run build`
+- `node scripts/validate-all.js`
 
 ## Next Phase Readiness
 
-Phase 27 is ready for execution. The plan is scoped to the shared public shell, direct login visibility, enabled-provider filtering, and the official entry treatment for the public routes.
+Phase 27 is complete and ready for the next milestone phase.
 
 ---
 *Phase: 27-public-shell-and-identity*
-*Completed: 2026-05-09*
+*Completed: 2026-05-10*

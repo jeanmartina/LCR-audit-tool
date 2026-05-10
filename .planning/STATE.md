@@ -1,37 +1,37 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.3
-milestone_name: Monitoring Source Expansion
-status: complete
-stopped_at: v1.3 shipped and archived
-last_updated: "2026-05-09T20:25:05-0300"
-last_activity: 2026-05-09 -- Phase 26 complete
+milestone: v1.4
+milestone_name: Interface Clarity and UX Modernization
+status: executing
+stopped_at: v1.4 requirements finalized
+last_updated: "2026-05-10T01:22:03.379Z"
+last_activity: 2026-05-10 -- Phase 27 implementation complete
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 13
-  completed_plans: 13
-  percent: 100
+  total_phases: 8
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
+  percent: 12.5
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-28)
+See: .planning/PROJECT.md (updated 2026-05-09)
 
-**Core value:** Never allow a trusted certificate to operate without valid revocation coverage
-**Current focus:** Next milestone definition
+**Core value:** Never allow a trusted certificate to operate without valid revocation coverage. The interface should also make the running build, operational state, and major user flows easy to understand.
+**Current focus:** Prepare v1.4 phase 28 planning from finalized requirements.
 
 ## Current Position
 
-Milestone: v1.3 Monitoring Source Expansion
-Phase: 26
+Milestone: v1.4 Interface Clarity and UX Modernization
+Phase: 27
 Plan: Complete
-Status: Shipped and archived
-Last activity: 2026-05-09 -- v1.3 shipped
+Status: Phase 27 complete
+Last activity: 2026-05-10 -- Phase 27 implementation complete
 
-Progress: [██████████] 100%
+Progress: [█---------] 12%
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Progress: [██████████] 100%
 | v1.0 | 1-7 | 7 | Shipped |
 | v1.1 | 8-15 | 8 | Shipped |
 | v1.2 | 16-21.1 | 12 | Shipped |
+| v1.3 | 22-26 | 13 | Shipped |
 
 **Recent Trend:**
 
@@ -79,6 +80,7 @@ Progress: [██████████] 100%
 - [Phase 20]: Trust-list onboarding now uses a guided wizard with optional non-mutating preview, group-admin scoped operation, explicit sync timeline visibility, and prescriptive recovery guidance mirrored in operator docs.
 - [Phase 21]: Executive visibility now ships as a dedicated route plus reporting entry point, open to any authorized user, with PDF + print output and packaged-runtime validation closure.
 - [Phase 21.1]: Published deployments need a non-404 root landing page with explicit local-login and enabled-IDP entry points so authentication is discoverable from the default URL.
+- [Milestone v1.4]: Interface modernization needs to be consistent across public shell, settings, trust lists, import review, reporting, PDF, navigation, and release visibility.
 
 ### Roadmap Evolution
 
@@ -90,19 +92,19 @@ Progress: [██████████] 100%
 - v1.3 started for OCSP and CP/CPS/DPC monitoring-source expansion with research before requirements
 - Phase 22 completed the derived monitoring-source storage, derivation, and import-provenance foundation
 - Phase 23 completed safe CP/CPS/DPC policy-document fetching, snapshot storage, text extraction, worker scheduling, and proof closure
+- v1.4 requirements defined for interface clarity and UX modernization
 
 ### Pending Todos
 
 - Rotate the Google client secret used during the proof because it was exposed during testing
+- Start phase 28 planning with the user before implementation
 
 ### Blockers/Concerns
 
-- No delivery blocker is active yet, but v1.2 scope spans both domain ingestion and substantial UX work, so requirements discipline matters.
-- Trust-list ingestion should extend the existing certificate-first model instead of introducing a second inconsistent operator workflow.
-- No active blocker remains; the milestone is ready for audit and completion.
+- No delivery blocker is active.
 
 ## Session Continuity
 
-Last session: 2026-05-09T20:25:05-0300
-Stopped at: v1.3 shipped and archived
-Resume file: .planning/milestones/v1.3-ROADMAP.md
+Last session: 2026-05-10T01:22:03.379Z
+Stopped at: Phase 27 implementation complete
+Resume file: .planning/ROADMAP.md

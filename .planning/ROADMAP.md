@@ -15,7 +15,7 @@
 
 | Phase | Name | Goal | Requirements |
 |-------|------|------|--------------|
-| 27 | Public Shell and Identity | Make the public landing page, login, identity provider visibility, language selector, and navigation feel official and modern. | UI-01 |
+| 27 | 1/1 | Complete   | 2026-05-10 |
 | 28 | Settings and Administration | Reorganize settings and admin surfaces into clear tabs for personal preferences, group defaults, providers, trust lists, groups, and invitations. | UI-02 |
 | 29 | Trust Lists and Diagnostics | Improve trust-list hierarchy, metadata, removals, and operational diagnostics. | UI-03 |
 | 30 | Import Review and Safety | Add review-before-save import flows with server-side revalidation and preserved provenance. | UI-04 |
@@ -32,10 +32,10 @@
 
 **Requirements:** UI-01
 
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] `27-01-PLAN.md` — Build the shared public shell, refactor `/` and `/auth`, and validate enabled-provider-only public entry.
+- [x] `27-01-PLAN.md` — Build the shared public shell, refactor `/` and `/auth`, and validate enabled-provider-only public entry.
 
 **Success criteria:**
 1. The public landing page reads like the official product entry, not a technical stub.
