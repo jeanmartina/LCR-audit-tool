@@ -50,6 +50,14 @@ Plans:
 
 **Requirements:** UI-02
 
+**Plans:** 4 plans
+
+Plans:
+- [ ] `28-01-PLAN.md` — Build the tabbed settings shell, hover-only field hints, and baseline copy.
+- [ ] `28-02-PLAN.md` — Deliver group CRUD and invitation lifecycle management.
+- [ ] `28-03-PLAN.md` — Add runtime provider enablement plus administration summary views.
+- [ ] `28-04-PLAN.md` — Reuse and extend trust-list administration with hierarchy editing.
+
 **Success criteria:**
 1. Settings are split into clear tabs or sections.
 2. Personal preferences are separated from administrative settings.
