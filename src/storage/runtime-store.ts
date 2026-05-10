@@ -124,6 +124,13 @@ export interface ProviderVerificationStatusRecord {
   updatedAt: Date;
 }
 
+export interface ProviderRuntimeOverrideRecord {
+  provider: "google" | "entra-id" | "oidc";
+  enabled: boolean;
+  updatedByUserId: string | null;
+  updatedAt: Date;
+}
+
 export interface UserRecord {
   id: string;
   email: string;
@@ -349,6 +356,8 @@ export interface TrustListSourceRecord {
   url: string;
   enabled: boolean;
   groupIds: string[];
+  parentSourceId: string | null;
+  archivedAt: Date | null;
   createdByUserId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -457,6 +466,7 @@ const cache = {
   ocspCheckEvents: [] as OcspCheckEventRecord[],
   ocspResponseEvidence: [] as OcspResponseEvidenceRecord[],
   platformSettings: [] as PlatformSettingsRecord[],
+  providerRuntimeOverrides: [] as ProviderRuntimeOverrideRecord[],
   providerVerificationStatuses: [] as ProviderVerificationStatusRecord[],
   predictiveEvents: [] as PredictiveEventRecord[],
   trustListSources: [] as TrustListSourceRecord[],
@@ -648,6 +658,12 @@ type ProviderVerificationStatusRow = {
   notes: string | null;
   updated_at: Date;
 };
+type ProviderRuntimeOverrideRow = {
+  provider: "google" | "entra-id" | "oidc";
+  enabled: boolean;
+  updated_by_user_id: string | null;
+  updated_at: Date;
+};
 type PredictiveEventRow = {
   id: string;
   target_id: string;
@@ -666,6 +682,8 @@ type TrustListSourceRow = {
   url: string;
   enabled: boolean;
   group_ids: string[] | string;
+  parent_source_id: string | null;
+  archived_at: Date | null;
   created_by_user_id: string;
   created_at: Date;
   updated_at: Date;
@@ -1047,6 +1065,13 @@ export const RUNTIME_SQL_SCHEMA = {
       updated_at timestamptz not null
     );
 
+    create table if not exists provider_runtime_override (
+      provider text primary key,
+      enabled boolean not null,
+      updated_by_user_id text null,
+      updated_at timestamptz not null
+    );
+
     create table if not exists group_memberships (
       id text primary key,
       user_id text not null,
@@ -1340,6 +1365,8 @@ export const RUNTIME_SQL_SCHEMA = {
       url text not null,
       enabled boolean not null,
       group_ids text[] not null,
+      parent_source_id text null,
+      archived_at timestamptz null,
       created_by_user_id text not null,
       created_at timestamptz not null,
       updated_at timestamptz not null
@@ -1452,6 +1479,12 @@ export async function initializeRuntimeStoreSchema(): Promise<void> {
     await client.query(
       `alter table certificate_group_overrides add column if not exists jurisdiction text null`
     );
+    await client.query(
+      `alter table trust_list_sources add column if not exists parent_source_id text null`
+    );
+    await client.query(
+      `alter table trust_list_sources add column if not exists archived_at timestamptz null`
+    );
     await client.query("commit");
   } catch (error) {
     await client.query("rollback");
@@ -1478,6 +1511,8 @@ function mapTrustListSourceRow(row: TrustListSourceRow): TrustListSourceRecord {
     url: row.url,
     enabled: row.enabled,
     groupIds: Array.isArray(row.group_ids) ? row.group_ids : JSON.parse(row.group_ids),
+    parentSourceId: row.parent_source_id,
+    archivedAt: row.archived_at ? new Date(row.archived_at) : null,
     createdByUserId: row.created_by_user_id,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
@@ -1682,7 +1717,7 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
   }
 
   const currentPool = getPool();
-  const [targets, polls, coverageGaps, validations, alerts, snapshots, users, userSettings, authAccounts, authTransactions, authSessions, groups, groupSettings, memberships, invites, passwordResets, mfaMethods, auditEvents, targetGroupShares, platformSettings, providerVerificationStatuses, predictiveEvents, monitoringSources, monitoringSourceEvents, documentSnapshots, ocspCheckEvents, ocspResponseEvidence, trustListSources, trustListSnapshots, trustListSyncRuns, trustListExtractedCertificates, trustListCertificateProjections] = await Promise.all([
+  const [targets, polls, coverageGaps, validations, alerts, snapshots, users, userSettings, authAccounts, authTransactions, authSessions, groups, groupSettings, memberships, invites, passwordResets, mfaMethods, auditEvents, targetGroupShares, platformSettings, providerVerificationStatuses, providerRuntimeOverrides, predictiveEvents, monitoringSources, monitoringSourceEvents, documentSnapshots, ocspCheckEvents, ocspResponseEvidence, trustListSources, trustListSnapshots, trustListSyncRuns, trustListExtractedCertificates, trustListCertificateProjections] = await Promise.all([
     currentPool.query<TargetRow>(
       `
         select
@@ -1806,6 +1841,9 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
     currentPool.query<ProviderVerificationStatusRow>(
       `select provider, configured, verified, verified_at, verified_by_user_id, notes, updated_at from provider_verification_status order by provider asc`
     ),
+    currentPool.query<ProviderRuntimeOverrideRow>(
+      `select provider, enabled, updated_by_user_id, updated_at from provider_runtime_override order by provider asc`
+    ),
     currentPool.query<PredictiveEventRow>(
       `select id, target_id, certificate_id, group_id, predictive_type, severity, next_update, message, created_at, resolved_at from predictive_events order by created_at asc`
     ),
@@ -1825,7 +1863,7 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
       `select id, source_id, source_key, certificate_id, certificate_fingerprint, issuer_certificate_id, issuer_fingerprint, responder_url, final_url, request_body, request_sha256, request_size_bytes, response_body, response_sha256, response_size_bytes, http_status, content_type, parse_status, parse_failure_reason, metadata_json, checked_at from ocsp_response_evidence order by checked_at desc`
     ),
     currentPool.query<TrustListSourceRow>(
-      `select id, label, url, enabled, group_ids, created_by_user_id, created_at, updated_at from trust_list_sources order by updated_at desc`
+      `select id, label, url, enabled, group_ids, parent_source_id, created_by_user_id, created_at, updated_at from trust_list_sources order by updated_at desc`
     ),
     currentPool.query<TrustListSnapshotRow>(
       `select id, source_id, digest_sha256, sequence_number, territory, issue_date, next_update, accepted_at, xml_size_bytes, certificate_count from trust_list_snapshots order by accepted_at desc`
@@ -2019,6 +2057,12 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
     verifiedAt: row.verified_at ? new Date(row.verified_at) : null,
     verifiedByUserId: row.verified_by_user_id,
     notes: row.notes,
+    updatedAt: new Date(row.updated_at),
+  }));
+  cache.providerRuntimeOverrides = providerRuntimeOverrides.rows.map((row) => ({
+    provider: row.provider,
+    enabled: row.enabled,
+    updatedByUserId: row.updated_by_user_id,
     updatedAt: new Date(row.updated_at),
   }));
   cache.predictiveEvents = predictiveEvents.rows.map((row) => ({
@@ -2890,6 +2934,49 @@ export async function createGroupRecord(input: {
   return record;
 }
 
+export async function updateGroupRecord(
+  groupId: string,
+  patch: Partial<Pick<GroupRecord, "name" | "slug">>
+): Promise<GroupRecord> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
+  const current = cache.groups.find((item) => item.id === groupId);
+  if (!current) {
+    throw new Error("group-not-found");
+  }
+  const updated: GroupRecord = {
+    ...current,
+    ...patch,
+  };
+  cache.groups = upsertInCache(cache.groups, updated);
+  if (hasDatabase()) {
+    await getPool().query(
+      `update auth_groups
+       set name = $2, slug = $3
+       where id = $1`,
+      [groupId, updated.name, updated.slug]
+    );
+  }
+  return updated;
+}
+
+export async function deleteGroupRecord(groupId: string): Promise<void> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
+  const hasSettings = cache.groupSettings.some((item) => item.groupId === groupId);
+  const hasMemberships = cache.groupMemberships.some((item) => item.groupId === groupId);
+  const hasInvites = cache.groupInvites.some((item) => item.groupId === groupId);
+  if (hasSettings || hasMemberships || hasInvites) {
+    throw new Error("group-delete-blocked");
+  }
+  cache.groups = cache.groups.filter((item) => item.id !== groupId);
+  if (hasDatabase()) {
+    await getPool().query(`delete from auth_groups where id = $1`, [groupId]);
+  }
+}
+
 export async function loadGroups(): Promise<GroupRecord[]> {
   if (hasDatabase()) {
     await ensureRuntimeSchema();
@@ -3125,6 +3212,62 @@ export async function listProviderVerificationStatuses(): Promise<ProviderVerifi
   return [...cache.providerVerificationStatuses];
 }
 
+export async function upsertProviderRuntimeOverrideRecord(input: {
+  provider: ProviderRuntimeOverrideRecord["provider"];
+  enabled: boolean;
+  updatedByUserId: string | null;
+}): Promise<ProviderRuntimeOverrideRecord> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
+  const record: ProviderRuntimeOverrideRecord = {
+    provider: input.provider,
+    enabled: input.enabled,
+    updatedByUserId: input.updatedByUserId,
+    updatedAt: new Date(),
+  };
+  cache.providerRuntimeOverrides = [
+    ...cache.providerRuntimeOverrides.filter((item) => item.provider !== record.provider),
+    record,
+  ];
+  if (hasDatabase()) {
+    await getPool().query(
+      `insert into provider_runtime_override (provider, enabled, updated_by_user_id, updated_at)
+       values ($1,$2,$3,$4)
+       on conflict (provider) do update set
+         enabled = excluded.enabled,
+         updated_by_user_id = excluded.updated_by_user_id,
+         updated_at = excluded.updated_at`,
+      [record.provider, record.enabled, record.updatedByUserId, record.updatedAt]
+    );
+  }
+  return record;
+}
+
+export async function findProviderRuntimeOverride(
+  provider: ProviderRuntimeOverrideRecord["provider"]
+): Promise<ProviderRuntimeOverrideRecord | null> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<ProviderRuntimeOverrideRow>(
+      `select provider, enabled, updated_by_user_id, updated_at
+       from provider_runtime_override where provider = $1 limit 1`,
+      [provider]
+    );
+    const row = result.rows[0];
+    if (!row) {
+      return null;
+    }
+    return {
+      provider: row.provider,
+      enabled: row.enabled,
+      updatedByUserId: row.updated_by_user_id,
+      updatedAt: new Date(row.updated_at),
+    };
+  }
+  return cache.providerRuntimeOverrides.find((item) => item.provider === provider) ?? null;
+}
+
 export async function createGroupMembershipRecord(input: {
   userId: string;
   groupId: string;
@@ -3219,16 +3362,27 @@ export async function createGroupInviteRecord(input: {
   return record;
 }
 
-export async function updateGroupInviteRecord(inviteId: string, patch: Partial<Pick<GroupInviteRecord, "expiresAt" | "status">>): Promise<GroupInviteRecord> {
+export async function updateGroupInviteRecord(
+  inviteId: string,
+  patch: Partial<Pick<GroupInviteRecord, "email" | "role" | "expiresAt" | "status">>
+): Promise<GroupInviteRecord> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
   const current = cache.groupInvites.find((item) => item.id === inviteId);
   if (!current) {
     throw new Error("invite-not-found");
   }
-  const updated = { ...current, ...patch };
-  cache.groupInvites = upsertInCache(cache.groupInvites, updated);
+  const updated: GroupInviteRecord = { ...current, ...patch };
   if (hasDatabase()) {
-    await getPool().query(`update group_invites set expires_at = $2, status = $3 where id = $1`, [inviteId, updated.expiresAt, updated.status]);
+    await getPool().query(
+      `update group_invites
+       set email = $2, role = $3, expires_at = $4, status = $5
+       where id = $1`,
+      [inviteId, updated.email, updated.role, updated.expiresAt, updated.status]
+    );
   }
+  cache.groupInvites = upsertInCache(cache.groupInvites, updated);
   return updated;
 }
 
@@ -3282,6 +3436,32 @@ export async function findGroupInviteByCode(code: string): Promise<GroupInviteRe
     };
   }
   return cache.groupInvites.find((item) => item.code === code) ?? null;
+}
+
+export async function listGroupInvitesByGroupId(groupId: string): Promise<GroupInviteRecord[]> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+    const result = await getPool().query<GroupInviteRow>(
+      `select id, code, email, group_id, role, status, expires_at, invited_by_user_id, accepted_by_user_id, created_at
+       from group_invites
+       where group_id = $1
+       order by created_at desc`,
+      [groupId]
+    );
+    return result.rows.map((row) => ({
+      id: row.id,
+      code: row.code,
+      email: row.email,
+      groupId: row.group_id,
+      role: row.role,
+      status: row.status,
+      expiresAt: new Date(row.expires_at),
+      invitedByUserId: row.invited_by_user_id,
+      acceptedByUserId: row.accepted_by_user_id,
+      createdAt: new Date(row.created_at),
+    }));
+  }
+  return cache.groupInvites.filter((item) => item.groupId === groupId);
 }
 
 export async function upsertPasswordResetRecord(input: {
@@ -4713,6 +4893,8 @@ export async function upsertTrustListSource(input: {
   url: string;
   enabled: boolean;
   groupIds: string[];
+  parentSourceId?: string | null;
+  archivedAt?: Date | null;
   createdByUserId: string;
 }): Promise<TrustListSourceRecord> {
   if (hasDatabase()) {
@@ -4729,6 +4911,8 @@ export async function upsertTrustListSource(input: {
         url: input.url,
         enabled: input.enabled,
         groupIds: input.groupIds,
+        parentSourceId: input.parentSourceId ?? null,
+        archivedAt: input.archivedAt ?? null,
         updatedAt: now,
       }
     : {
@@ -4737,6 +4921,8 @@ export async function upsertTrustListSource(input: {
         url: input.url,
         enabled: input.enabled,
         groupIds: input.groupIds,
+        parentSourceId: input.parentSourceId ?? null,
+        archivedAt: input.archivedAt ?? null,
         createdByUserId: input.createdByUserId,
         createdAt: now,
         updatedAt: now,
@@ -4746,13 +4932,15 @@ export async function upsertTrustListSource(input: {
     await getPool().query(
       `
         insert into trust_list_sources (
-          id, label, url, enabled, group_ids, created_by_user_id, created_at, updated_at
-        ) values ($1,$2,$3,$4,$5,$6,$7,$8)
+          id, label, url, enabled, group_ids, parent_source_id, archived_at, created_by_user_id, created_at, updated_at
+        ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
         on conflict (id) do update set
           label = excluded.label,
           url = excluded.url,
           enabled = excluded.enabled,
           group_ids = excluded.group_ids,
+          parent_source_id = excluded.parent_source_id,
+          archived_at = excluded.archived_at,
           updated_at = excluded.updated_at
       `,
       [
@@ -4761,6 +4949,8 @@ export async function upsertTrustListSource(input: {
         record.url,
         record.enabled,
         record.groupIds,
+        record.parentSourceId,
+        record.archivedAt,
         record.createdByUserId,
         record.createdAt,
         record.updatedAt,
@@ -4774,7 +4964,7 @@ export async function listTrustListSources(): Promise<TrustListSourceRecord[]> {
   if (hasDatabase()) {
     await ensureRuntimeSchema();
     const result = await getPool().query<TrustListSourceRow>(
-      `select id, label, url, enabled, group_ids, created_by_user_id, created_at, updated_at from trust_list_sources order by updated_at desc`
+      `select id, label, url, enabled, group_ids, parent_source_id, archived_at, created_by_user_id, created_at, updated_at from trust_list_sources order by updated_at desc`
     );
     cache.trustListSources = result.rows.map(mapTrustListSourceRow);
   }
@@ -4783,7 +4973,7 @@ export async function listTrustListSources(): Promise<TrustListSourceRecord[]> {
 
 export async function listEnabledTrustListSources(): Promise<TrustListSourceRecord[]> {
   const sources = await listTrustListSources();
-  return sources.filter((source) => source.enabled);
+  return sources.filter((source) => source.enabled && !source.archivedAt);
 }
 
 export async function findTrustListSourceById(
@@ -4791,6 +4981,16 @@ export async function findTrustListSourceById(
 ): Promise<TrustListSourceRecord | null> {
   const sources = await listTrustListSources();
   return sources.find((item) => item.id === sourceId) ?? null;
+}
+
+export async function deleteTrustListSourceRecord(sourceId: string): Promise<void> {
+  if (hasDatabase()) {
+    await ensureRuntimeSchema();
+  }
+  cache.trustListSources = cache.trustListSources.filter((item) => item.id !== sourceId);
+  if (hasDatabase()) {
+    await getPool().query(`delete from trust_list_sources where id = $1`, [sourceId]);
+  }
 }
 
 export async function createTrustListSyncRun(input: {

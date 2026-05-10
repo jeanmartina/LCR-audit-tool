@@ -9,11 +9,17 @@ function parseCsv(value: FormDataEntryValue | null): string[] {
     .filter(Boolean);
 }
 
+function parseBoolean(value: FormDataEntryValue | null): boolean {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  return normalized === "on" || normalized === "true" || normalized === "1";
+}
+
 async function parseRequest(request: Request): Promise<{
   label: string;
   url: string;
   enabled: boolean;
   groupIds: string[];
+  parentSourceId: string | null;
 }> {
   const contentType = request.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
@@ -23,14 +29,16 @@ async function parseRequest(request: Request): Promise<{
       url: String(body.url ?? "").trim(),
       enabled: body.enabled !== false,
       groupIds: Array.isArray(body.groupIds) ? body.groupIds.map(String) : parseCsv(body.groupIds),
+      parentSourceId: body.parentSourceId ? String(body.parentSourceId).trim() : null,
     };
   }
   const form = await request.formData();
   return {
     label: String(form.get("label") ?? "").trim(),
     url: String(form.get("url") ?? "").trim(),
-    enabled: form.get("enabled") !== null,
+    enabled: parseBoolean(form.get("enabled")),
     groupIds: parseCsv(form.get("groupIds")),
+    parentSourceId: String(form.get("parentSourceId") ?? "").trim() || null,
   };
 }
 

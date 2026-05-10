@@ -1,6 +1,7 @@
 import { assertAuthenticated, type AuthenticatedPrincipal } from "../auth/authorization";
 import {
   findGroupById,
+  deleteTrustListSourceRecord,
   findTrustListSourceById,
   listTrustListCertificateProjections,
   listTrustListSnapshots,
@@ -109,6 +110,49 @@ function normalizeTrustListSourceInput(input: { label?: string; url: string; ena
   return { label, url, enabled: input.enabled !== false, groupIds };
 }
 
+function assertTrustListSourceAcyclic(
+  sourceId: string,
+  parentSourceId: string | null,
+  sources: TrustListSourceRecord[]
+): void {
+  if (!parentSourceId) {
+    return;
+  }
+  if (parentSourceId === sourceId) {
+    throw new Error("trust-list-parent-cycle");
+  }
+  const byId = new Map(sources.map((item) => [item.id, item] as const));
+  let current = byId.get(parentSourceId) ?? null;
+  while (current) {
+    if (current.id === sourceId) {
+      throw new Error("trust-list-parent-cycle");
+    }
+    current = current.parentSourceId ? byId.get(current.parentSourceId) ?? null : null;
+  }
+}
+
+function buildTrustListSourceWriteInput(input: {
+  id?: string;
+  createdByUserId: string;
+  label: string;
+  url: string;
+  enabled: boolean;
+  groupIds: string[];
+  parentSourceId: string | null;
+  archivedAt: Date | null;
+}) {
+  return {
+    id: input.id,
+    createdByUserId: input.createdByUserId,
+    label: input.label,
+    url: input.url,
+    enabled: input.enabled,
+    groupIds: input.groupIds,
+    parentSourceId: input.parentSourceId,
+    archivedAt: input.archivedAt,
+  };
+}
+
 function summarizeProjectionCounts(
   projections: TrustListCertificateProjectionRecord[],
 ): TrustListProjectionCounts {
@@ -177,7 +221,7 @@ export async function findTrustListCertificateProvenance(
 
 export async function createTrustListSource(
   actor: AuthenticatedPrincipal | undefined,
-  input: { label: string; url: string; enabled: boolean; groupIds: string[] },
+  input: { label: string; url: string; enabled: boolean; groupIds: string[]; parentSourceId?: string | null },
 ): Promise<TrustListSourceRecord> {
   const principal = await ensureTrustListOperator(actor);
   const normalized = normalizeTrustListSourceInput(input);
@@ -185,13 +229,125 @@ export async function createTrustListSource(
   assertHttpsTrustListUrl(normalized.url);
   await validateGroupIds(normalized.groupIds);
   assertTrustListGroupScope(principal, normalized.groupIds);
-  return upsertTrustListSource({
+  if (input.parentSourceId) {
+    const parent = await findTrustListSourceById(input.parentSourceId);
+    if (!parent) {
+      throw new Error("trust-list-parent-not-found");
+    }
+    if (!canSeeTrustListSource(principal, parent)) {
+      throw new Error("trust-list-group-admin-required");
+    }
+  }
+  return upsertTrustListSource(buildTrustListSourceWriteInput({
     label: normalized.label,
     url: normalized.url,
     enabled: normalized.enabled,
     groupIds: normalized.groupIds,
+    parentSourceId: input.parentSourceId ?? null,
+    archivedAt: null,
     createdByUserId: principal.userId,
-  });
+  }));
+}
+
+export async function updateTrustListSource(
+  actor: AuthenticatedPrincipal | undefined,
+  sourceId: string,
+  input: {
+    label: string;
+    url: string;
+    enabled: boolean;
+    groupIds: string[];
+    parentSourceId: string | null;
+  }
+): Promise<TrustListSourceRecord> {
+  const principal = await ensureTrustListOperator(actor);
+  const current = await findTrustListSourceById(sourceId);
+  if (!current) {
+    throw new Error("trust-list-source-not-found");
+  }
+  if (!canSeeTrustListSource(principal, current)) {
+    throw new Error("trust-list-group-admin-required");
+  }
+  const normalized = normalizeTrustListSourceInput(input);
+  if (!normalized.label) throw new Error("trust-list-label-required");
+  assertHttpsTrustListUrl(normalized.url);
+  await validateGroupIds(normalized.groupIds);
+  assertTrustListGroupScope(principal, normalized.groupIds);
+  if (input.parentSourceId) {
+    const parent = await findTrustListSourceById(input.parentSourceId);
+    if (!parent) {
+      throw new Error("trust-list-parent-not-found");
+    }
+    if (!canSeeTrustListSource(principal, parent)) {
+      throw new Error("trust-list-group-admin-required");
+    }
+  }
+  const sources = await listTrustListSources();
+  assertTrustListSourceAcyclic(sourceId, input.parentSourceId, sources);
+  const archivedAt = current.archivedAt ?? (normalized.enabled ? null : new Date());
+  return upsertTrustListSource(buildTrustListSourceWriteInput({
+    id: sourceId,
+    createdByUserId: current.createdByUserId,
+    label: normalized.label,
+    url: normalized.url,
+    enabled: current.archivedAt ? false : normalized.enabled,
+    groupIds: normalized.groupIds,
+    parentSourceId: input.parentSourceId,
+    archivedAt,
+  }));
+}
+
+export async function archiveTrustListSource(
+  actor: AuthenticatedPrincipal | undefined,
+  sourceId: string,
+): Promise<TrustListSourceRecord> {
+  const principal = await ensureTrustListOperator(actor);
+  const current = await findTrustListSourceById(sourceId);
+  if (!current) {
+    throw new Error("trust-list-source-not-found");
+  }
+  if (!canSeeTrustListSource(principal, current)) {
+    throw new Error("trust-list-group-admin-required");
+  }
+  return upsertTrustListSource(
+    buildTrustListSourceWriteInput({
+      id: sourceId,
+      createdByUserId: current.createdByUserId,
+      label: current.label,
+      url: current.url,
+      enabled: false,
+      groupIds: current.groupIds,
+      parentSourceId: current.parentSourceId,
+      archivedAt: current.archivedAt ?? new Date(),
+    }),
+  );
+}
+
+export async function deleteTrustListSource(
+  actor: AuthenticatedPrincipal | undefined,
+  sourceId: string,
+): Promise<void> {
+  const principal = await ensureTrustListOperator(actor);
+  const current = await findTrustListSourceById(sourceId);
+  if (!current) {
+    throw new Error("trust-list-source-not-found");
+  }
+  if (!canSeeTrustListSource(principal, current)) {
+    throw new Error("trust-list-group-admin-required");
+  }
+  const children = (await listTrustListSources()).filter((item) => item.parentSourceId === sourceId);
+  if (children.length > 0) {
+    throw new Error("trust-list-source-has-children");
+  }
+  const [snapshots, runs, projections] = await Promise.all([
+    listTrustListSnapshots(sourceId),
+    listTrustListSyncRuns(sourceId),
+    listTrustListCertificateProjections({ sourceId }),
+  ]);
+  if (snapshots.length > 0 || runs.length > 0 || projections.length > 0) {
+    throw new Error("trust-list-source-has-history");
+  }
+  await deleteTrustListSourceRecord(sourceId);
 }
 
 export async function previewTrustListSource(
@@ -213,5 +369,6 @@ export async function syncTrustListSourceNow(
   const source = await findTrustListSourceById(sourceId);
   if (!source) throw new Error("trust-list-source-not-found");
   if (!canSeeTrustListSource(principal, source)) throw new Error("trust-list-group-admin-required");
+  if (source.archivedAt) throw new Error("trust-list-source-archived");
   return syncTrustListSource(source);
 }
