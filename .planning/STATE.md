@@ -5,7 +5,7 @@ milestone_name: Interface Clarity and UX Modernization
 status: executing
 stopped_at: v1.4 requirements finalized
 last_updated: "2026-05-10T01:22:03.379Z"
-last_activity: 2026-05-10 -- Phase 27 implementation complete
+last_activity: 2026-05-10 -- Phase 29 context gathered
 progress:
   total_phases: 8
   completed_phases: 1
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-09)
 
 **Core value:** Never allow a trusted certificate to operate without valid revocation coverage. The interface should also make the running build, operational state, and major user flows easy to understand.
-**Current focus:** Prepare v1.4 phase 28 planning from finalized requirements.
+**Current focus:** Gather and plan v1.4 phase 29 trust-list diagnostics from finalized requirements.
 
 ## Current Position
 
 Milestone: v1.4 Interface Clarity and UX Modernization
-Phase: 27
-Plan: Complete
-Status: Phase 27 complete
-Last activity: 2026-05-10 -- Phase 27 implementation complete
+Phase: 29
+Plan: Pending
+Status: Phase 29 context gathered
+Last activity: 2026-05-10 -- Phase 29 context gathered
 
 Progress: [█---------] 12%
 
@@ -97,7 +97,8 @@ Progress: [█---------] 12%
 ### Pending Todos
 
 - Rotate the Google client secret used during the proof because it was exposed during testing
-- Start phase 28 planning with the user before implementation
+- Decide how to handle the multiple-lockfile Next.js workspace warning: either set `turbopack.root` or remove the extra root lockfile if it is no longer needed
+- Start phase 29 planning with the user before implementation
 
 ### Blockers/Concerns
 
@@ -106,5 +107,5 @@ Progress: [█---------] 12%
 ## Session Continuity
 
 Last session: 2026-05-10T01:22:03.379Z
-Stopped at: Phase 27 implementation complete
+Stopped at: Phase 29 context gathered
 Resume file: .planning/ROADMAP.md
