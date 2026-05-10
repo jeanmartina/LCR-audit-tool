@@ -7,94 +7,134 @@
 - [x] **v1.2** — Shipped trust-list ingestion, trust-list operator UX, executive summary reporting, first-run/bootstrap improvements, guided onboarding, and a published auth-entry landing across Phases 16-21.1. See `.planning/milestones/v1.2-ROADMAP.md`.
 - [x] **v1.3** — Shipped monitoring source expansion across Phases 22-26 with derived OCSP/policy-document evidence, reporting visibility, and packaged closure validation. See `.planning/milestones/v1.3-ROADMAP.md`.
 
-## Active Milestone: v1.3 Monitoring Source Expansion
+## Active Milestone: v1.4 Interface Clarity and UX Modernization
 
-**Goal:** expand monitoring beyond CRL/certificate/trust-list availability into OCSP and CP/CPS/DPC document sources while preserving audit evidence for future PKI compliance analysis.
+**Goal:** make the product easier to use and inspect across public shell, settings, trust lists, import review, reporting, PDF, global navigation, and runtime version visibility.
 
-**Requirements:** 19 total, 19 mapped.
+**Requirements:** 8 total, 8 mapped.
 
 | Phase | Name | Goal | Requirements |
 |-------|------|------|--------------|
-| 22 | Derived Monitoring Source Foundation | Add a deterministic derived-source layer for OCSP and policy-document candidates tied to existing certificates and trust-list provenance. | SRC-05, SRC-06, SRC-07, SRC-08 |
-| 23 | CP/CPS/DPC Document Snapshot Monitoring | Safely fetch, snapshot, hash, and extract bounded metadata/text from discovered policy documents. | DOCS-01, DOCS-02, DOCS-03, DOCS-04, DOCS-05, SEC-01 |
-| 24 | OCSP Technical Evidence Monitoring | Check derived OCSP responders technically and retain evidence without claiming full revocation validation. | OCSP-01, OCSP-02, OCSP-03, OCSP-04 |
-| 25 | Monitoring Source Reporting and Executive Visibility | Expose derived-source health in operator drill-downs and simple executive aggregate cards under existing authorization. | REP-04, REP-05, REP-06 |
-| 26 | Operations, Configuration, and Proof Closure | Document and validate source limits, safety posture, compose envs, and future AI boundary. | OPS-07, OPS-08 |
+| 27 | Public Shell and Identity | Make the public landing page, login, identity provider visibility, language selector, and navigation feel official and modern. | UI-01 |
+| 28 | Settings and Administration | Reorganize settings and admin surfaces into clear tabs for personal preferences, group defaults, providers, trust lists, groups, and invitations. | UI-02 |
+| 29 | Trust Lists and Diagnostics | Improve trust-list hierarchy, metadata, removals, and operational diagnostics. | UI-03 |
+| 30 | Import Review and Safety | Add review-before-save import flows with server-side revalidation and preserved provenance. | UI-04 |
+| 31 | Dashboard and Reporting | Make dashboard, timelines, derived states, and actions clearer and more consistent. | UI-05 |
+| 32 | Executive PDF | Make the executive PDF professional, Unicode-safe, and aligned with the web executive read model. | UI-06 |
+| 33 | Global UX Consistency | Apply one modern visual language and navigation pattern across the application. | UI-07 |
+| 34 | Release Clarity | Surface the running version/build identifier in an operator-visible place in the web UI. | UI-08 |
 
 ## Phase Details
 
-### Phase 22: Derived Monitoring Source Foundation
+### Phase 27: Public Shell and Identity
 
-**Goal:** Add a deterministic derived-source layer for OCSP and policy-document candidates tied to existing certificates and trust-list provenance.
+**Goal:** Make the public landing page, login, identity provider visibility, language selector, and navigation feel official and modern.
 
-**Requirements:** SRC-05, SRC-06, SRC-07, SRC-08
+**Requirements:** UI-01
 
-**Success criteria:**
-1. Imported and trust-list-derived certificates can produce derived OCSP/document source records when supported metadata exists.
-2. Source records deduplicate by certificate/provenance, source type, normalized URL, and policy/document role.
-3. Missing or uncheckable sources are represented explicitly without failing certificate import or trust-list sync.
-4. Derived sources inherit parent certificate/provenance references for reporting and authorization.
-5. Validators prove the derivation schema and source-state behavior.
+**Plans:** 1 plan
 
-### Phase 23: CP/CPS/DPC Document Snapshot Monitoring
-
-**Goal:** Add safe policy-document fetching and snapshot capture suitable for later AI compliance analysis.
-
-**Requirements:** DOCS-01, DOCS-02, DOCS-03, DOCS-04, DOCS-05, SEC-01
+Plans:
+- [ ] `27-01-PLAN.md` — Build the shared public shell, refactor `/` and `/auth`, and validate enabled-provider-only public entry.
 
 **Success criteria:**
-1. Document fetches enforce timeout, redirect, size, and private-network protections before downloading content.
-2. Document events and snapshots store content type, size, SHA-256 hash, URL, capture timestamp, and failure reason.
-3. The system extracts bounded metadata/text when feasible and records truncation or extraction failure clearly.
-4. Hash changes create historical snapshot evidence without losing prior versions.
-5. Document snapshots retain certificate, policy OID, trust-list source, and snapshot/run provenance for future AI analysis.
+1. The public landing page reads like the official product entry, not a technical stub.
+2. Login is visible directly without an extra click.
+3. Only enabled identity providers appear publicly.
+4. The language selector is compact and unobtrusive.
+5. Top-level navigation feels modern and action-oriented.
 
-### Phase 24: OCSP Technical Evidence Monitoring
+### Phase 28: Settings and Administration
 
-**Goal:** Add bounded OCSP responder checks and response evidence capture while clearly separating reachability from semantic revocation validation.
+**Goal:** Reorganize settings and admin surfaces into clear tabs for personal preferences, group defaults, providers, trust lists, groups, and invitations.
 
-**Requirements:** OCSP-01, OCSP-02, OCSP-03, OCSP-04
-
-**Success criteria:**
-1. OCSP checks run only when derived responder URL and issuer/check context are sufficient; otherwise the source becomes `not checkable` with a reason.
-2. OCSP events store status, duration, HTTP status, content type, response size, response hash, and failure reason.
-3. OCSP response evidence is retained within configured byte limits for later validation work.
-4. UI/reporting copy does not present technical OCSP reachability as full revocation-status validation.
-5. Validators cover reachable, unavailable, oversized, malformed, and missing-issuer-context outcomes.
-
-### Phase 25: Monitoring Source Reporting and Executive Visibility
-
-**Goal:** Make new source categories visible without overwhelming existing operator and executive workflows.
-
-**Requirements:** REP-04, REP-05, REP-06
+**Requirements:** UI-02
 
 **Success criteria:**
-1. Operator reporting shows OCSP and policy-document source health with links to parent certificates and evidence details.
-2. Executive summary adds simple aggregate cards for OCSP health and policy-document availability/change risk.
-3. Reporting respects parent certificate/group authorization for every derived source and export path.
-4. Empty/not-discovered/not-checkable states are readable and actionable.
-5. CSV/PDF/export behavior remains stable for existing CRL/certificate/trust-list reporting.
+1. Settings are split into clear tabs or sections.
+2. Personal preferences are separated from administrative settings.
+3. Group administration and invitation management are clear CRUD flows.
+4. Technical fields provide contextual hints.
 
-### Phase 26: Operations, Configuration, and Proof Closure
+### Phase 29: Trust Lists and Diagnostics
 
-**Goal:** Close v1.3 with documented operational limits, packaged runtime validation, and explicit future AI-analysis boundary.
+**Goal:** Improve trust-list hierarchy, metadata, removals, and operational diagnostics.
 
-**Requirements:** OPS-07, OPS-08
+**Requirements:** UI-03
 
 **Success criteria:**
-1. `.env.example` and compose expose fetch timeout, document byte limit, extracted text byte limit, redirect limit, and OCSP response byte limit.
-2. README/operator docs explain source derivation, health states, retention limits, safety controls, and future AI scope.
-3. Packaged validation covers web/worker behavior for derived source polling and reporting.
-4. Security review confirms certificate-derived URLs cannot reach private/internal targets or unsafe redirects.
-5. Milestone audit confirms all 19 requirements are mapped, implemented, and validated.
+1. Trust-list hierarchy is visible, including LOTL/subordinate structure.
+2. Operators can remove incorrect sources without losing history.
+3. Failure modes are distinguished clearly and explained technically.
+4. Inventory cards and tables remain compact and legible.
+
+### Phase 30: Import Review and Safety
+
+**Goal:** Add review-before-save import flows with server-side revalidation and preserved provenance.
+
+**Requirements:** UI-04
+
+**Success criteria:**
+1. Import flows use derivation/prevalidation followed by review and then save.
+2. Operators can accept, edit, ignore, reject, mark duplicates, or keep suggestions pending.
+3. The server revalidates everything at final save time.
+4. Provenance is preserved across corrections.
+
+### Phase 31: Dashboard and Reporting
+
+**Goal:** Make dashboard, timelines, derived states, and actions clearer and more consistent.
+
+**Requirements:** UI-05
+
+**Success criteria:**
+1. Dashboard filters are predictable and keep healthy items visible.
+2. Derived-source states are explicit and readable.
+3. Timelines/logs explain issues in human terms.
+4. Actions look like consistent controls rather than loose links.
+5. Detail views become diagnostic pages rather than data dumps.
+
+### Phase 32: Executive PDF
+
+**Goal:** Make the executive PDF professional, Unicode-safe, and aligned with the web executive read model.
+
+**Requirements:** UI-06
+
+**Success criteria:**
+1. The PDF has a professional executive-report appearance.
+2. Unicode and accented characters render correctly.
+3. Sections are fixed and predictable.
+4. The PDF uses the same underlying read model as the web executive view.
+
+### Phase 33: Global UX Consistency
+
+**Goal:** Apply one modern visual language and navigation pattern across the application.
+
+**Requirements:** UI-07
+
+**Success criteria:**
+1. The application feels like one coherent product across all major screens.
+2. Buttons and actions follow a consistent hierarchy.
+3. Density is controlled without becoming sparse or noisy.
+4. The same visual discipline applies everywhere without exception.
+
+### Phase 34: Release Clarity
+
+**Goal:** Surface the running version/build identifier in an operator-visible place in the web UI.
+
+**Requirements:** UI-08
+
+**Success criteria:**
+1. The running version/build is visible without developer tools.
+2. The placement is stable and operator-facing.
+3. The displayed value can be verified in the packaged runtime.
 
 ## Current Status
 
-- Active milestone: v1.3 Monitoring Source Expansion
-- Current stage: Phase 26 complete; milestone audit passed
-- Next recommended step: `/gsd-complete-milestone 1.3`
+- Active milestone: v1.4 Interface Clarity and UX Modernization
+- Current stage: requirements finalized; roadmap ready for phase planning
+- Next recommended step: `/gsd-plan-phase 27`
 
-## Backlog / Future
+## Future / Backlog
 
 ### OCSP Validation
 
