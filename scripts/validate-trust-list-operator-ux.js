@@ -67,13 +67,23 @@ assertContains("src/app/api/admin/trust-lists/preview/route.ts", "previewTrustLi
 assertContains("src/app/api/admin/trust-lists/preview/route.ts", "assertAuthenticated");
 assertContains("src/app/api/admin/trust-lists/route.ts", "assertAuthenticated");
 assertContains("src/app/api/admin/trust-lists/[sourceId]/sync/route.ts", "assertAuthenticated");
+assertContains("src/app/admin/trust-lists/trust-list-diagnostics-panel.tsx", "admin.trustLists.openDetails");
+assertContains("src/app/admin/trust-lists/trust-list-diagnostics-panel.tsx", "admin.trustLists.detail.failureLayers.downloadFetch");
+assertContains("src/app/admin/trust-lists/trust-list-diagnostics-panel.tsx", "admin.trustLists.detail.failureLayers.xmlParse");
+assertContains("src/app/admin/trust-lists/trust-list-diagnostics-panel.tsx", "admin.trustLists.detail.failureLayers.xmlDsig");
+assertContains("src/app/admin/trust-lists/trust-list-diagnostics-panel.tsx", "admin.trustLists.detail.failureLayers.projectionImport");
+assertContains("src/app/admin/trust-lists/trust-list-diagnostics-panel.tsx", "admin.trustLists.detail.failureLayers.hierarchyLotl");
+assertContains("src/app/admin/trust-lists/trust-list-diagnostics-panel.tsx", "admin.trustLists.source.archive");
+assertContains("src/app/admin/trust-lists/trust-list-diagnostics-panel.tsx", "admin.trustLists.source.delete");
+assertContains("src/app/admin/trust-lists/page.tsx", "TrustListSourceWizard");
+assertContains("src/app/admin/trust-lists/page.tsx", "TrustListDiagnosticsPanel");
+assertContains("src/app/admin/trust-lists/[sourceId]/page.tsx", "TrustListDiagnosticsPanel");
+assertContains("src/app/admin/trust-lists/[sourceId]/page.tsx", "admin.trustLists.detail.title");
 
 assertContains("src/app/admin/trust-lists/trust-list-source-wizard.tsx", "admin.trustLists.wizard.testButton");
 assertContains("src/app/admin/trust-lists/trust-list-source-wizard.tsx", "/api/admin/trust-lists/preview");
 assertContains("src/app/admin/trust-lists/trust-list-source-wizard.tsx", "saveWithoutTest");
-assertContains("src/app/admin/trust-lists/page.tsx", "TrustListSourceWizard");
-assertContains("src/app/admin/trust-lists/page.tsx", "timeline");
-assertContains("src/app/admin/trust-lists/page.tsx", "latestRecovery");
+assertContains("src/app/admin/trust-lists/page.tsx", "admin.trustLists.sources.title");
 
 for (const key of [
   "admin.trustLists.wizard.step.details",
@@ -83,6 +93,18 @@ for (const key of [
   "admin.trustLists.timeline.recommendedAction",
   "admin.trustLists.recovery.xmlSignatureInvalid.title",
   "admin.trustLists.recovery.fetchFailed.action",
+  "admin.trustLists.openDetails",
+  "admin.trustLists.hierarchy.title",
+  "admin.trustLists.detail.metadata.title",
+  "admin.trustLists.detail.recovery.title",
+  "admin.trustLists.detail.snapshots.title",
+  "admin.trustLists.detail.syncHistory.title",
+  "admin.trustLists.detail.projectionCounts.title",
+  "admin.trustLists.detail.failureLayers.downloadFetch",
+  "admin.trustLists.detail.failureLayers.xmlParse",
+  "admin.trustLists.detail.failureLayers.xmlDsig",
+  "admin.trustLists.detail.failureLayers.projectionImport",
+  "admin.trustLists.detail.failureLayers.hierarchyLotl",
 ]) {
   assertContains("src/i18n/index.ts", key);
 }

@@ -89,7 +89,7 @@ if (fs.existsSync(path.join(process.cwd(), "src/trust-lists/admin.ts"))) {
   assertContains("src/app/api/admin/trust-lists/[sourceId]/route.ts", "updateTrustListSource");
   assertContains("src/app/api/admin/trust-lists/[sourceId]/route.ts", "deleteTrustListSource");
   assertContains("src/app/api/admin/trust-lists/[sourceId]/sync/route.ts", "syncTrustListSourceNow");
-  assertContains("src/app/admin/trust-lists/page.tsx", "StatusPill");
+  assertContains("src/app/admin/trust-lists/trust-list-diagnostics-panel.tsx", "StatusPill");
   assertContains("src/i18n/index.ts", "XMLDSig");
   assertContains("scripts/run-worker.js", "syncEnabledTrustListSources");
 }

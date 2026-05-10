@@ -1,19 +1,11 @@
 import type { ReactElement } from "react";
 import { redirect } from "next/navigation";
 import { assertAuthenticated } from "../../../auth/authorization";
-import {
-  EmptyState,
-  Notice,
-  PageHeader,
-  PageShell,
-  Panel,
-  stackStyle,
-  StatusPill,
-  ActionButton,
-} from "../../../components/ui/primitives";
+import { Notice, PageHeader, PageShell } from "../../../components/ui/primitives";
 import { getPrincipalTranslator } from "../../../i18n";
 import { listTrustListSourcesForAdmin } from "../../../trust-lists/admin";
-import { TrustListSourceWizard, type TrustListWizardCopy } from "./trust-list-source-wizard";
+import { TrustListSourceWizard } from "./trust-list-source-wizard";
+import { TrustListDiagnosticsPanel } from "./trust-list-diagnostics-panel";
 
 const wizardCopyKeys = [
   "admin.trustLists.new.title",
@@ -73,23 +65,16 @@ const wizardCopyKeys = [
   "admin.trustLists.recovery.unknown.title",
   "admin.trustLists.recovery.unknown.body",
   "admin.trustLists.recovery.unknown.action",
-];
+] as const;
 
-const cardGridStyle = {
-  display: "grid",
-  gap: "16px",
-  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-};
+type TranslationValues = Record<string, string | number | boolean | null | undefined>;
+type SettingsTranslator = (key: string, values?: TranslationValues) => string;
+
+function buildWizardCopy(t: SettingsTranslator): Record<string, string> {
+  return Object.fromEntries(wizardCopyKeys.map((key) => [key, t(key)]));
+}
 
 type TrustListSearchParams = Promise<Record<string, string | string[] | undefined>>;
-
-function formatDate(value: Date | null | undefined): string {
-  return value ? value.toISOString() : "-";
-}
-
-function valueOrDash(value: string | number | null | undefined): string {
-  return value === null || value === undefined || value === "" ? "-" : String(value);
-}
 
 export default async function TrustListsPage({
   searchParams,
@@ -111,8 +96,7 @@ export default async function TrustListsPage({
   const created = params.created === "source";
   const syncComplete = params.sync === "complete";
   const syncFailed = params.sync === "failed";
-  const copy: TrustListWizardCopy = Object.fromEntries(wizardCopyKeys.map((key) => [key, t(key)]));
-
+  const wizardCopy = buildWizardCopy(t);
   return (
     <PageShell>
       <PageHeader
@@ -127,65 +111,16 @@ export default async function TrustListsPage({
       {syncComplete ? <Notice tone="success" title={t("admin.trustLists.syncComplete.title")}>{t("admin.trustLists.syncComplete.body")}</Notice> : null}
       {syncFailed ? <Notice tone="warning" title={t("admin.trustLists.syncFailed.title")}>{t("admin.trustLists.syncFailed.body")}</Notice> : null}
 
-      <TrustListSourceWizard copy={copy} />
+      <TrustListSourceWizard copy={wizardCopy} />
 
-      <Panel title={t("admin.trustLists.sources.title")} description={t("admin.trustLists.sources.description")}>
-        {sources.length === 0 ? (
-          <EmptyState title={t("admin.trustLists.empty.title")}>{t("admin.trustLists.empty.body")}</EmptyState>
-        ) : (
-          <div style={cardGridStyle}>
-            {sources.map((item) => {
-              const statusTone = item.lastRun?.status === "failed" ? "warning" : item.lastRun?.status === "succeeded" ? "success" : "neutral";
-              const latestFailureReason = item.lastRun?.failureReason ?? item.latestProjectionFailureReason;
-              return (
-                <Panel key={item.source.id} compact title={item.source.label} description={item.source.url}>
-                  <div style={stackStyle("12px")}>
-                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                      <StatusPill tone={item.source.enabled ? "success" : "warning"}>{item.source.enabled ? t("common.status.active") : t("common.status.disabled")}</StatusPill>
-                      <StatusPill tone={statusTone}>{item.lastRun?.status ?? t("common.none")}</StatusPill>
-                    </div>
-                    <div style={stackStyle("4px")}>
-                      <strong>{t("admin.trustLists.timeline.title")}</strong>
-                      <span>{t("admin.trustLists.table.groups")}: {item.source.groupIds.join(", ")}</span>
-                      <span>{t("admin.trustLists.timeline.lastRun")}: {formatDate(item.lastRun?.finishedAt ?? item.lastRun?.startedAt)}</span>
-                      <span>{t("admin.trustLists.timeline.lastSuccess")}: {formatDate(item.lastSuccess?.finishedAt)}</span>
-                      <span>{t("admin.trustLists.timeline.lastFailure")}: {formatDate(item.lastFailure?.finishedAt)}</span>
-                      <span>{t("admin.trustLists.timeline.nextExpectedUpdate")}: {valueOrDash(item.lastSnapshot?.nextUpdate)}</span>
-                    </div>
-                    <div style={stackStyle("4px")}>
-                      <strong>{t("admin.trustLists.table.metadata")}</strong>
-                      <span>{t("admin.trustLists.metadata.digest")}: {valueOrDash(item.lastSnapshot?.digestSha256)}</span>
-                      <span>{t("admin.trustLists.metadata.sequence")}: {valueOrDash(item.lastSnapshot?.sequenceNumber)}</span>
-                      <span>{t("admin.trustLists.metadata.territory")}: {valueOrDash(item.lastSnapshot?.territory)}</span>
-                      <span>{t("admin.trustLists.metadata.imported")}: {item.lastSuccess?.importedCount ?? 0} / {item.lastSuccess?.failedCount ?? 0}</span>
-                    </div>
-                    <div style={stackStyle("4px")}>
-                      <strong>{t("admin.trustLists.timeline.changeSummary")}</strong>
-                      <span>{t("admin.trustLists.projection.imported")}: {item.projectionCounts.imported}</span>
-                      <span>{t("admin.trustLists.projection.updated")}: {item.projectionCounts.updated}</span>
-                      <span>{t("admin.trustLists.projection.skippedUnchanged")}: {item.projectionCounts.skippedUnchanged}</span>
-                      <span>{t("admin.trustLists.projection.skippedDuplicate")}: {item.projectionCounts.skippedDuplicate}</span>
-                      <span>{t("admin.trustLists.projection.failed")}: {item.projectionCounts.failed}</span>
-                    </div>
-                    {item.latestRecovery ? (
-                      <Notice tone="warning" title={t(item.latestRecovery.titleKey)}>
-                        {t(item.latestRecovery.bodyKey)} {t("admin.trustLists.timeline.recommendedAction")}: {t(item.latestRecovery.actionKey)}
-                      </Notice>
-                    ) : latestFailureReason ? (
-                      <Notice tone="warning" title={t("admin.trustLists.timeline.rawFailure")}>
-                        {latestFailureReason}
-                      </Notice>
-                    ) : null}
-                    <form action={`/api/admin/trust-lists/${item.source.id}/sync`} method="post">
-                      <ActionButton>{t("admin.trustLists.syncNow")}</ActionButton>
-                    </form>
-                  </div>
-                </Panel>
-              );
-            })}
-          </div>
-        )}
-      </Panel>
+      <TrustListDiagnosticsPanel
+        t={t}
+        sources={sources}
+        title={t("admin.trustLists.sources.title")}
+        description={t("admin.trustLists.sources.description")}
+        noAccessTitle={t("admin.trustLists.empty.title")}
+        noAccessBody={t("admin.trustLists.empty.body")}
+      />
     </PageShell>
   );
 }

@@ -63,7 +63,7 @@ if (fs.existsSync(path.join(process.cwd(), "src/trust-lists/admin.ts"))) {
   assertContains("src/trust-lists/admin.ts", "listTrustListCertificateProjections");
   assertContains("src/trust-lists/admin.ts", "projectionCounts");
   assertContains("src/trust-lists/admin.ts", "findTrustListCertificateProvenance");
-  assertContains("src/app/admin/trust-lists/page.tsx", "skippedUnchanged");
+  assertContains("src/app/admin/trust-lists/trust-list-diagnostics-panel.tsx", "skippedUnchanged");
   assertContains("src/app/admin/certificates/[certificateId]/page.tsx", "trustListProvenance");
   assertContains("src/i18n/index.ts", "trustListProvenance");
 }
