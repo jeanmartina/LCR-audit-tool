@@ -9,7 +9,7 @@
 
 This phase adds a review-before-save import flow with server-side revalidation and preserved provenance.
 
-The review step is part of the import flow, but it must also be runnable separately as its own review surface. The same review experience must apply to every import path in the product, including single-certificate import, ZIP import, and any trust-list-derived import flow that lands in the certificate pipeline.
+The review step is part of the import flow, but it can also be run separately. The same review experience must apply to every import path in the product, including single-certificate import, ZIP import, and any trust-list-derived import flow that enters the certificate pipeline.
 
 </domain>
 
@@ -19,7 +19,7 @@ The review step is part of the import flow, but it must also be runnable separat
 ### Review Placement
 - The review step is part of the import flow.
 - The review step can also be run separately.
-- The review-before-save behavior is the default for this phase.
+- Review-before-save is the default behavior for this phase.
 
 ### Review Scope
 - The same review experience must apply to all import types.
