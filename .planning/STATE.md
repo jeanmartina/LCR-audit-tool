@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Interface Clarity and UX Modernization
-status: verifying
-stopped_at: Completed 29-02-PLAN.md
-last_updated: "2026-05-10T12:51:10.756Z"
-last_activity: 2026-05-10
+status: executing
+stopped_at: Phase 30 context gathered
+last_updated: "2026-05-10T13:25:00.000Z"
+last_activity: 2026-05-10 -- Phase 30 context gathered
 progress:
   total_phases: 8
   completed_phases: 2
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-09)
 
 **Core value:** Never allow a trusted certificate to operate without valid revocation coverage. The interface should also make the running build, operational state, and major user flows easy to understand.
-**Current focus:** Phase 29 — Trust Lists and Diagnostics
+**Current focus:** Prepare phase 30 planning for import review and safety from finalized requirements.
 
 ## Current Position
 
 Milestone: v1.4 Interface Clarity and UX Modernization
-Phase: 29 (Trust Lists and Diagnostics) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
-Last activity: 2026-05-10
+Phase: 30 (Import Review and Safety) — PLANNING
+Plan: Pending
+Status: Phase 30 context gathered
+Last activity: 2026-05-10 -- Phase 30 context gathered
 
 Progress: [█---------] 12%
 
@@ -90,6 +90,7 @@ Progress: [█---------] 12%
 - [Phase 29]: Kept the list page as a wizard plus compact diagnostics inventory, with open details as the primary card action.
 - [Phase 29]: Rendered failure layers from existing summary data instead of adding new backend fetch paths or mutating diagnostics state.
 - [Phase 29]: Moved validator anchors from the old all-in-one page into the shared diagnostics panel so the checks match the new component boundary.
+- [Phase 30]: Review-before-save applies to single, ZIP, and trust-list-derived imports, can also be invoked separately, and the review screen shows only the final value while history stays in details.
 
 ### Roadmap Evolution
 
@@ -107,7 +108,7 @@ Progress: [█---------] 12%
 
 - Rotate the Google client secret used during the proof because it was exposed during testing
 - Decide how to handle the multiple-lockfile Next.js workspace warning: either set `turbopack.root` or remove the extra root lockfile if it is no longer needed
-- Start phase 29 planning with the user before implementation
+- Start phase 30 planning with the user before implementation
 
 ### Blockers/Concerns
 
@@ -115,6 +116,6 @@ Progress: [█---------] 12%
 
 ## Session Continuity
 
-Last session: 2026-05-10T12:51:10.753Z
-Stopped at: Completed 29-02-PLAN.md
+Last session: 2026-05-10T13:25:00.000Z
+Stopped at: Phase 30 context gathered
 Resume file: None
