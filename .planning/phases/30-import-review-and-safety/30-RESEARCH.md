@@ -1,31 +1,38 @@
 # Phase 30: Import Review and Safety - Research
 
 **Researched:** 2026-05-12  
-**Domain:** Next.js import review flows, certificate import persistence, and provenance-preserving revalidation  
+**Domain:** Next.js review-before-save import flows, certificate provenance, and server-side revalidation  
 **Confidence:** HIGH
 
 <user_constraints>
 ## User Constraints (from CONTEXT.md)
 
 ### Locked Decisions
-- Review-before-save is part of the import flow.
-- Review-before-save is the default behavior for this phase.
-- The same review experience must apply to all import types.
-- This includes single certificate import, ZIP batch import, and trust-list-derived import paths that enter the certificate pipeline.
-- The review screen should show only the final value the user is about to save.
-- The review screen should not expose the full correction history inline.
-- Historical provenance and correction details belong in the detail view or record history after save.
+#### Review Scope
+- Operators may edit all reviewable fields before final save, including technical fields and administrative metadata.
+
+#### Divergence Handling
+- If an operator-edited value diverges from the derived/original value, final save is blocked until the operator provides a mandatory justification.
+
+#### Final Save Revalidation
+- Final save is blocked if server-side revalidation finds new errors; the flow must return to review with highlighted errors.
+
+#### Non-accepted Outcomes
+- Items marked duplicate/rejected/ignored are not persisted as active certificates.
+- These outcomes must be recorded in provenance/audit history with decision and reason.
+
+#### Origin Policy Consistency
+- The same review-and-save policy applies across single import, ZIP import, and trust-list-derived candidates.
 
 ### Claude's Discretion
 - Exact route structure for the review surface versus the main import submission surface.
-- Whether the separate review mode is a dedicated page, a toggle, or a reusable panel.
+- Whether the review experience is a dedicated page, a toggle, or a reusable panel.
 - The detailed presentation of the history view that sits behind the review surface.
 - The precise mechanics for mapping the review UI across single, ZIP, and trust-list-derived import paths.
 
 ### Deferred Ideas (OUT OF SCOPE)
-- Exact implementation shape for the separate review invocation.
-- Detailed provenance/history UI beyond the final-value review screen.
-- Any future AI-assisted normalization or explanation layer, which is out of scope for this phase.
+- Advanced policy exceptions per origin (manual vs trust-list) are out of scope; policy is unified in this phase.
+- Any role-based secondary approval workflow for edits is out of scope for this phase.
 </user_constraints>
 
 <phase_requirements>
@@ -38,7 +45,7 @@
 
 ## Summary
 
-The current codebase already separates preview from commit for single-certificate import, but the UI still posts directly to the commit route from the same form, ZIP import still commits immediately, and trust-list sync still auto-imports certificates into the pipeline [VERIFIED: src/app/admin/certificates/new/certificate-preview-form.tsx; src/app/api/admin/certificates/import/route.ts; src/app/api/admin/certificates/import-zip/route.ts; src/trust-lists/sync.ts]. The main planning gap is not validation logic; it is the absence of a shared review snapshot that can survive the round-trip from preview to final save without trusting client state [VERIFIED: src/app/admin/certificates/new/certificate-preview-form.tsx; src/app/admin/certificates/batch/page.tsx; src/trust-lists/admin.ts].
+The current codebase already separates preview from commit for single-certificate import, but the UI still posts directly to the commit route from the same form, ZIP import still commits immediately, and trust-list sync still auto-imports certificates into the pipeline [VERIFIED: src/app/admin/certificates/new/certificate-preview-form.tsx; src/app/api/admin/certificates/import/route.ts; src/app/api/admin/certificates/import-zip/route.ts; src/trust-lists/sync.ts]. The main planning gap is not parsing or normalization; it is a durable review contract that can survive the preview-to-commit round trip without trusting browser state [VERIFIED: src/app/admin/certificates/new/certificate-preview-form.tsx; src/app/admin/certificates/batch/page.tsx; src/trust-lists/admin.ts].
 
 The strongest implementation direction is to make review a shared server-canonical contract across all import sources, then use thin UI adapters for single, ZIP, and trust-list-derived candidates [ASSUMED]. The server should re-parse and revalidate the raw inputs at commit time, compare them with the staged review payload, and reject stale or tampered reviews before any mutation happens [ASSUMED]. Provenance already has the right downstream landing zones: certificate detail pages render change history, trust-list provenance, and group/default state after save, so the review screen can stay focused on the final chosen value [VERIFIED: src/app/admin/certificates/[certificateId]/page.tsx; src/storage/runtime-store.ts].
 
@@ -50,30 +57,30 @@ The strongest implementation direction is to make review a shared server-canonic
 
 | Library | Version | Purpose | Why Standard |
 |---------|---------|---------|--------------|
-| Next.js | `^16.2.2` [VERIFIED: package.json] | App Router pages and route handlers for import review and commit flows | The current UI and API surfaces already live in Next.js routes and server components [VERIFIED: src/app/admin/certificates/new/page.tsx; src/app/api/admin/certificates/import/route.ts]. |
-| React | `^19.2.4` [VERIFIED: package.json] | Client-side review interactions and state transitions | The current import forms are React client components and the review UI can stay in that model [VERIFIED: src/app/admin/certificates/new/certificate-preview-form.tsx; src/app/admin/trust-lists/trust-list-source-wizard.tsx]. |
-| TypeScript | `^6.0.2` [VERIFIED: package.json] | Shared DTOs for review snapshots, commit payloads, and provenance records | The repo already uses typed helper objects and record interfaces for import and provenance data [VERIFIED: src/inventory/certificate-admin.ts; src/storage/runtime-store.ts]. |
-| pg | `^8.20.0` [VERIFIED: package.json] | Runtime persistence for import runs, items, change events, and trust-list projections | The runtime store already persists import runs, import items, change events, and provenance records through the database path [VERIFIED: src/storage/runtime-store.ts]. |
+| Next.js | `^16.2.2` [VERIFIED: package.json] | App Router pages and route handlers for review and commit flows | The current import surfaces already live in Next.js server components and route handlers [VERIFIED: src/app/admin/certificates/new/page.tsx; src/app/api/admin/certificates/import/route.ts]. |
+| React | `^19.2.4` [VERIFIED: package.json] | Client-side review interactions and state transitions | The current review and preview forms are React client components [VERIFIED: src/app/admin/certificates/new/certificate-preview-form.tsx; src/app/admin/trust-lists/trust-list-source-wizard.tsx]. |
+| TypeScript | `^6.0.2` [VERIFIED: package.json] | Shared DTOs for review snapshots, commit payloads, and provenance records | The repo already models import and provenance data as typed record interfaces [VERIFIED: src/inventory/certificate-admin.ts; src/storage/runtime-store.ts]. |
+| pg | `^8.20.0` [VERIFIED: package.json] | Runtime persistence for import runs, items, change events, and trust-list projections | The runtime store already persists review-adjacent data through the database path [VERIFIED: src/storage/runtime-store.ts]. |
 
 ### Supporting
 
 | Library | Version | Purpose | When to Use |
-|---------|---------|---------|--------------|
+|---------|---------|---------|-------------|
 | fflate | `^0.8.2` [VERIFIED: package.json] | ZIP archive extraction for batch import | Use for ZIP candidate review and final ZIP import revalidation [VERIFIED: src/inventory/certificate-admin.ts]. |
 | xml-crypto | `^6.1.2` [VERIFIED: package.json] | XML signature validation for trust-list preview/sync | Use for trust-list-derived candidate review when the pipeline needs to prove signature validity before save [VERIFIED: src/trust-lists/sync.ts]. |
 | @xmldom/xmldom | `^0.9.10` [VERIFIED: package.json] | XML parsing support | Use alongside XMLDSig verification in the trust-list path [VERIFIED: src/trust-lists/sync.ts]. |
-| @peculiar/x509 | `^2.0.0` [VERIFIED: package.json] | X.509 inspection utilities | Keep for certificate parsing and fingerprint-adjacent certificate handling already used in the repo [VERIFIED: package.json]. |
+| @peculiar/x509 | `^2.0.0` [VERIFIED: package.json] | X.509 inspection utilities | Keep for certificate parsing and X.509 handling already present in the repo [VERIFIED: package.json]. |
 | pkijs | `^3.4.0` [VERIFIED: package.json] | ASN.1 / PKI helpers | Keep for certificate and trust-list cryptographic parsing paths already present in the dependency graph [VERIFIED: package.json]. |
 
 ### Alternatives Considered
 
 | Instead of | Could Use | Tradeoff |
 |------------|-----------|----------|
-| Shared review snapshot/token contract | Client-only preview state | Simpler UI, but it cannot safely survive the preview-to-commit round trip for file uploads or trust-list candidates [ASSUMED]. |
-| Server-canonical final revalidation | Trusting preview output during commit | Lower implementation cost, but it reintroduces stale/tampered review risk and makes review screens authoritative when they should not be [ASSUMED]. |
-| One review adapter per import path | A single normalized review model | Per-path logic is easier to start, but it will drift and make provenance/correction behavior inconsistent across single, ZIP, and trust-list flows [ASSUMED]. |
+| Shared review snapshot/token contract | Client-only review state | Simpler UI, but it cannot safely survive file uploads or trust-list candidates without trusting browser state [ASSUMED]. |
+| Server-canonical final revalidation | Trusting preview output during commit | Lower implementation cost, but it reintroduces stale/tampered review risk [ASSUMED]. |
+| One review adapter per import path | A single normalized review model | Per-path logic is easier to start, but it will drift and make provenance/correction behavior inconsistent [ASSUMED]. |
 
-**Installation:** the repo already declares the needed packages in `package.json`; no new third-party stack is required for phase 30 [VERIFIED: package.json].
+**Installation:** the repo already declares the needed packages in `package.json`; no new third-party stack is required for Phase 30 [VERIFIED: package.json].
 
 ## Architecture Patterns
 
@@ -92,8 +99,8 @@ src/
 ```
 
 ### Pattern 1: Server-canonical preview, server-canonical commit
-**What:** compute preview data on the server, then re-run the same normalization and permission checks at final commit time before mutating state [VERIFIED: src/app/api/admin/certificates/import/preview/route.ts; src/app/api/admin/certificates/import/route.ts; src/app/api/admin/certificates/import-zip/route.ts].  
-**When to use:** every import source that can change between the review click and final save, especially file uploads and trust-list candidates [ASSUMED].  
+**What:** compute preview data on the server, then re-run the same normalization, permission checks, and provenance binding at final commit time before mutating state [VERIFIED: src/app/api/admin/certificates/import/preview/route.ts; src/app/api/admin/certificates/import/route.ts; src/app/api/admin/certificates/import-zip/route.ts].  
+**When to use:** every import source that can change between the review click and final save, especially file uploads and trust-list candidates [VERIFIED: src/trust-lists/sync.ts; src/inventory/certificate-admin.ts].  
 **Example:**
 ```ts
 // Source: src/app/api/admin/certificates/import/preview/route.ts and src/app/api/admin/certificates/import/route.ts
@@ -104,7 +111,19 @@ const result = await importCertificate(principal, input, "single", file.name);
 const result = await importCertificate(actor, input, "trust-list", provenance);
 ```
 
-### Pattern 2: Provenance travels with the certificate, not with the review surface
+### Pattern 2: Shared review contract across import origins
+**What:** represent single, ZIP, and trust-list-derived candidates with one normalized review DTO so the same decisions, validation rules, and server-side recomputation apply everywhere [ASSUMED].  
+**When to use:** whenever an operator can edit values before save and the backend must later prove that the final write matches the staged review state [ASSUMED].  
+**Example:**
+```ts
+// Source: src/app/admin/certificates/new/certificate-preview-form.tsx
+const response = await fetch("/api/admin/certificates/import/preview", {
+  method: "POST",
+  body: new FormData(formRef.current),
+});
+```
+
+### Pattern 3: Provenance travels with the certificate, not with the review surface
 **What:** store provenance in the import pipeline and show it later in the detail/history view instead of crowding the review screen [VERIFIED: src/inventory/certificate-admin.ts; src/app/admin/certificates/[certificateId]/page.tsx].  
 **When to use:** any trust-list-derived import or corrected certificate record that needs an audit trail [VERIFIED: src/trust-lists/sync.ts; src/storage/runtime-store.ts].  
 **Example:**
@@ -123,7 +142,7 @@ await importCertificate(
 );
 ```
 
-### Pattern 3: Use change events for corrections and post-save history
+### Pattern 4: Use change events for corrections and post-save history
 **What:** persist corrections and operator actions as change events, then render them in the certificate detail page history [VERIFIED: src/storage/runtime-store.ts; src/inventory/certificate-admin.ts; src/app/admin/certificates/[certificateId]/page.tsx].  
 **When to use:** after save, when operators edit display names, tags, group membership, ignored URLs, or other correction data [VERIFIED: src/inventory/certificate-admin.ts].  
 **Example:**
@@ -144,7 +163,7 @@ await recordCertificateChangeEvent({
 ```
 
 ### Anti-Patterns to Avoid
-- **Directly trusting preview output during commit:** preview data is not a final authority; the commit route must reparse and revalidate the raw input [ASSUMED].
+- **Directly trusting preview output during commit:** preview data is not a final authority; the commit route must reparse and revalidate the raw input [VERIFIED: src/app/api/admin/certificates/import/preview/route.ts; src/app/api/admin/certificates/import/route.ts].
 - **Splitting single, ZIP, and trust-list review logic into unrelated implementations:** the repo already has shared import helpers and provenance fields, so duplicating logic will create drift [VERIFIED: src/inventory/certificate-admin.ts; src/trust-lists/sync.ts].
 - **Showing correction history inline on the review screen:** the phase decision explicitly keeps history in the detail view or record history after save [VERIFIED: .planning/phases/30-import-review-and-safety/30-CONTEXT.md].
 
@@ -152,30 +171,20 @@ await recordCertificateChangeEvent({
 
 | Problem | Don't Build | Use Instead | Why |
 |---------|-------------|-------------|-----|
-| PEM/DER normalization and fingerprint extraction | Ad-hoc certificate parsing in the UI | `normalizeCertificatePem()` and `extractCertificateFingerprint()` [VERIFIED: src/inventory/certificate-admin.ts] | The repo already normalizes both PEM and DER input and computes the import fingerprint centrally. |
-| ZIP archive extraction and limit checks | Custom zip parsing | `fflate` via `extractCertificateFilesFromZip()` [VERIFIED: src/inventory/certificate-admin.ts; package.json] | Existing code already enforces archive size, per-file size, file-count, and uncompressed limits. |
-| Same-origin request protection | Frontend-only anti-CSRF assumptions | `rejectCrossOriginRequest()` on every POST route [VERIFIED: src/auth/request-security.ts] | Import commit routes already rely on server-side same-origin enforcement. |
-| Group-level authorization | UI gating only | `assertAuthenticated()` plus `canManageGroup()` / trust-list operator checks [VERIFIED: src/app/api/admin/certificates/import/route.ts; src/inventory/certificate-admin.ts; src/trust-lists/admin.ts] | Review and final commit must remain backend-authoritative. |
-| Provenance/audit history | Inline ad-hoc history blobs | `recordCertificateChangeEvent()` and the certificate detail history view [VERIFIED: src/storage/runtime-store.ts; src/app/admin/certificates/[certificateId]/page.tsx] | Existing history plumbing already exists and should absorb corrections. |
-| Trust-list candidate deduplication | New per-path dedupe logic | `candidateKey` + `candidateDigest` + `findLatestTrustListProjection()` [VERIFIED: src/trust-lists/sync.ts; src/storage/runtime-store.ts] | Trust-list change detection already depends on these fields. |
+| PEM/DER normalization and fingerprint extraction | Ad-hoc certificate parsing in the UI | `normalizeCertificatePem()` and `extractCertificateFingerprint()` | The repo already normalizes both PEM and DER input and computes the import fingerprint centrally [VERIFIED: src/inventory/certificate-admin.ts]. |
+| ZIP archive extraction and limit checks | Custom zip parsing | `fflate` via `extractCertificateFilesFromZip()` | Existing code already enforces archive size, per-file size, file-count, and uncompressed limits [VERIFIED: src/inventory/certificate-admin.ts]. |
+| Same-origin request protection | Frontend-only anti-CSRF assumptions | `rejectCrossOriginRequest()` on every POST route | Import commit routes already rely on server-side same-origin enforcement [VERIFIED: src/app/api/admin/certificates/import/route.ts; src/app/api/admin/certificates/import-zip/route.ts; src/app/api/admin/trust-lists/[sourceId]/sync/route.ts]. |
+| Group-level authorization | UI gating only | `assertAuthenticated()` plus `canManageGroup()` / trust-list operator checks | Review and final commit must remain backend-authoritative [VERIFIED: src/app/api/admin/certificates/import/route.ts; src/inventory/certificate-admin.ts; src/trust-lists/admin.ts]. |
+| Provenance/audit history | Inline ad-hoc history blobs | `recordCertificateChangeEvent()` and the certificate detail history view | Existing history plumbing already exists and should absorb corrections [VERIFIED: src/storage/runtime-store.ts; src/app/admin/certificates/[certificateId]/page.tsx]. |
+| Trust-list candidate deduplication | New per-path dedupe logic | `candidateKey` + `candidateDigest` + `findLatestTrustListProjection()` | Trust-list change detection already depends on these fields [VERIFIED: src/trust-lists/sync.ts; src/storage/runtime-store.ts]. |
 
 **Key insight:** file upload review, ZIP review, and trust-list review all need one canonical server model; the repo already contains the normalization and provenance hooks, so the main job is to connect them with a review staging step rather than invent new parsing logic [ASSUMED].
-
-## Runtime State Inventory
-
-| Category | Items Found | Action Required |
-|----------|-------------|------------------|
-| Stored data | Certificate import runs, import items, certificate change events, trust-list snapshots, trust-list sync runs, extracted certificates, and trust-list projections all live in runtime storage [VERIFIED: src/storage/runtime-store.ts]. | Preserve the existing records and add new review-stage records or tokens if the implementation needs a durable preview-to-commit handoff [ASSUMED]. |
-| Live service config | No external live-service config for import review was found in the repository; the import flows are app-local [VERIFIED: src/app/api/admin/certificates/import/route.ts; src/app/api/admin/trust-lists/preview/route.ts]. | None [VERIFIED]. |
-| OS-registered state | No OS-registered state for import review was found in the repository [VERIFIED: repo search of src/ and .planning/ paths]. | None [VERIFIED]. |
-| Secrets/env vars | No review-specific secret or env-var names were found for phase 30; current env vars are general import-size and trust-list fetch limits [VERIFIED: src/inventory/certificate-admin.ts; src/trust-lists/sync.ts]. | None for review flow naming; preserve existing env-var names for unrelated limits [VERIFIED]. |
-| Build artifacts | No installed artifact or generated review bundle was found in the repository tree [VERIFIED: repo search of src/ and .planning/ paths]. | None [VERIFIED]. |
 
 ## Common Pitfalls
 
 ### Pitfall 1: Preview/commit drift
-**What goes wrong:** the UI shows one thing, but the final server commit uses different parsed data or different authorization logic [ASSUMED].  
-**Why it happens:** preview and commit are already separate routes, and the current single-import form still exposes both actions in one client component [VERIFIED: src/app/admin/certificates/new/certificate-preview-form.tsx; src/app/api/admin/certificates/import/preview/route.ts; src/app/api/admin/certificates/import/route.ts].  
+**What goes wrong:** the UI shows one thing, but the final server commit uses different parsed data or different authorization logic [VERIFIED: src/app/admin/certificates/new/certificate-preview-form.tsx; src/app/api/admin/certificates/import/preview/route.ts; src/app/api/admin/certificates/import/route.ts].  
+**Why it happens:** preview and commit are already separate routes, and the current single-import form still exposes both actions in one client component [VERIFIED: src/app/admin/certificates/new/certificate-preview-form.tsx].  
 **How to avoid:** make the commit route re-run normalization, group authorization, and provenance binding from the raw staged input before any write [ASSUMED].  
 **Warning signs:** preview payloads are stored as the source of truth or commit code starts trusting client-supplied derived values [ASSUMED].
 
@@ -186,7 +195,7 @@ await recordCertificateChangeEvent({
 **Warning signs:** review-specific corrections disappear once the operator clicks save, or the detail page cannot explain why the final value differs from the imported candidate [ASSUMED].
 
 ### Pitfall 3: Treating trust-list sync as a special case
-**What goes wrong:** the trust-list path keeps auto-importing candidates while single and ZIP move to review, creating inconsistent operator expectations [ASSUMED].  
+**What goes wrong:** the trust-list path keeps auto-importing candidates while single and ZIP move to review, creating inconsistent operator expectations [VERIFIED: src/trust-lists/sync.ts].  
 **Why it happens:** trust-list sync currently calls `importCertificate()` directly with provenance fields, so it already behaves like a backend import pipeline rather than a review pipeline [VERIFIED: src/trust-lists/sync.ts].  
 **How to avoid:** route trust-list-derived candidates through the same review DTO and final commit contract as other import sources [ASSUMED].  
 **Warning signs:** the review screen is only implemented for manual uploads and not for trust-list-derived candidates [ASSUMED].
@@ -249,7 +258,7 @@ const result = await importCertificate(
   <ul>
     {detail.changeHistory.map((event) => (
       <li key={event.id}>
-        {event.occurredAt.toISOString()} — {event.eventType} — actor {event.actorUserId ?? "system"} — {JSON.stringify(event.details)}
+        {event.occurredAt.toISOString()} - {event.eventType} - actor {event.actorUserId ?? "system"} - {JSON.stringify(event.details)}
       </li>
     ))}
   </ul>
@@ -270,21 +279,27 @@ const result = await importCertificate(
 
 ## Assumptions Log
 
-> List all claims tagged `[ASSUMED]` in this research. The planner and discuss-phase use this section to identify decisions that need user confirmation before execution.
+> List all claims tagged `[ASSUMED]` in this research. The planner and discuss-phase use this
+> section to identify decisions that need user confirmation before execution.
 
 | # | Claim | Section | Risk if Wrong |
 |---|-------|---------|---------------|
-| A1 | A shared review snapshot/token layer is the best implementation shape for all three import sources. | Summary, Architecture Patterns, State of the Art | The planner could over-invest in staging storage if the team prefers a simpler page-level review only. |
-| A2 | The commit route should reject stale or tampered review payloads by re-running normalization and validation on the server. | Summary, Common Pitfalls | If the team wants a softer approach, this may need to be downgraded to warnings rather than hard rejection. |
-| A3 | A new review-stage persistence mechanism may be needed to preserve uploaded bytes or staged candidate state between review and final save. | Runtime State Inventory, Common Pitfalls | If the repo can reuse another existing storage primitive, the planner should not create a new table or token store. |
-| A4 | Trust-list-derived candidates should use the same review DTO and commit contract as manual imports. | Common Pitfalls, State of the Art | If trust-list review is meant to stay automated, the planner will need a different operator-confirmation boundary. |
-| A5 | The exact route shape for review pages should be added as a concrete implementation decision during planning. | Summary, Architecture Patterns | A different route layout could shift task decomposition and test coverage. |
+| A1 | A shared server-stored review contract or token, backed by one normalized review DTO, is the right implementation shape for all import origins. | Summary, Architecture Patterns, Alternatives Considered, State of the Art | The planner could over-invest in staging storage or under-invest in replay protection if the final contract differs. |
+| A2 | Final commit should re-run normalization, authorization, and provenance binding on the server and reject stale or tampered staged review data. | Summary, Common Pitfalls, Security Domain | If the team wants soft validation, this may need to become warning-only instead of a hard rejection. |
+| A3 | The review screen should stay focused on the final chosen value and keep correction history in post-save detail/history. | Summary, Architecture Patterns, Common Pitfalls | If the team wants inline history, the review screen layout and read model both change. |
+| A4 | Trust-list-derived candidates should use the same review DTO and commit contract as manual imports, and may need per-candidate review granularity. | Summary, Common Pitfalls, Open Questions, State of the Art | If trust-list review stays automated, the planner needs a different operator-confirmation boundary. |
+| A5 | A dedicated review-stage storage primitive may be needed if no existing runtime record can safely survive file uploads and trust-list edits. | Open Questions, Summary | If a lighter token reuse works, the planner should not create a new table or token store. |
+| A6 | The exact review route shape, including whether `/admin/certificates/import-runs/[runId]` is reused, should be decided during planning. | Open Questions, Claude's Discretion | Route wiring and validation scope could shift. |
+| A7 | Phase 30 will need new validation coverage for tamper/replay rejection, divergence justification, and shared fixtures. | Validation Architecture | If existing scripts are enough, the planner can skip new validator work. |
+| A8 | The phase gate remains the full quality suite plus `/gsd-verify-work`. | Validation Architecture | If the project workflow changes, the gate command changes. |
+| A9 | Review payload tampering and replay are the main new threats; server-side recomputation is the mitigation. | Security Domain | If threat modeling identifies a different attack, the security task list changes. |
+| A10 | The confidence note that pitfalls are inferred from current code shape is itself an assumption about evidence quality. | Metadata | If more explicit docs are found, the pitfall confidence can rise. |
 
 ## Open Questions
 
 1. **Where should the staged review payload live?**
    - What we know: there is no existing draft/review-token store in the repo, and the current model only persists runs, items, and change events after import [VERIFIED: src/storage/runtime-store.ts; src/inventory/certificate-admin.ts].
-   - What's unclear: whether phase 30 should use a dedicated database table, a short-lived signed token, or another existing runtime primitive.
+   - What's unclear: whether Phase 30 should use a dedicated database table, a short-lived signed token, or another existing runtime primitive.
    - Recommendation: choose the smallest server-stored mechanism that can survive file uploads and trust-list candidate edits without depending on client replay [ASSUMED].
 
 2. **Should trust-list review happen per candidate or per sync batch?**
@@ -297,22 +312,43 @@ const result = await importCertificate(
    - What's unclear: whether review-time corrections should become a dedicated event type or be folded into the existing import/update event payload.
    - Recommendation: keep the detail view simple and store enough metadata in the event `details` object to reconstruct the correction path later [ASSUMED].
 
+4. **Should the review handoff reuse an existing import result page?**
+   - What we know: the repo already has `/admin/certificates/import-runs/[runId]`, but it is a post-save summary view [VERIFIED: src/app/admin/certificates/import-runs/[runId]/page.tsx].
+   - What's unclear: whether Phase 30 should extend that route, add a sibling review route, or use a reusable review panel embedded in each import page.
+   - Recommendation: decide this during planning because it changes both route wiring and validation scope [ASSUMED].
+
+## Environment Availability
+
+> Local runtime checks on 2026-05-12 showed Node, npm, and PostgreSQL availability [VERIFIED: local env check].
+
+| Dependency | Required By | Available | Version | Fallback |
+|------------|-------------|-----------|---------|----------|
+| Node.js | validation scripts and Next.js build/runtime | ✓ | `v22.22.2` [VERIFIED: local env check] | — |
+| npm | package scripts and repo validation entrypoints | ✓ | `11.12.1` [VERIFIED: local env check] | — |
+| PostgreSQL client/server | database-backed runtime store and persistence verification | ✓ | `16.13` via `pg_isready` [VERIFIED: local env check] | In-memory cache paths exist, but provenance and review persistence need DB-backed verification [VERIFIED: src/storage/runtime-store.ts]. |
+
+**Missing dependencies with no fallback:**
+- None verified in this session.
+
+**Missing dependencies with fallback:**
+- None verified in this session.
+
 ## Validation Architecture
 
 ### Test Framework
 
 | Property | Value |
 |----------|-------|
-| Framework | None detected; the repo currently uses script-based validation only [VERIFIED: package.json; rg --files]. |
-| Config file | none — no `jest.config.*`, `vitest.config.*`, `pytest.ini`, or similar test runner config was found [VERIFIED: rg --files]. |
+| Framework | None detected; the repo currently uses script-based validation only [VERIFIED: package.json; scripts/validate-all.js]. |
+| Config file | none - no `jest.config.*`, `vitest.config.*`, `pytest.ini`, or similar runner config was found [VERIFIED: rg --files]. |
 | Quick run command | `npm run typecheck` [VERIFIED: package.json] |
 | Full suite command | `npm run quality` [VERIFIED: package.json] |
 
-### Phase Requirements → Test Map
+### Phase Requirements -> Test Map
 
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
-| UI-04 | Review-before-save on single import, ZIP import, and trust-list-derived candidates; server-side final revalidation; provenance preserved across corrections | integration + storage unit + route smoke | `npm run quality` after adding targeted phase tests [VERIFIED: package.json] | ❌ Wave 0 [VERIFIED: rg --files] |
+| UI-04 | Review-before-save on single import, ZIP import, and trust-list-derived candidates; server-side final revalidation; provenance preserved across corrections | integration + storage unit + route smoke | `npm run quality` after adding a phase-specific Node validator patterned after `scripts/validate-onboarding-admin.js` [VERIFIED: scripts/validate-onboarding-admin.js; scripts/validate-all.js] | ❌ Wave 0 [VERIFIED: rg --files] |
 
 ### Sampling Rate
 - **Per task commit:** `npm run typecheck` [VERIFIED: package.json]
@@ -320,10 +356,10 @@ const result = await importCertificate(
 - **Phase gate:** full suite green before `/gsd-verify-work` [ASSUMED]
 
 ### Wave 0 Gaps
-- [ ] No dedicated test runner config was found [VERIFIED: rg --files].
-- [ ] No phase-specific review/commit test files were found [VERIFIED: rg --files].
-- [ ] No shared test fixtures for import review or provenance preservation were found [VERIFIED: rg --files].
-- [ ] Add targeted tests for single import review, ZIP import review, trust-list-derived candidate review, and replay/tamper rejection [ASSUMED].
+- [ ] No phase-specific import review validator exists yet [VERIFIED: rg --files].
+- [ ] No review draft/token persistence tests exist yet [VERIFIED: rg --files].
+- [ ] No route smoke coverage exists yet for tamper/replay rejection or divergence justification paths [ASSUMED].
+- [ ] No shared fixture layer exists yet for staged review payloads and provenance assertions [ASSUMED].
 
 ## Security Domain
 
@@ -331,7 +367,7 @@ const result = await importCertificate(
 
 | ASVS Category | Applies | Standard Control |
 |---------------|---------|------------------|
-| V2 Authentication | yes [VERIFIED: src/app/api/admin/certificates/import/route.ts; src/app/api/admin/trust-lists/preview/route.ts] | `assertAuthenticated()` on every review and commit route [VERIFIED: src/app/api/admin/certificates/import/route.ts]. |
+| V2 Authentication | yes [VERIFIED: src/app/api/admin/certificates/import/route.ts; src/app/api/admin/trust-lists/[sourceId]/sync/route.ts] | `assertAuthenticated()` on every review and commit route [VERIFIED: src/app/api/admin/certificates/import/route.ts]. |
 | V3 Session Management | yes [VERIFIED: src/auth/authorization.ts; src/auth/session.ts] | Existing session-cookie auth and authorization guards [VERIFIED: src/auth/session.ts; src/auth/authorization.ts]. |
 | V4 Access Control | yes [VERIFIED: src/inventory/certificate-admin.ts; src/trust-lists/admin.ts] | `canManageGroup()` plus trust-list operator/group scoping [VERIFIED: src/inventory/certificate-admin.ts; src/trust-lists/admin.ts]. |
 | V5 Input Validation | yes [VERIFIED: src/app/api/admin/certificates/import/preview/route.ts; src/app/api/admin/certificates/import/route.ts; src/app/api/admin/certificates/import-zip/route.ts] | Server-side parsing, size checks, and helper normalization before mutation [VERIFIED: src/app/api/admin/certificates/import/preview/route.ts; src/inventory/certificate-admin.ts]. |
@@ -342,7 +378,7 @@ const result = await importCertificate(
 | Pattern | STRIDE | Standard Mitigation |
 |---------|--------|---------------------|
 | Tampered review payload or replayed stale review token | Tampering | Recompute normalization and validation on the server at commit time, and reject mismatches [ASSUMED]. |
-| Cross-site POST to review/commit routes | Spoofing | Preserve `rejectCrossOriginRequest()` on every mutating route [VERIFIED: src/auth/request-security.ts]. |
+| Cross-site POST to review/commit routes | Spoofing | Preserve `rejectCrossOriginRequest()` on every mutating route [VERIFIED: src/app/api/admin/certificates/import/route.ts; src/app/api/admin/certificates/import-zip/route.ts; src/app/api/admin/trust-lists/[sourceId]/sync/route.ts]. |
 | Oversized certificate archive or per-file bomb | Denial of Service | Keep size, file-count, and uncompressed-byte limits in the server import helper [VERIFIED: src/inventory/certificate-admin.ts]. |
 | Private-network trust-list fetch target or redirect chain | Information Disclosure / SSRF | Keep the trust-list public-fetch checks and redirect validation in the sync path [VERIFIED: src/trust-lists/sync.ts]. |
 | Lost provenance after correction | Repudiation | Persist correction events and show provenance in the post-save detail/history view [VERIFIED: src/storage/runtime-store.ts; src/app/admin/certificates/[certificateId]/page.tsx]. |
@@ -362,9 +398,13 @@ const result = await importCertificate(
 - `src/app/admin/trust-lists/page.tsx` - trust-list wizard and admin surface [VERIFIED].
 - `src/app/admin/trust-lists/trust-list-source-wizard.tsx` - current trust-list preview-and-save flow [VERIFIED].
 - `src/app/admin/certificates/[certificateId]/page.tsx` - post-save provenance and history surface [VERIFIED].
+- `src/app/admin/certificates/import-runs/[runId]/page.tsx` - import run result view [VERIFIED].
 - `src/storage/runtime-store.ts` - run, item, event, and projection record schemas and persistence helpers [VERIFIED].
 - `src/auth/request-security.ts` - same-origin enforcement for mutating requests [VERIFIED].
 - `package.json` - declared dependency and script versions [VERIFIED].
+- `scripts/validate-all.js` - current validation entrypoint [VERIFIED].
+- `scripts/validate-onboarding-admin.js` - existing Node validation pattern to mirror for Phase 30 [VERIFIED].
+- `scripts/validate-ui-guidance.js` - existing Node validation pattern to mirror for Phase 30 [VERIFIED].
 - `.planning/phases/30-import-review-and-safety/30-CONTEXT.md` - locked phase decisions and out-of-scope items [VERIFIED].
 - `.planning/REQUIREMENTS.md` - UI-04 requirement text [VERIFIED].
 - `.planning/STATE.md` - current milestone context and phase position [VERIFIED].
