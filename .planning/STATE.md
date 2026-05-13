@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: Interface Clarity and UX Modernization
 status: executing
-stopped_at: Completed 30-01-PLAN.md
-last_updated: "2026-05-13T14:46:24.222Z"
+stopped_at: Completed 30-02-PLAN.md
+last_updated: "2026-05-13T14:59:08.097Z"
 last_activity: 2026-05-13
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 10
-  completed_plans: 4
-  percent: 40
+  completed_plans: 5
+  percent: 50
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-05-09)
 
 Milestone: v1.4 Interface Clarity and UX Modernization
 Phase: 30 (import-review-and-safety) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-05-13
 
@@ -58,6 +58,7 @@ Progress: [█---------] 12%
 | Phase 29-trust-lists-and-diagnostics P01 | 40 | 1 tasks | 5 files |
 | Phase 29 P02 | 9min | 1 tasks | 7 files |
 | Phase 30 P01 | 15min | 1 tasks | 9 files |
+| Phase 30 P02 | 62min | 1 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,8 @@ Progress: [█---------] 12%
 - [Phase 30]: Review-before-save applies to single, ZIP, and trust-list-derived imports, can also be invoked separately, and the review screen shows only the final value while history stays in details.
 - [Phase 30]: Final save validates canonical review submissions against server recomputation before mutation.
 - [Phase 30]: Non-accepted review decisions are persisted as review outcomes without activating certificates.
+- [Phase 30]: Single import review stays embedded while ZIP review uses a dedicated route with shared save validation.
+- [Phase 30]: ZIP review-save returns first actionable revalidation index so operators resume on the failing candidate.
 
 ### Roadmap Evolution
 
@@ -119,6 +122,6 @@ Progress: [█---------] 12%
 
 ## Session Continuity
 
-Last session: 2026-05-13T14:46:24.216Z
-Stopped at: Completed 30-01-PLAN.md
+Last session: 2026-05-13T14:59:08.091Z
+Stopped at: Completed 30-02-PLAN.md
 Resume file: None
