@@ -258,6 +258,20 @@ export async function previewTrustListXmlSource(url: string): Promise<TrustListS
     }
     const signature = validateTrustListXmlSignature(xml);
     const failureReason = signature.valid ? null : signature.reason ?? "xml-signature-invalid";
+    const candidates = parsed.certificates.flatMap((candidate) => {
+      try {
+        const fingerprint = extractCertificateFingerprint(candidate.pem);
+        return [{
+          ordinal: candidate.ordinal,
+          fingerprint,
+          subjectSummary: candidate.subjectSummary,
+          sourcePath: candidate.sourcePath || `ordinal:${candidate.ordinal}`,
+          reviewKey: `${candidate.ordinal}:${fingerprint}`,
+        }];
+      } catch {
+        return [];
+      }
+    });
     return {
       ok: signature.valid,
       url: trimmedUrl,
@@ -271,6 +285,7 @@ export async function previewTrustListXmlSource(url: string): Promise<TrustListS
       validationStatus: signature.valid ? "valid" : "invalid",
       failureReason,
       recovery: getTrustListRecoveryGuidance(failureReason),
+      candidates,
     };
   } catch (error) {
     const failureReason = error instanceof Error ? error.message : "trust-list-preview-failed";
@@ -287,6 +302,7 @@ export async function previewTrustListXmlSource(url: string): Promise<TrustListS
       validationStatus: "invalid",
       failureReason,
       recovery: getTrustListRecoveryGuidance(failureReason),
+      candidates: [],
     };
   }
 }

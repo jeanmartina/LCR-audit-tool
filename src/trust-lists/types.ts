@@ -73,4 +73,11 @@ export interface TrustListSourcePreviewResult {
   validationStatus: "valid" | "invalid";
   failureReason: string | null;
   recovery: TrustListRecoveryGuidance | null;
+  candidates: Array<{
+    ordinal: number;
+    fingerprint: string;
+    subjectSummary: string | null;
+    sourcePath: string;
+    reviewKey: string;
+  }>;
 }
