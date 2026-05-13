@@ -4,16 +4,26 @@ import { validateCertificateReviewSubmission } from "../../../../../../inventory
 import { syncTrustListSourceNow } from "../../../../../../trust-lists/admin";
 import type { TrustListReviewPayload } from "../../../../../../trust-lists/sync";
 
-function parseReviewPayload(form: FormData): TrustListReviewPayload {
-  const raw = String(form.get("reviewPayload") ?? "").trim();
-  if (!raw) {
-    throw new Error("review-required:candidate-decisions");
-  }
-  const parsed = JSON.parse(raw) as TrustListReviewPayload;
+function validateReviewPayload(parsed: TrustListReviewPayload | null | undefined): TrustListReviewPayload {
   if (!parsed?.candidateDecisions || typeof parsed.candidateDecisions !== "object") {
     throw new Error("review-required:candidate-decisions");
   }
   return parsed;
+}
+
+async function parseReviewPayload(request: Request): Promise<TrustListReviewPayload> {
+  const contentType = request.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    const body = await request.json();
+    const direct = (body?.candidateDecisions ? body : body?.reviewPayload) as TrustListReviewPayload | undefined;
+    return validateReviewPayload(direct);
+  }
+  const form = await request.formData();
+  const raw = String(form.get("reviewPayload") ?? "").trim();
+  if (!raw) {
+    throw new Error("review-required:candidate-decisions");
+  }
+  return validateReviewPayload(JSON.parse(raw) as TrustListReviewPayload);
 }
 
 export async function POST(
@@ -26,8 +36,7 @@ export async function POST(
   const { sourceId } = await context.params;
   try {
     const principal = await assertAuthenticated();
-    const form = await request.formData();
-    const reviewPayload = parseReviewPayload(form);
+    const reviewPayload = await parseReviewPayload(request);
     const result = await syncTrustListSourceNow(principal, sourceId, reviewPayload);
     if (request.headers.get("accept")?.includes("application/json")) {
       return Response.json({ result }, { status: result.status === "succeeded" ? 200 : 400 });

@@ -24,8 +24,8 @@ assertContains("src/app/api/admin/trust-lists/[sourceId]/sync/route.ts", "review
 assertContains("src/app/api/admin/trust-lists/[sourceId]/sync/route.ts", "candidate-decisions", "sync route must enforce per-candidate decisions");
 
 assertContains("src/app/admin/trust-lists/trust-list-source-wizard.tsx", "admin.trustLists.review", "trust-list review copy keys must be used");
-assertContains("src/app/admin/trust-lists/trust-list-source-wizard.tsx", "reviewDecision", "trust-list review UI must capture decisions");
-assertContains("src/app/admin/trust-lists/trust-list-source-wizard.tsx", "reviewJustification", "trust-list review UI must capture justification");
+assertContains("src/app/admin/trust-lists/trust-list-source-wizard.tsx", "candidateDecisions", "trust-list review UI must capture decisions");
+assertContains("src/app/admin/trust-lists/trust-list-source-wizard.tsx", "setCandidateReason", "trust-list review UI must capture justification");
 
 assertContains("src/app/admin/certificates/[certificateId]/page.tsx", "review:", "certificate detail must surface review history provenance");
 assertContains("src/i18n/index.ts", "admin.trustLists.review.title", "review copy keys must exist");
