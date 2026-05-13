@@ -98,7 +98,7 @@
 
 ### Import Review and Safety
 
-- [ ] **UI-04**: Import flows should use review-before-save, allow accept/edit/ignore/reject decisions, revalidate on the server, and preserve provenance across corrections.
+- [x] **UI-04**: Import flows should use review-before-save, allow accept/edit/ignore/reject decisions, revalidate on the server, and preserve provenance across corrections.
 
 ### Dashboard and Reporting
 
