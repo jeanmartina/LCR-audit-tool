@@ -13,6 +13,7 @@ import {
   createTrustListSyncRun,
   findLatestTrustListProjection,
   listEnabledTrustListSources,
+  recordCertificateReviewOutcome,
   recordTrustListCertificateProjection,
   recordTrustListExtractedCertificate,
   type TrustListCertificateProjectionRecord,
@@ -27,6 +28,21 @@ import type {
   TrustListSyncSummary,
 } from "./types";
 import { validateTrustListXmlSignature } from "./xmldsig";
+
+export type TrustListReviewDecision = "accept" | "edit" | "ignore" | "reject" | "duplicate" | "pending";
+export interface TrustListReviewCandidateSubmission {
+  decision: TrustListReviewDecision;
+  reason?: string;
+  editedInput?: {
+    displayName?: string;
+    tags?: string[];
+    ignoredUrls?: string[];
+    status?: "active" | "disabled";
+  };
+}
+export interface TrustListReviewPayload {
+  candidateDecisions: Record<string, TrustListReviewCandidateSubmission>;
+}
 
 const DEFAULT_FETCH_TIMEOUT_MS = 30000;
 const DEFAULT_MAX_XML_BYTES = 25 * 1024 * 1024;
@@ -275,7 +291,10 @@ export async function previewTrustListXmlSource(url: string): Promise<TrustListS
   }
 }
 
-export async function syncTrustListSource(source: TrustListSourceRecord): Promise<TrustListSyncSummary> {
+export async function syncTrustListSource(
+  source: TrustListSourceRecord,
+  reviewPayload?: TrustListReviewPayload,
+): Promise<TrustListSyncSummary> {
   const run = await createTrustListSyncRun({ sourceId: source.id });
   try {
     const xml = await fetchTrustListXml(source.url);
@@ -410,10 +429,64 @@ export async function syncTrustListSource(source: TrustListSourceRecord): Promis
           status: "active" as const,
           groupOverrides: [],
         };
+        const reviewKey = `${candidate.ordinal}:${fingerprint}`;
+        const review = reviewPayload?.candidateDecisions?.[reviewKey];
+        if (!review) {
+          throw new Error("review-required:candidate-decisions");
+        }
+        const decision = review.decision;
+        if (decision === "ignore" || decision === "reject" || decision === "duplicate" || decision === "pending") {
+          skippedCount += 1;
+          const extracted = await recordTrustListExtractedCertificate({
+            sourceId: source.id,
+            snapshotId: snapshot.id,
+            runId: run.id,
+            fingerprint,
+            subjectSummary: candidate.subjectSummary,
+            pem: candidate.pem,
+            importStatus: "skipped",
+            failureReason: `review:${decision}${review.reason ? `:${review.reason}` : ""}`,
+          });
+          await recordProjection({
+            source,
+            snapshotId: snapshot.id,
+            runId: run.id,
+            extracted,
+            fingerprint,
+            candidateKey,
+            candidateDigest,
+            sourcePath,
+            sequenceNumber: parsed.sequenceNumber,
+            territory: parsed.territory,
+            status: "skipped",
+            changeReason: "unchanged",
+            failureReason: `review:${decision}${review.reason ? `:${review.reason}` : ""}`,
+          });
+          await recordCertificateReviewOutcome({
+            runId: run.id,
+            filename: `${source.id}-${candidate.ordinal}.pem`,
+            fingerprint,
+            decision,
+            reason: review.reason ?? null,
+          });
+          continue;
+        }
+
+        const editedInput =
+          decision === "edit"
+            ? {
+                ...reviewInput,
+                displayName: review.editedInput?.displayName?.trim() || reviewInput.displayName,
+                tags: review.editedInput?.tags ?? reviewInput.tags,
+                ignoredUrls: review.editedInput?.ignoredUrls ?? reviewInput.ignoredUrls,
+                status: review.editedInput?.status ?? reviewInput.status,
+              }
+            : reviewInput;
         const validated = await validateCertificateReviewSubmission(actor, {
           snapshot: await createCertificateReviewSnapshot(actor, reviewInput, "trust-list"),
-          decision: "accept",
-          editedInput: reviewInput,
+          decision,
+          editedInput,
+          justification: review.reason,
         });
         const result = await importCertificate(
           actor,

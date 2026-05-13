@@ -15,6 +15,7 @@ import {
 } from "../storage/runtime-store";
 import {
   getTrustListRecoveryGuidance,
+  type TrustListReviewPayload,
   previewTrustListXmlSource,
   syncTrustListSource,
 } from "./sync";
@@ -364,11 +365,12 @@ export async function previewTrustListSource(
 export async function syncTrustListSourceNow(
   actor: AuthenticatedPrincipal | undefined,
   sourceId: string,
+  reviewPayload?: TrustListReviewPayload,
 ) {
   const principal = await ensureTrustListOperator(actor);
   const source = await findTrustListSourceById(sourceId);
   if (!source) throw new Error("trust-list-source-not-found");
   if (!canSeeTrustListSource(principal, source)) throw new Error("trust-list-group-admin-required");
   if (source.archivedAt) throw new Error("trust-list-source-archived");
-  return syncTrustListSource(source);
+  return syncTrustListSource(source, reviewPayload);
 }

@@ -30,6 +30,8 @@ const commands = [
   ["node", ["scripts/validate-trust-list-projection.js"]],
   ["node", ["scripts/validate-trust-list-operator-ux.js"]],
   ["node", ["scripts/validate-import-review-foundation.js"]],
+  ["node", ["scripts/validate-import-review-ux.js"]],
+  ["node", ["scripts/validate-import-review-safety.js"]],
   ["node", ["scripts/validate-derived-monitoring-sources.js"]],
   ["node", ["scripts/validate-document-snapshots.js"]],
   ["node", ["scripts/validate-ocsp-monitoring.js"]],

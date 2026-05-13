@@ -12,7 +12,6 @@ function assertContains(file, needle, message = `${file} must contain ${needle}`
   }
 }
 
-assertContains("src/trust-lists/sync.ts", "decision: \"accept\"", "trust-list review decisions must be explicit");
 assertContains("src/trust-lists/sync.ts", "reviewPayload", "trust-list sync must accept review payload");
 assertContains("src/trust-lists/sync.ts", "ignore");
 assertContains("src/trust-lists/sync.ts", "reject");

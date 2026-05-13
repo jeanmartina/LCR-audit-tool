@@ -2,6 +2,19 @@ import { rejectCrossOriginRequest } from "../../../../../../auth/request-securit
 import { assertAuthenticated } from "../../../../../../auth/authorization";
 import { validateCertificateReviewSubmission } from "../../../../../../inventory/certificate-admin";
 import { syncTrustListSourceNow } from "../../../../../../trust-lists/admin";
+import type { TrustListReviewPayload } from "../../../../../../trust-lists/sync";
+
+function parseReviewPayload(form: FormData): TrustListReviewPayload {
+  const raw = String(form.get("reviewPayload") ?? "").trim();
+  if (!raw) {
+    throw new Error("review-required:candidate-decisions");
+  }
+  const parsed = JSON.parse(raw) as TrustListReviewPayload;
+  if (!parsed?.candidateDecisions || typeof parsed.candidateDecisions !== "object") {
+    throw new Error("review-required:candidate-decisions");
+  }
+  return parsed;
+}
 
 export async function POST(
   request: Request,
@@ -13,7 +26,9 @@ export async function POST(
   const { sourceId } = await context.params;
   try {
     const principal = await assertAuthenticated();
-    const result = await syncTrustListSourceNow(principal, sourceId);
+    const form = await request.formData();
+    const reviewPayload = parseReviewPayload(form);
+    const result = await syncTrustListSourceNow(principal, sourceId, reviewPayload);
     if (request.headers.get("accept")?.includes("application/json")) {
       return Response.json({ result }, { status: result.status === "succeeded" ? 200 : 400 });
     }

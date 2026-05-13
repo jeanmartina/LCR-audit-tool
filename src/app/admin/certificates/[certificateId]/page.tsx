@@ -267,6 +267,9 @@ export default async function CertificateDetailPage({
             <li key={event.id}>
               {event.occurredAt.toISOString()} — {event.eventType} — actor{" "}
               {event.actorUserId ?? "system"} — {JSON.stringify(event.details)}
+              {typeof event.details?.message === "string" && event.details.message.includes("review:") ? (
+                <span> {" "}review: {event.details.message}</span>
+              ) : null}
             </li>
           ))}
         </ul>

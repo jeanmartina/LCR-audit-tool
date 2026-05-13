@@ -82,6 +82,24 @@ export function TrustListSourceWizard({ copy }: { copy: TrustListWizardCopy }): 
           </Field>
         </div>
         <CheckboxField name="enabled" defaultChecked label={copy["admin.trustLists.enabled"]} hint={copy["admin.trustLists.enabled.hint"]} />
+        <Notice title={copy["admin.trustLists.review.title"]}>
+          {copy["admin.trustLists.review.body"]}
+        </Notice>
+        <div style={{ display: "grid", gap: "8px" }}>
+          <input name="reviewDecision" type="hidden" value="pending" />
+          <input name="reviewJustification" type="hidden" value="" />
+          <Field
+            label={copy["admin.trustLists.review.payload"]}
+            hint={copy["admin.trustLists.review.payloadHint"]}
+          >
+            <textarea
+              name="reviewPayload"
+              rows={4}
+              placeholder='{"candidateDecisions":{"1:sha256":{"decision":"accept"}}}'
+              style={{ width: "100%", borderRadius: "10px", border: "1px solid var(--panel-border)", padding: "10px" }}
+            />
+          </Field>
+        </div>
 
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
           <button
