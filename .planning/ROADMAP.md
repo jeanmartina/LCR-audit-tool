@@ -18,7 +18,7 @@
 | 27 | 1/1 | Complete   | 2026-05-10 |
 | 28 | Settings and Administration | Reorganize settings and admin surfaces into clear tabs for personal preferences, group defaults, providers, trust lists, groups, and invitations. | UI-02 |
 | 29 | 2/2 | Complete   | 2026-05-10 |
-| 30 | 2/3 | In Progress|  |
+| 30 | 3/3 | Complete   | 2026-05-13 |
 | 31 | Dashboard and Reporting | Make dashboard, timelines, derived states, and actions clearer and more consistent. | UI-05 |
 | 32 | Executive PDF | Make the executive PDF professional, Unicode-safe, and aligned with the web executive read model. | UI-06 |
 | 33 | Global UX Consistency | Apply one modern visual language and navigation pattern across the application. | UI-07 |
