@@ -117,7 +117,6 @@ export function BatchReviewPageClient({ copy }: { copy: Record<string, string> }
 
       const formData = new FormData();
       formData.set("mode", "review-save");
-      formData.set("archive", new File(["placeholder"], "review.zip"));
       formData.set("reviewPayload", JSON.stringify(reviewPayload));
 
       const response = await fetch("/api/admin/certificates/import-zip", {

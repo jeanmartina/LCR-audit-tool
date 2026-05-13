@@ -38,15 +38,6 @@ export async function POST(request: Request): Promise<Response> {
     const principal = await assertAuthenticated();
     const form = await request.formData();
     const mode = String(form.get("mode") ?? "direct").trim();
-    const file = form.get("archive");
-    if (!(file instanceof File)) {
-      return Response.json({ error: "zip-file-required" }, { status: 400 });
-    }
-    if (file.size > getMaxZipArchiveBytes()) {
-      return Response.json({ error: "zip-archive-too-large" }, { status: 413 });
-    }
-
-    const zipBytes = Buffer.from(await file.arrayBuffer());
     const sharedInput = {
       tags: parseCsv(form.get("tags")),
       groupIds: parseCsv(form.get("groupIds")),
@@ -54,11 +45,6 @@ export async function POST(request: Request): Promise<Response> {
       status: "active" as const,
       groupOverrides: parseOverrides(form.get("groupOverrides")),
     };
-
-    if (mode === "preview") {
-      const candidates = await previewCertificateZip(principal, zipBytes, sharedInput);
-      return Response.json({ candidates }, { status: 200 });
-    }
 
     if (mode === "review-save") {
       const payloadRaw = String(form.get("reviewPayload") ?? "").trim();
@@ -162,6 +148,20 @@ export async function POST(request: Request): Promise<Response> {
         { status: "ok", runId: run.id, items: await listCertificateImportItems(run.id) },
         { status: 200 }
       );
+    }
+
+    const file = form.get("archive");
+    if (!(file instanceof File)) {
+      return Response.json({ error: "zip-file-required" }, { status: 400 });
+    }
+    if (file.size > getMaxZipArchiveBytes()) {
+      return Response.json({ error: "zip-archive-too-large" }, { status: 413 });
+    }
+    const zipBytes = Buffer.from(await file.arrayBuffer());
+
+    if (mode === "preview") {
+      const candidates = await previewCertificateZip(principal, zipBytes, sharedInput);
+      return Response.json({ candidates }, { status: 200 });
     }
 
     const summary = await importCertificateZip(principal, zipBytes, sharedInput);
