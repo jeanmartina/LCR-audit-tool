@@ -135,6 +135,11 @@ export interface ImportRunSummary {
   items: Awaited<ReturnType<typeof listCertificateImportItems>>;
 }
 
+export interface ZipReviewCandidate {
+  filename: string;
+  snapshot: CertificateReviewSnapshot;
+}
+
 export const TRUST_LIST_CERTIFICATE_SOURCE_TYPE = "trust-list" as const;
 export const DEFAULT_MAX_CERTIFICATE_FILE_BYTES = 512 * 1024;
 export const DEFAULT_MAX_ZIP_ARCHIVE_BYTES = 10 * 1024 * 1024;
@@ -613,6 +618,33 @@ export async function importCertificateZip(
     ...summary,
     items: await listCertificateImportItems(run.id),
   };
+}
+
+export async function previewCertificateZip(
+  actor: AuthenticatedPrincipal,
+  zipBytes: Buffer,
+  sharedInput: Omit<CertificateInput, "displayName" | "pemText">
+): Promise<ZipReviewCandidate[]> {
+  for (const groupId of sharedInput.groupIds) {
+    if (!canManageGroup(actor, groupId)) {
+      throw new Error("forbidden");
+    }
+  }
+
+  const entries = await extractCertificateFilesFromZip(zipBytes);
+  const candidates: ZipReviewCandidate[] = [];
+  for (const entry of entries) {
+    const input: CertificateInput = {
+      ...sharedInput,
+      displayName: slugify(entry.name).replace(/-/g, " "),
+      pemText: entry.pemText,
+    };
+    candidates.push({
+      filename: entry.name,
+      snapshot: await createCertificateReviewSnapshot(actor, input, "zip"),
+    });
+  }
+  return candidates;
 }
 
 export async function getCertificateImportRunDetail(

@@ -30,10 +30,13 @@ function toneForResult(result: string): "neutral" | "success" | "warning" {
 
 export default async function CertificateImportRunPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ runId: string }>;
+  searchParams: Promise<{ reviewRecorded?: string; reviewSaved?: string }>;
 }): Promise<ReactElement> {
   const { runId } = await params;
+  const query = await searchParams;
   let principal;
   try {
     principal = await assertAuthenticated();
@@ -73,6 +76,16 @@ export default async function CertificateImportRunPage({
         title={t("admin.certificates.importRun.title")}
         description={t("admin.certificates.importRun.description", { runId: run.id })}
       />
+      {query.reviewRecorded === "1" ? (
+        <Panel compact title={t("admin.certificates.importRun.reviewRecordedTitle")} description={t("admin.certificates.importRun.reviewRecordedBody")}>
+          <span />
+        </Panel>
+      ) : null}
+      {query.reviewSaved === "1" ? (
+        <Panel compact title={t("admin.certificates.importRun.reviewSavedTitle")} description={t("admin.certificates.importRun.reviewSavedBody")}>
+          <span />
+        </Panel>
+      ) : null}
 
       <section style={{ display: "grid", gap: "12px", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
         {cards.map((card) => (

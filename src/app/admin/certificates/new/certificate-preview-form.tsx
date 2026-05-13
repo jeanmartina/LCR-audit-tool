@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactElement } from "react";
+import { useMemo, useRef, useState, type ReactElement } from "react";
 import {
   ActionButton,
   Field,
@@ -31,21 +31,69 @@ type Preview = {
   warnings: string[];
 };
 
+type Snapshot = {
+  origin: "single" | "zip" | "trust-list";
+  input: {
+    displayName: string;
+    pemText: string;
+    tags: string[];
+    groupIds: string[];
+    ignoredUrls: string[];
+    status: "active" | "disabled";
+    groupOverrides: unknown[];
+  };
+  preview: Preview;
+};
+
 type Copy = Record<string, string>;
+
+type Decision = "accept" | "edit" | "ignore" | "reject" | "duplicate" | "pending";
+
+const DECISIONS: Decision[] = ["accept", "edit", "ignore", "reject", "duplicate", "pending"];
+
+function parseCsv(value: string): string[] {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
 
 export function CertificatePreviewForm({ copy }: { copy: Copy }): ReactElement {
   const formRef = useRef<HTMLFormElement>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
+  const [decision, setDecision] = useState<Decision>("accept");
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [highlightedError, setHighlightedError] = useState<string | null>(null);
+  const [justification, setJustification] = useState("");
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editedDisplayName, setEditedDisplayName] = useState("");
+  const [editedTags, setEditedTags] = useState("");
+  const [editedGroupIds, setEditedGroupIds] = useState("");
+  const [editedIgnoredUrls, setEditedIgnoredUrls] = useState("");
+  const [editedStatus, setEditedStatus] = useState<"active" | "disabled">("active");
+
+  const hasDivergence = useMemo(() => {
+    if (!snapshot) return false;
+    return (
+      editedDisplayName.trim() !== snapshot.input.displayName ||
+      JSON.stringify(parseCsv(editedTags)) !== JSON.stringify(snapshot.input.tags) ||
+      JSON.stringify(parseCsv(editedGroupIds)) !== JSON.stringify(snapshot.input.groupIds) ||
+      JSON.stringify(parseCsv(editedIgnoredUrls)) !== JSON.stringify(snapshot.input.ignoredUrls) ||
+      editedStatus !== snapshot.input.status
+    );
+  }, [editedDisplayName, editedGroupIds, editedIgnoredUrls, editedStatus, editedTags, snapshot]);
 
   async function previewImport(): Promise<void> {
     if (!formRef.current) {
       return;
     }
     setLoading(true);
-    setError(null);
+    setReviewError(null);
+    setHighlightedError(null);
     setPreview(null);
+    setSnapshot(null);
     try {
       const response = await fetch("/api/admin/certificates/import/preview", {
         method: "POST",
@@ -53,14 +101,83 @@ export function CertificatePreviewForm({ copy }: { copy: Copy }): ReactElement {
       });
       const payload = await response.json();
       if (!response.ok) {
-        setError(payload.error ?? "certificate-preview-failed");
+        setReviewError(payload.error ?? "certificate-preview-failed");
         return;
       }
       setPreview(payload.preview);
+      setSnapshot(payload.snapshot);
+      setDecision("accept");
+      setJustification("");
+      setEditedDisplayName(payload.snapshot.input.displayName);
+      setEditedTags(payload.snapshot.input.tags.join(", "));
+      setEditedGroupIds(payload.snapshot.input.groupIds.join(", "));
+      setEditedIgnoredUrls(payload.snapshot.input.ignoredUrls.join(", "));
+      setEditedStatus(payload.snapshot.input.status);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "certificate-preview-failed");
+      setReviewError(nextError instanceof Error ? nextError.message : "certificate-preview-failed");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function submitReview(): Promise<void> {
+    if (!formRef.current || !snapshot) {
+      return;
+    }
+    if (hasDivergence && !justification.trim()) {
+      setHighlightedError("review-justification-required");
+      setReviewError(copy.reviewMissingJustification);
+      return;
+    }
+
+    setSaving(true);
+    setReviewError(null);
+    setHighlightedError(null);
+    try {
+      const formData = new FormData(formRef.current);
+      const reviewPayload = {
+        snapshot,
+        decision,
+        editedInput: {
+          ...snapshot.input,
+          displayName: editedDisplayName.trim(),
+          tags: parseCsv(editedTags),
+          groupIds: parseCsv(editedGroupIds),
+          ignoredUrls: parseCsv(editedIgnoredUrls),
+          status: editedStatus,
+        },
+        justification,
+      };
+      formData.set("reviewDecision", decision);
+      formData.set("reviewJustification", justification);
+      formData.set("reviewPayload", JSON.stringify(reviewPayload));
+
+      const response = await fetch("/api/admin/certificates/import", {
+        method: "POST",
+        body: formData,
+        redirect: "manual",
+      });
+
+      if (response.status === 303) {
+        const location = response.headers.get("location") ?? "/admin/certificates";
+        window.location.assign(location);
+        return;
+      }
+
+      const payload = await response.json();
+      if (!response.ok) {
+        const errorCode = String(payload.error ?? "certificate-import-failed");
+        setReviewError(copy.reviewSaveFailed.replace("{error}", errorCode));
+        setHighlightedError(errorCode);
+        return;
+      }
+      if (payload.runId) {
+        window.location.assign(`/admin/certificates/import-runs/${payload.runId}?reviewRecorded=1`);
+      }
+    } catch (nextError) {
+      setReviewError(nextError instanceof Error ? nextError.message : "certificate-import-failed");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -91,86 +208,98 @@ export function CertificatePreviewForm({ copy }: { copy: Copy }): ReactElement {
         <TextAreaInput
           name="groupOverrides"
           rows={8}
-          defaultValue={`[
-  {
-    "groupId": "group-1",
-    "intervalSeconds": 600,
-    "timeoutSeconds": 5,
-    "criticality": "high",
-    "alertEmail": "alerts@example.com",
-    "extraRecipients": ["backup@example.com"]
-  }
-]`}
+          defaultValue={`[\n  {\n    "groupId": "group-1",\n    "intervalSeconds": 600,\n    "timeoutSeconds": 5,\n    "criticality": "high",\n    "alertEmail": "alerts@example.com",\n    "extraRecipients": ["backup@example.com"]\n  }\n]`}
         />
       </Field>
 
       <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-        <button
-          type="button"
-          onClick={previewImport}
-          style={{
-            width: "fit-content",
-            padding: "10px 14px",
-            borderRadius: "10px",
-            border: "1px solid var(--button-border)",
-            background: "var(--subtle-bg)",
-            color: "inherit",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
+        <button type="button" onClick={previewImport} style={{ width: "fit-content", padding: "10px 14px", borderRadius: "10px", border: "1px solid var(--button-border)", background: "var(--subtle-bg)", color: "inherit", fontWeight: 700, cursor: "pointer" }}>
           {loading ? copy.previewLoading : copy.previewButton}
         </button>
-        <ActionButton>{copy.submit}</ActionButton>
+        <button type="button" onClick={submitReview} disabled={!snapshot || saving || (hasDivergence && !justification.trim())} style={{ width: "fit-content", padding: "10px 14px", borderRadius: "10px", border: "1px solid var(--button-border)", background: "var(--accent)", color: "white", fontWeight: 700, cursor: "pointer", opacity: !snapshot || saving || (hasDivergence && !justification.trim()) ? 0.6 : 1 }}>
+          {saving ? copy.reviewSaving : copy.reviewSaveButton}
+        </button>
       </div>
 
-      {error ? (
+      {reviewError ? (
         <Notice tone="warning" title={copy.previewErrorTitle}>
-          {error}
+          {reviewError}
         </Notice>
       ) : null}
 
-      <Panel title={copy.previewConfig} description={copy.previewConfigText} compact>
-        {preview ? (
+      <Panel title={copy.reviewTitle} description={copy.reviewDescription} compact>
+        {!preview || !snapshot ? (
+          <p style={{ color: "var(--muted-color)", margin: 0 }}>{copy.previewEmpty}</p>
+        ) : (
           <div style={stackStyle("10px")}>
             <div>
               <strong>{copy.previewFingerprint}</strong>
               <div style={{ overflowWrap: "anywhere" }}>{preview.fingerprint}</div>
             </div>
             <div>
-              <strong>{copy.previewDerivedCrls}</strong>
-              <ul>
-                {preview.derivedUrls.map((url) => (
-                  <li key={url}>{url}</li>
+              <strong>{copy.reviewDecisionLabel}</strong>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
+                {DECISIONS.map((value) => (
+                  <label key={value} style={{ display: "inline-flex", gap: "4px", alignItems: "center" }}>
+                    <input type="radio" checked={decision === value} onChange={() => setDecision(value)} />
+                    {copy[`reviewDecision.${value}`]}
+                  </label>
                 ))}
-              </ul>
+              </div>
             </div>
-            <div>
-              <strong>{copy.previewTrackedCrls}</strong> {preview.trackedUrls.length}
-            </div>
-            <div>
-              <strong>{copy.previewIgnoredCrls}</strong> {preview.ignoredUrls.length}
-            </div>
-            <div>
-              <strong>{copy.previewEffectiveDefaults}</strong>
-              <ul>
-                {preview.effectiveDefaults.map((item) => (
-                  <li key={item.groupId}>
-                    {item.groupId}: {item.intervalSeconds}s / {item.timeoutSeconds}s / {item.criticality}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <Field label={copy.displayName}>
+              <TextInput value={editedDisplayName} onChange={(event) => setEditedDisplayName(event.target.value)} />
+            </Field>
+            <Field label={copy.tags}>
+              <TextInput value={editedTags} onChange={(event) => setEditedTags(event.target.value)} />
+            </Field>
+            <Field label={copy.groupIds}>
+              <TextInput value={editedGroupIds} onChange={(event) => setEditedGroupIds(event.target.value)} />
+            </Field>
+            <Field label={copy.ignoredUrls}>
+              <TextAreaInput rows={3} value={editedIgnoredUrls} onChange={(event) => setEditedIgnoredUrls(event.target.value)} />
+            </Field>
+            <Field label={copy.reviewStatusLabel}>
+              <select value={editedStatus} onChange={(event) => setEditedStatus(event.target.value === "disabled" ? "disabled" : "active")}>
+                <option value="active">active</option>
+                <option value="disabled">disabled</option>
+              </select>
+            </Field>
+            <Field label={copy.reviewJustificationLabel} hint={copy.reviewJustificationHint}>
+              <TextAreaInput
+                rows={3}
+                value={justification}
+                onChange={(event) => setJustification(event.target.value)}
+                style={highlightedError === "review-justification-required" ? { borderColor: "#c53030" } : undefined}
+              />
+            </Field>
             {preview.warnings.length ? (
               <Notice tone="warning" title={copy.previewWarnings}>
                 {preview.warnings.join(", ")}
               </Notice>
             ) : null}
+            <div style={{ color: "var(--muted-color)" }}>{copy.reviewServerGuardrail}</div>
           </div>
-        ) : (
-          <p style={{ color: "var(--muted-color)", margin: 0 }}>{copy.previewEmpty}</p>
         )}
       </Panel>
+      <button
+        type="button"
+        onClick={submitReview}
+        disabled={!snapshot || saving || (hasDivergence && !justification.trim())}
+        style={{
+          width: "fit-content",
+          padding: "10px 14px",
+          borderRadius: "10px",
+          border: "1px solid var(--button-border)",
+          background: "var(--accent)",
+          color: "white",
+          fontWeight: 700,
+          cursor: "pointer",
+          opacity: !snapshot || saving || (hasDivergence && !justification.trim()) ? 0.6 : 1,
+        }}
+      >
+        {saving ? copy.reviewSaving : copy.reviewSaveButton}
+      </button>
     </form>
   );
 }
