@@ -1,7 +1,12 @@
 import { createHash } from "node:crypto";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
-import { extractCertificateFingerprint, importCertificate } from "../inventory/certificate-admin";
+import {
+  createCertificateReviewSnapshot,
+  extractCertificateFingerprint,
+  importCertificate,
+  validateCertificateReviewSubmission,
+} from "../inventory/certificate-admin";
 import {
   completeTrustListSyncRun,
   createTrustListSnapshot,
@@ -396,17 +401,23 @@ export async function syncTrustListSource(source: TrustListSourceRecord): Promis
         const changeReason: TrustListCertificateProjectionRecord["changeReason"] = previousProjection
           ? "changed-candidate"
           : "new-fingerprint";
+        const reviewInput = {
+          displayName: `${source.label} certificate ${candidate.ordinal}`,
+          pemText: candidate.pem,
+          tags: ["trust-list", source.id],
+          groupIds: source.groupIds,
+          ignoredUrls: [],
+          status: "active" as const,
+          groupOverrides: [],
+        };
+        const validated = await validateCertificateReviewSubmission(actor, {
+          snapshot: await createCertificateReviewSnapshot(actor, reviewInput, "trust-list"),
+          decision: "accept",
+          editedInput: reviewInput,
+        });
         const result = await importCertificate(
           actor,
-          {
-            displayName: `${source.label} certificate ${candidate.ordinal}`,
-            pemText: candidate.pem,
-            tags: ["trust-list", source.id],
-            groupIds: source.groupIds,
-            ignoredUrls: [],
-            status: "active",
-            groupOverrides: [],
-          },
+          validated.input,
           "trust-list",
           `${source.id}-${candidate.ordinal}.pem`,
           {

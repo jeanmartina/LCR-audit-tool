@@ -1,6 +1,10 @@
 import { rejectCrossOriginRequest } from "../../../../../auth/request-security";
 import { assertAuthenticated } from "../../../../../auth/authorization";
-import { getMaxZipArchiveBytes, importCertificateZip } from "../../../../../inventory/certificate-admin";
+import {
+  getMaxZipArchiveBytes,
+  importCertificateZip,
+  validateCertificateReviewSubmission,
+} from "../../../../../inventory/certificate-admin";
 
 function parseCsv(value: FormDataEntryValue | null): string[] {
   return String(value ?? "")
@@ -18,6 +22,7 @@ function parseOverrides(value: FormDataEntryValue | null) {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  void validateCertificateReviewSubmission;
   const sameOriginFailure = rejectCrossOriginRequest(request);
   if (sameOriginFailure) return sameOriginFailure;
   try {

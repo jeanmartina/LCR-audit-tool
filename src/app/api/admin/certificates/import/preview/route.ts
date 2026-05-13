@@ -1,6 +1,7 @@
 import { rejectCrossOriginRequest } from "../../../../../../auth/request-security";
 import { assertAuthenticated } from "../../../../../../auth/authorization";
 import {
+  createCertificateReviewSnapshot,
   getMaxCertificateFileBytes,
   normalizeCertificatePem,
   previewCertificateImport,
@@ -35,17 +36,21 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: "certificate-file-too-large" }, { status: 413 });
     }
 
-    const preview = await previewCertificateImport(principal, {
+    const input = {
       displayName: String(form.get("displayName") ?? "").trim(),
       pemText: normalizeCertificatePem(Buffer.from(await file.arrayBuffer())),
       tags: parseCsv(form.get("tags")),
       groupIds: parseCsv(form.get("groupIds")),
       ignoredUrls: parseCsv(form.get("ignoredUrls")),
-      status: String(form.get("status") ?? "active").trim() === "disabled" ? "disabled" : "active",
+      status: (String(form.get("status") ?? "active").trim() === "disabled" ? "disabled" : "active") as
+        | "active"
+        | "disabled",
       groupOverrides: parseOverrides(form.get("groupOverrides")),
-    });
+    };
+    const preview = await previewCertificateImport(principal, input);
+    const snapshot = await createCertificateReviewSnapshot(principal, input, "single");
 
-    return Response.json({ preview }, { status: 200 });
+    return Response.json({ preview, snapshot }, { status: 200 });
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "certificate-preview-failed" },

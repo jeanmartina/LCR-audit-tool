@@ -4438,6 +4438,23 @@ export async function recordCertificateImportItem(input: {
   return record;
 }
 
+export async function recordCertificateReviewOutcome(input: {
+  runId: string;
+  filename: string;
+  fingerprint: string | null;
+  decision: "ignore" | "reject" | "duplicate" | "pending";
+  reason?: string | null;
+}): Promise<CertificateImportItemRecord> {
+  return recordCertificateImportItem({
+    runId: input.runId,
+    certificateId: null,
+    filename: input.filename,
+    fingerprint: input.fingerprint,
+    result: "ignored",
+    message: `review:${input.decision}${input.reason ? `:${input.reason}` : ""}`,
+  });
+}
+
 export async function listCertificateImportItems(
   runId: string
 ): Promise<CertificateImportItemRecord[]> {

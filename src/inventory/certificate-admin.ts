@@ -105,6 +105,27 @@ export interface CertificateImportPreview {
   warnings: string[];
 }
 
+export type CertificateReviewDecision =
+  | "accept"
+  | "edit"
+  | "ignore"
+  | "reject"
+  | "duplicate"
+  | "pending";
+
+export interface CertificateReviewSnapshot {
+  origin: "single" | "zip" | "trust-list";
+  input: CertificateInput;
+  preview: CertificateImportPreview;
+}
+
+export interface CertificateReviewSubmission {
+  snapshot: CertificateReviewSnapshot;
+  decision: CertificateReviewDecision;
+  editedInput?: CertificateInput;
+  justification?: string;
+}
+
 export interface ImportRunSummary {
   runId: string;
   imported: number;
@@ -264,6 +285,61 @@ export async function previewCertificateImport(
       return { groupId, ...resolveOverrideEffectiveValues(override) };
     }),
     warnings: derivedUrls.length ? [] : ["no-crl-urls-found"],
+  };
+}
+
+function assertJustificationForDivergence(
+  original: CertificateInput,
+  edited: CertificateInput | undefined,
+  justification: string
+): void {
+  if (!edited) return;
+  const diverged = JSON.stringify(original) !== JSON.stringify(edited);
+  if (diverged && !justification.trim()) {
+    throw new Error("review-justification-required");
+  }
+}
+
+export async function createCertificateReviewSnapshot(
+  actor: AuthenticatedPrincipal,
+  input: CertificateInput,
+  origin: CertificateReviewSnapshot["origin"]
+): Promise<CertificateReviewSnapshot> {
+  const preview = await previewCertificateImport(actor, input);
+  return { origin, input, preview };
+}
+
+export async function validateCertificateReviewSubmission(
+  actor: AuthenticatedPrincipal,
+  submission: CertificateReviewSubmission
+): Promise<{
+  input: CertificateInput;
+  preview: CertificateImportPreview;
+  decision: CertificateReviewDecision;
+  shouldPersistActiveCertificate: boolean;
+}> {
+  const canonicalInput = submission.editedInput ?? submission.snapshot.input;
+  const canonicalPreview = await previewCertificateImport(actor, canonicalInput);
+  const stagedPreview = submission.snapshot.preview;
+  if (
+    stagedPreview.fingerprint !== canonicalPreview.fingerprint ||
+    JSON.stringify(stagedPreview.derivedUrls) !== JSON.stringify(canonicalPreview.derivedUrls) ||
+    JSON.stringify(stagedPreview.trackedUrls) !== JSON.stringify(canonicalPreview.trackedUrls) ||
+    JSON.stringify(stagedPreview.ignoredUrls) !== JSON.stringify(canonicalPreview.ignoredUrls)
+  ) {
+    throw new Error("review-mismatch-detected");
+  }
+  assertJustificationForDivergence(
+    submission.snapshot.input,
+    submission.editedInput,
+    String(submission.justification ?? "")
+  );
+  const shouldPersistActiveCertificate = submission.decision === "accept" || submission.decision === "edit";
+  return {
+    input: canonicalInput,
+    preview: canonicalPreview,
+    decision: submission.decision,
+    shouldPersistActiveCertificate,
   };
 }
 
