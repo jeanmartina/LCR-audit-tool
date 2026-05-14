@@ -1,7 +1,7 @@
 import { rejectCrossOriginRequest } from "../../../../../../auth/request-security";
 import { assertPlatformAdmin } from "../../../../../../auth/authorization";
 import { getConfigPresence } from "../../../../../../auth/provider-flow";
-import { saveProviderVerificationSetting } from "../../../../../../settings/preferences";
+import { saveProviderRuntimeSetting, saveProviderVerificationSetting } from "../../../../../../settings/preferences";
 
 const SUPPORTED_PROVIDERS = new Set(["google", "entra-id", "oidc"]);
 
@@ -24,6 +24,11 @@ export async function POST(
   }
 
   const formData = await request.formData();
+  await saveProviderRuntimeSetting({
+    provider: provider as "google" | "entra-id" | "oidc",
+    enabled: formData.get("enabled") === "on",
+    updatedByUserId: principal.userId,
+  });
   await saveProviderVerificationSetting({
     provider: provider as "google" | "entra-id" | "oidc",
     configured: getConfigPresence(provider as "google" | "entra-id" | "oidc"),
