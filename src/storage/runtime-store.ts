@@ -1863,7 +1863,7 @@ export async function reloadRuntimeStoreCache(): Promise<void> {
       `select id, source_id, source_key, certificate_id, certificate_fingerprint, issuer_certificate_id, issuer_fingerprint, responder_url, final_url, request_body, request_sha256, request_size_bytes, response_body, response_sha256, response_size_bytes, http_status, content_type, parse_status, parse_failure_reason, metadata_json, checked_at from ocsp_response_evidence order by checked_at desc`
     ),
     currentPool.query<TrustListSourceRow>(
-      `select id, label, url, enabled, group_ids, parent_source_id, created_by_user_id, created_at, updated_at from trust_list_sources order by updated_at desc`
+      `select id, label, url, enabled, group_ids, parent_source_id, archived_at, created_by_user_id, created_at, updated_at from trust_list_sources order by updated_at desc`
     ),
     currentPool.query<TrustListSnapshotRow>(
       `select id, source_id, digest_sha256, sequence_number, territory, issue_date, next_update, accepted_at, xml_size_bytes, certificate_count from trust_list_snapshots order by accepted_at desc`
