@@ -33,6 +33,16 @@ async function parseRequest(request: Request): Promise<{
     };
   }
   const form = await request.formData();
+  return parseForm(form);
+}
+
+function parseForm(form: FormData): {
+  label: string;
+  url: string;
+  enabled: boolean;
+  groupIds: string[];
+  parentSourceId: string | null;
+} {
   return {
     label: String(form.get("label") ?? "").trim(),
     url: String(form.get("url") ?? "").trim(),
@@ -71,12 +81,38 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ sourceId: string }> }
 ): Promise<Response> {
+  const sameOriginFailure = rejectCrossOriginRequest(request);
+  if (sameOriginFailure) return sameOriginFailure;
   const form = await request.formData();
   const method = String(form.get("_method") ?? "").trim().toUpperCase();
   if (method === "DELETE") {
-    return DELETE(request, context);
+    try {
+      const principal = await assertAuthenticated();
+      const { sourceId } = await context.params;
+      await deleteTrustListSource(principal, sourceId);
+      return new Response(null, {
+        status: 303,
+        headers: { Location: "/admin/trust-lists?deleted=source" },
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "trust-list-delete-failed";
+      return Response.json({ error: message }, { status: 400 });
+    }
   }
-  return PATCH(request, context);
+  try {
+    const principal = await assertAuthenticated();
+    const { sourceId } = await context.params;
+    await updateTrustListSource(principal, sourceId, parseForm(form));
+    return new Response(null, {
+      status: 303,
+      headers: { Location: "/admin/trust-lists?updated=source" },
+    });
+  } catch (error) {
+    return Response.json(
+      { error: error instanceof Error ? error.message : "trust-list-update-failed" },
+      { status: 400 }
+    );
+  }
 }
 
 export async function DELETE(
