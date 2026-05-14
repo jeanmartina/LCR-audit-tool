@@ -2965,14 +2965,14 @@ export async function deleteGroupRecord(groupId: string): Promise<void> {
   if (hasDatabase()) {
     await ensureRuntimeSchema();
   }
-  const hasSettings = cache.groupSettings.some((item) => item.groupId === groupId);
-  const hasMemberships = cache.groupMemberships.some((item) => item.groupId === groupId);
-  const hasInvites = cache.groupInvites.some((item) => item.groupId === groupId);
-  if (hasSettings || hasMemberships || hasInvites) {
-    throw new Error("group-delete-blocked");
-  }
+  cache.groupSettings = cache.groupSettings.filter((item) => item.groupId !== groupId);
+  cache.groupMemberships = cache.groupMemberships.filter((item) => item.groupId !== groupId);
+  cache.groupInvites = cache.groupInvites.filter((item) => item.groupId !== groupId);
   cache.groups = cache.groups.filter((item) => item.id !== groupId);
   if (hasDatabase()) {
+    await getPool().query(`delete from group_invites where group_id = $1`, [groupId]);
+    await getPool().query(`delete from group_memberships where group_id = $1`, [groupId]);
+    await getPool().query(`delete from group_settings where group_id = $1`, [groupId]);
     await getPool().query(`delete from auth_groups where id = $1`, [groupId]);
   }
 }
