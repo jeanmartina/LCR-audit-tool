@@ -13,6 +13,22 @@ const inputBase: CSSProperties = {
   color: "inherit",
 };
 
+const hintChipStyle: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "18px",
+  height: "18px",
+  borderRadius: "999px",
+  border: "1px solid var(--panel-border)",
+  background: "var(--subtle-bg)",
+  color: "var(--muted-color)",
+  fontSize: "11px",
+  fontWeight: 700,
+  cursor: "help",
+  flexShrink: 0,
+};
+
 export function PageShell({ children }: { children: ReactNode }): ReactElement {
   return (
     <main style={{ padding: "32px", display: "grid", gap: "24px", maxWidth: "1280px", margin: "0 auto" }}>
@@ -85,7 +101,7 @@ export function Field({
   hint,
   example,
   children,
-}: {
+  }: {
   label: string;
   hint?: string;
   example?: string;
@@ -93,9 +109,11 @@ export function Field({
 }): ReactElement {
   return (
     <label style={{ display: "grid", gap: "6px" }}>
-      <span style={{ fontWeight: 700 }}>{label}</span>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontWeight: 700 }}>
+        {label}
+        {hint ? <span aria-label={hint} title={hint} style={hintChipStyle}>?</span> : null}
+      </span>
       {children}
-      {hint ? <span style={{ color: "var(--muted-color)", fontSize: "13px", lineHeight: 1.45 }}>{hint}</span> : null}
       {example ? <code style={{ color: "var(--example-color)", fontSize: "12px" }}>{example}</code> : null}
     </label>
   );
@@ -116,10 +134,10 @@ export function CheckboxField({
 }): ReactElement {
   return (
     <label style={{ display: "grid", gap: "4px", alignContent: "start" }}>
-      <span>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
         <input type="checkbox" name={name} value={value} defaultChecked={defaultChecked} /> {label}
+        {hint ? <span aria-label={hint} title={hint} style={hintChipStyle}>?</span> : null}
       </span>
-      {hint ? <span style={{ color: "var(--muted-color)", fontSize: "13px", lineHeight: 1.45 }}>{hint}</span> : null}
     </label>
   );
 }
