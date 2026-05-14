@@ -16,7 +16,7 @@
 | Phase | Name | Goal | Requirements |
 |-------|------|------|--------------|
 | 27 | 1/1 | Complete   | 2026-05-10 |
-| 28 | 2/4 | In Progress|  |
+| 28 | 3/4 | In Progress|  |
 | 29 | 2/2 | Complete   | 2026-05-10 |
 | 30 | 4/4 | Complete   | 2026-05-13 |
 | 31 | Dashboard and Reporting | Make dashboard, timelines, derived states, and actions clearer and more consistent. | UI-05 |
@@ -50,7 +50,7 @@ Plans:
 
 **Requirements:** UI-02
 
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 - [ ] `28-01-PLAN.md` — Build the tabbed settings shell, hover-only field hints, and baseline copy.
