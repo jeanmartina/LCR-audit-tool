@@ -8,6 +8,7 @@ import {
   listProviderVerificationStatuses,
   upsertGroupSettingsRecord,
   upsertPlatformSettingsRecord,
+  upsertProviderRuntimeOverrideRecord,
   upsertProviderVerificationStatusRecord,
   upsertUserSettingsRecord,
   updateUserRecord,
@@ -119,4 +120,12 @@ export async function saveProviderVerificationSetting(input: {
   notes?: string | null;
 }): Promise<ProviderVerificationStatusRecord> {
   return upsertProviderVerificationStatusRecord(input);
+}
+
+export async function saveProviderRuntimeSetting(input: {
+  provider: ProviderVerificationStatusRecord["provider"];
+  enabled: boolean;
+  updatedByUserId: string | null;
+}): Promise<void> {
+  await upsertProviderRuntimeOverrideRecord(input);
 }

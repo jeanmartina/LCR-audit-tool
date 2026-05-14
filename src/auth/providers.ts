@@ -1,4 +1,5 @@
 import {
+  findProviderRuntimeOverride,
   findProviderVerificationStatus,
   type ProviderVerificationStatusRecord,
 } from "../storage/runtime-store";
@@ -20,17 +21,24 @@ export interface ProviderStatusEntry {
   verification: ProviderVerificationStatusRecord | null;
 }
 
-export function getProviderRuntimeConfigs(): ProviderRuntimeConfig[] {
-  return AUTH_PROVIDERS.map((provider) => ({
-    id: provider.id,
-    label: provider.label,
-    enabled: provider.envKeys.every((key) => process.env[key] || provider.id === "credentials"),
-    callbackUrl: `${resolvePublicOrigin()}/api/auth/callback/${provider.id}`,
-  }));
+export async function getProviderRuntimeConfigs(): Promise<ProviderRuntimeConfig[]> {
+  return Promise.all(
+    AUTH_PROVIDERS.map(async (provider) => {
+      const runtimeOverride = provider.id === "credentials" ? null : await findProviderRuntimeOverride(provider.id);
+      return {
+        id: provider.id,
+        label: provider.label,
+        enabled:
+          runtimeOverride?.enabled ??
+          provider.envKeys.every((key) => process.env[key] || provider.id === "credentials"),
+        callbackUrl: `${resolvePublicOrigin()}/api/auth/callback/${provider.id}`,
+      };
+    })
+  );
 }
 
-export function getExternalProviderRuntimeConfigs(): ProviderRuntimeConfig[] {
-  return getProviderRuntimeConfigs().filter((provider) => provider.id !== "credentials");
+export async function getExternalProviderRuntimeConfigs(): Promise<ProviderRuntimeConfig[]> {
+  return (await getProviderRuntimeConfigs()).filter((provider) => provider.id !== "credentials");
 }
 
 export async function listProviderStatusEntries(): Promise<ProviderStatusEntry[]> {
