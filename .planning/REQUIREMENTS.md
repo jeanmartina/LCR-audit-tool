@@ -90,7 +90,7 @@
 
 ### Settings and Administration
 
-- [ ] **UI-02**: Settings and administration should be organized into clear tabs or sections for personal preferences, group defaults, provider verification, trust-list administration, groups, and invitations, with contextual hints for technical fields.
+- [x] **UI-02**: Settings and administration should be organized into clear tabs or sections for personal preferences, group defaults, provider verification, trust-list administration, groups, and invitations, with contextual hints for technical fields.
 
 ### Trust Lists
 
