@@ -34,7 +34,9 @@ export default async function FirstRunSetupPage({
 
       {complete ? (
         <Notice tone="success" title={t("setup.complete.title")}>
-          {t("setup.complete.body")} <Link href="/auth">{t("setup.complete.signIn")}</Link>
+          {t("setup.complete.body")}{" "}
+          <Link href="/settings?tab=administration">{t("setup.complete.reviewAdministration")}</Link>{" "}
+          <Link href="/auth">{t("setup.complete.signIn")}</Link>
         </Notice>
       ) : (
         <Panel title={t("setup.form.title")} description={t("setup.form.description")}>
