@@ -35,7 +35,13 @@ function validateReadModels() {
   assertIncludes(readModels, 'buildCrlDashboardRows', "Missing CRL reporting projection");
   assertIncludes(readModels, "derivedSourceHealth", "Missing derived source executive summary");
   assertIncludes(readModels, "derivedSources: DerivedSourceDetail[]", "Missing derived source detail model");
+  assertIncludes(readModels, "export type UiDerivedState =", "Missing exported UI-05 six-state taxonomy type");
+  assertIncludes(readModels, "export function normalizeUiDerivedState(", "Missing UI-05 status normalization helper");
+  assertIncludes(readModels, "normalizedState: UiDerivedState", "Missing normalized UI state across read models");
+  assertIncludes(readModels, "const riskDiff = getRiskPriority(right) - getRiskPriority(left);", "Missing risk-first dashboard ordering hook");
   assertIncludes(timeline, 'type: "predictive"', "Timeline is missing predictive events");
+  assertIncludes(timeline, "narrative: string", "Timeline is missing human narrative field");
+  assertIncludes(timeline, "technical: string[]", "Timeline is missing technical drill-down payload");
   console.log("Reporting read models ready");
 }
 
@@ -68,7 +74,7 @@ function validateDetail() {
   assertIncludes(detail, 't("reporting.detail.derivedSources")', "Derived sources section missing");
   assertIncludes(detail, 't("reporting.derived.type.ocsp")', "Derived source OCSP label missing");
   assertIncludes(detail, 't("reporting.derived.type.policyDocument")', "Derived source policy-document label missing");
-  assertIncludes(detail, 't("reporting.derived.status.discovered")', "Derived source discovered status missing");
+  assertIncludes(detail, "reporting.derived.status.${status}", "Derived source status label mapping missing");
   assertIncludes(detail, 't("reporting.tab.sources")', "Derived sources tab missing");
   assertIncludes(detail, 't("reporting.derived.historyDisabled")', "Disabled derived-source history state missing");
   assertIncludes(detail, 't("common.actions.apply")', "Detail Apply action missing");
@@ -315,7 +321,7 @@ function validatePdfAudit() {
   console.log("Reporting PDF audit gap closed");
 }
 
-const mode = process.argv[2];
+const mode = process.argv[2] ?? "read-models";
 
 if (mode === "read-models") {
   validateReadModels();
