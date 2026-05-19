@@ -94,6 +94,12 @@ Plans:
 
 **Requirements:** UI-05
 
+**Plans:** 2 plans
+
+Plans:
+- [ ] `31-01-PLAN.md` — Normalize reporting state taxonomy, risk-first ordering, and human-first timeline contracts.
+- [ ] `31-02-PLAN.md` — Apply consistent dashboard/detail/executive action and diagnostic UI wiring using the normalized contracts.
+
 **Success criteria:**
 1. Dashboard filters are predictable and keep healthy items visible.
 2. Derived-source states are explicit and readable.
