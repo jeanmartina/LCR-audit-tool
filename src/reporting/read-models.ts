@@ -582,6 +582,58 @@ function worstStatus(statuses: DashboardRow["currentStatus"][]): DashboardRow["c
   return "healthy";
 }
 
+function getDashboardStatusPriority(status: DashboardRow["currentStatus"]): number {
+  if (status === "offline") {
+    return 2;
+  }
+  if (status === "degraded") {
+    return 1;
+  }
+  return 0;
+}
+
+function getDashboardPredictivePriority(
+  severity: DashboardRow["predictiveSeverity"]
+): number {
+  if (severity === "critical") {
+    return 2;
+  }
+  if (severity === "warning") {
+    return 1;
+  }
+  return 0;
+}
+
+function compareDashboardRows(left: DashboardRow, right: DashboardRow): number {
+  const statusDiff =
+    getDashboardStatusPriority(right.currentStatus) -
+    getDashboardStatusPriority(left.currentStatus);
+  if (statusDiff !== 0) {
+    return statusDiff;
+  }
+
+  const predictiveDiff =
+    getDashboardPredictivePriority(right.predictiveSeverity) -
+    getDashboardPredictivePriority(left.predictiveSeverity);
+  if (predictiveDiff !== 0) {
+    return predictiveDiff;
+  }
+
+  const openAlertsDiff = right.openAlerts - left.openAlerts;
+  if (openAlertsDiff !== 0) {
+    return openAlertsDiff;
+  }
+
+  const unavailabilityDiff =
+    (right.latestUnavailabilityAt?.getTime() ?? 0) -
+    (left.latestUnavailabilityAt?.getTime() ?? 0);
+  if (unavailabilityDiff !== 0) {
+    return unavailabilityDiff;
+  }
+
+  return left.name.localeCompare(right.name);
+}
+
 function normalizeText(value: string | null | undefined): string | null {
   return value && value.trim() ? value.trim() : null;
 }
@@ -842,7 +894,7 @@ async function buildCrlDashboardRows(
     rows.push(row);
   }
 
-  return rows.sort((left, right) => left.name.localeCompare(right.name));
+  return rows.sort(compareDashboardRows);
 }
 
 export async function buildDashboardRows(
@@ -860,7 +912,7 @@ export async function buildDashboardRows(
       buildCertificateDashboardRow(visibleCertificate, filters, targetsById)
     )
   );
-  return rows.filter((row): row is DashboardRow => Boolean(row));
+  return rows.filter((row): row is DashboardRow => Boolean(row)).sort(compareDashboardRows);
 }
 
 export async function buildDashboardSummary(
