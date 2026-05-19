@@ -49,6 +49,7 @@ export interface DashboardRow {
   owner: string | null;
   criticality: string;
   currentStatus: "healthy" | "degraded" | "offline";
+  normalizedState: UiDerivedState;
   latestUnavailabilityAt: Date | null;
   slaPercent: number;
   errorBudgetUsed: number;
@@ -155,6 +156,7 @@ export interface DashboardFilterOptions {
 
 export interface DetailSummary {
   currentStatus: DashboardRow["currentStatus"];
+  normalizedState: UiDerivedState;
   latestIncidentAt: Date | null;
   slaPercent: number;
   openAlerts: number;
@@ -206,6 +208,12 @@ export interface DetailEvidence {
 
 export interface DerivedSourceHealthSummary {
   total: number;
+  ok: number;
+  degraded: number;
+  blockedUi: number;
+  failed: number;
+  notCheckableUi: number;
+  unknown: number;
   discovered: number;
   available: number;
   unavailable: number;
@@ -233,6 +241,7 @@ export interface DerivedSourceDetail {
   historyEvents: DerivedSourceEventRecord[];
   historyEvidence: DerivedSourceEvidenceRecord[];
   displayStatus: DerivedSourceDisplayStatus;
+  normalizedState: UiDerivedState;
 }
 
 export type DerivedSourceDisplayStatus =
@@ -242,6 +251,14 @@ export type DerivedSourceDisplayStatus =
 
 type DerivedSourceEventRecord = MonitoringSourceEventRecord | OcspCheckEventRecord;
 type DerivedSourceEvidenceRecord = DocumentSnapshotRecord | OcspResponseEvidenceRecord;
+
+export type UiDerivedState =
+  | "ok"
+  | "degraded"
+  | "blocked"
+  | "failed"
+  | "not-checkable"
+  | "unknown";
 
 export interface DetailFilterOptions {
   httpStatuses: number[];
@@ -293,6 +310,34 @@ function getDerivedSourceDisplayStatus(
   return latestEvent?.status ?? source.state;
 }
 
+export function normalizeUiDerivedState(rawStatus: string): UiDerivedState {
+  if (
+    rawStatus === "healthy" ||
+    rawStatus === "available" ||
+    rawStatus === "unchanged"
+  ) {
+    return "ok";
+  }
+  if (rawStatus === "degraded" || rawStatus === "discovered" || rawStatus === "changed") {
+    return "degraded";
+  }
+  if (rawStatus === "blocked") {
+    return "blocked";
+  }
+  if (
+    rawStatus === "offline" ||
+    rawStatus === "unavailable" ||
+    rawStatus === "malformed" ||
+    rawStatus === "extraction_failed"
+  ) {
+    return "failed";
+  }
+  if (rawStatus === "not_checkable" || rawStatus === "disabled" || rawStatus === "oversized") {
+    return "not-checkable";
+  }
+  return "unknown";
+}
+
 function getDerivedSourceHistoryEnabled(
   source: MonitoringSourceRecord,
   displayStatus: DerivedSourceDisplayStatus,
@@ -315,6 +360,20 @@ function countDerivedSourceStatus(
   summary: DerivedSourceHealthSummary,
   status: DerivedSourceDisplayStatus
 ): void {
+  const normalized = normalizeUiDerivedState(status);
+  if (normalized === "ok") {
+    summary.ok += 1;
+  } else if (normalized === "degraded") {
+    summary.degraded += 1;
+  } else if (normalized === "blocked") {
+    summary.blockedUi += 1;
+  } else if (normalized === "failed") {
+    summary.failed += 1;
+  } else if (normalized === "not-checkable") {
+    summary.notCheckableUi += 1;
+  } else {
+    summary.unknown += 1;
+  }
   if (status === "discovered") {
     summary.discovered += 1;
     return;
@@ -367,6 +426,12 @@ function countDerivedSourceStatus(
 function createDerivedSourceHealthSummary(): DerivedSourceHealthSummary {
   return {
     total: 0,
+    ok: 0,
+    degraded: 0,
+    blockedUi: 0,
+    failed: 0,
+    notCheckableUi: 0,
+    unknown: 0,
     discovered: 0,
     available: 0,
     unavailable: 0,
@@ -437,6 +502,7 @@ async function loadDerivedSourceDetail(
       historyEvents: filteredEvents,
       historyEvidence: filteredEvidence,
       displayStatus,
+      normalizedState: normalizeUiDerivedState(displayStatus),
     };
   }
 
@@ -461,6 +527,7 @@ async function loadDerivedSourceDetail(
     historyEvents: filteredEvents,
     historyEvidence: filteredEvidence,
     displayStatus,
+    normalizedState: normalizeUiDerivedState(displayStatus),
   };
 }
 
@@ -605,6 +672,10 @@ function getDashboardPredictivePriority(
 }
 
 function compareDashboardRows(left: DashboardRow, right: DashboardRow): number {
+  const riskDiff = getRiskPriority(right) - getRiskPriority(left);
+  if (riskDiff !== 0) {
+    return riskDiff;
+  }
   const statusDiff =
     getDashboardStatusPriority(right.currentStatus) -
     getDashboardStatusPriority(left.currentStatus);
@@ -766,6 +837,7 @@ async function buildCertificateDashboardRow(
     owner: targetScope.find((target) => target.owner)?.owner ?? null,
     criticality: targetScope.find((target) => target.criticality)?.criticality ?? "medium",
     currentStatus: worstStatus(statuses.length > 0 ? statuses : ["degraded"]),
+    normalizedState: normalizeUiDerivedState(worstStatus(statuses.length > 0 ? statuses : ["degraded"])),
     latestUnavailabilityAt: latestUnavailability?.occurredAt ?? null,
     slaPercent: Math.max(0, 100 - errorBudgetUsed * 100),
     errorBudgetUsed,
@@ -864,6 +936,7 @@ async function buildCrlDashboardRows(
       owner: firstTarget?.owner ?? null,
       criticality: firstTarget?.criticality ?? "medium",
       currentStatus: worstStatus(statuses.length > 0 ? statuses : ["degraded"]),
+      normalizedState: normalizeUiDerivedState(worstStatus(statuses.length > 0 ? statuses : ["degraded"])),
       latestUnavailabilityAt: latestUnavailability?.occurredAt ?? null,
       slaPercent: Math.max(0, 100 - calculateErrorBudget(gaps, getWindowMs(filters)) * 100),
       errorBudgetUsed: calculateErrorBudget(gaps, getWindowMs(filters)),
@@ -1223,6 +1296,7 @@ export async function buildDetailEvidence(
     certificate,
     summary: {
       currentStatus: worstStatus(statuses.length > 0 ? statuses : ["degraded"]),
+      normalizedState: normalizeUiDerivedState(worstStatus(statuses.length > 0 ? statuses : ["degraded"])),
       latestIncidentAt,
       slaPercent: Math.max(
         0,
