@@ -2,11 +2,12 @@ import type { ReactElement } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { assertAuthenticated } from "../../../auth/authorization";
-import { PageHeader, PageShell, Panel, StatusPill, stackStyle } from "../../../components/ui/primitives";
+import { ActionGroup, ActionLink, PageHeader, PageShell, Panel, StatusPill, stackStyle } from "../../../components/ui/primitives";
 import { getPrincipalTranslator } from "../../../i18n";
 import { buildExecutiveSummary } from "../../../reporting/read-models";
 import { parseReportFilters, type SearchParamLike, withFilter } from "../../../reporting/query-state";
 import { ExecutivePrintButton } from "./print-button";
+import { getDerivedOperationalTone } from "../../../reporting/derived-state";
 
 const cardGridStyle = {
   display: "grid",
@@ -19,10 +20,6 @@ const sourceCardGridStyle = {
   gap: "16px",
   gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
 };
-
-function statusTone(status: "healthy" | "degraded" | "offline"): "success" | "warning" | "neutral" {
-  return status === "healthy" ? "success" : status === "offline" ? "warning" : "neutral";
-}
 
 function formatMaybeDate(value: string | Date | null | undefined): string {
   if (!value) return "-";
@@ -129,14 +126,12 @@ export default async function ExecutiveReportingPage({
         />
       </div>
 
-      <div data-no-print="true" style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
-        <Link href={`/reporting?${query}`} style={{ color: "var(--link-color)" }}>
-          {t("reporting.executive.openOperational")}
-        </Link>
-        <a href={`/reporting/export/executive.pdf?${query}`} style={{ color: "var(--link-color)" }}>
-          {t("reporting.exportExecutivePdf")}
-        </a>
-        <ExecutivePrintButton label={t("reporting.executive.print")} />
+      <div data-no-print="true">
+        <ActionGroup>
+          <ActionLink href={`/reporting?${query}`}>{t("reporting.executive.openOperational")}</ActionLink>
+          <ActionLink href={`/reporting/export/executive.pdf?${query}`}>{t("reporting.exportExecutivePdf")}</ActionLink>
+          <ExecutivePrintButton label={t("reporting.executive.print")} />
+        </ActionGroup>
       </div>
 
       <Panel title={t("reporting.executive.scopeTitle")} description={t("reporting.executive.scopeBody")} compact>
@@ -174,7 +169,7 @@ export default async function ExecutiveReportingPage({
               <article key={item.id} style={{ borderTop: "1px solid var(--panel-border)", paddingTop: "12px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
                   <strong>{item.name}</strong>
-                  <StatusPill tone={statusTone(item.currentStatus)}>{t(`common.status.${item.currentStatus}`)}</StatusPill>
+                  <StatusPill tone={getDerivedOperationalTone(item.normalizedState)}>{t(`reporting.state.ui.${item.normalizedState}`)}</StatusPill>
                 </div>
                 <div style={stackStyle("4px")}>
                   <span>{t("reporting.table.openAlerts")}: {item.openAlerts}</span>

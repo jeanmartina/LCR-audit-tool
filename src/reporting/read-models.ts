@@ -88,6 +88,7 @@ export interface ExecutiveRiskItem {
   id: string;
   name: string;
   currentStatus: DashboardRow["currentStatus"];
+  normalizedState: UiDerivedState;
   predictiveSeverity: DashboardRow["predictiveSeverity"];
   predictiveType: DashboardRow["predictiveType"];
   openAlerts: number;
@@ -1041,6 +1042,7 @@ function toExecutiveRiskItem(row: DashboardRow): ExecutiveRiskItem {
     id: row.id,
     name: row.name,
     currentStatus: row.currentStatus,
+    normalizedState: row.normalizedState,
     predictiveSeverity: row.predictiveSeverity,
     predictiveType: row.predictiveType,
     openAlerts: row.openAlerts,

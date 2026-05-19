@@ -7,6 +7,7 @@ import { getPrincipalTranslator } from "../../../i18n";
 import {
   buildDetailEvidence,
   buildDetailFilterOptions,
+  normalizeUiDerivedState,
   type DerivedSourceDisplayStatus,
 } from "../../../reporting/read-models";
 import {
@@ -239,13 +240,14 @@ function renderTimelineEvent(event: TimelineEvent, t: (key: string) => string): 
         <strong>{getTimelineHeadline(event, t)}</strong>
         <span style={{ color: "var(--muted-color)", fontSize: "12px" }}>{event.at.toISOString()}</span>
       </div>
-      <p style={{ margin: 0 }}>{event.title}</p>
+      <p style={{ margin: 0 }}>{event.narrative}</p>
       <details>
         <summary style={{ cursor: "pointer", color: "var(--link-color)" }}>{t("reporting.timeline.technicalDetails")}</summary>
         <div style={{ marginTop: "8px", color: "var(--muted-color)", fontSize: "12px" }}>
           <div>{t("reporting.timeline.type")}: {event.type}</div>
           <div>{t("reporting.timeline.rawTitle")}: {event.title}</div>
           <div>{t("reporting.timeline.rawDetail")}: {event.detail}</div>
+          {event.technical.map((line, index) => (<div key={`${event.type}-${index}`}>{line}</div>))}
         </div>
       </details>
     </article>
@@ -334,7 +336,7 @@ function renderTabContent(
   return (
     <div style={{ display: "grid", gap: "12px" }}>
       {timeline.length > 0 ? (
-        timeline.map((event) => renderTimelineEvent(event, t))
+        [...timeline].sort((left, right) => right.at.getTime() - left.at.getTime()).map((event) => renderTimelineEvent(event, t))
       ) : (
         <p style={{ margin: 0, color: "var(--muted-color)" }}>{t("reporting.timeline.empty")}</p>
       )}
@@ -397,7 +399,7 @@ export default async function ReportingTargetPage({
       <section style={{ display: "grid", gap: "12px", gridTemplateColumns: "repeat(7, minmax(0, 1fr))" }}>
         <article style={BOX}>
           <div style={{ color: "var(--muted-color)", fontSize: "12px" }}>{t("reporting.detail.currentStatus")}</div>
-          <strong>{t(`common.status.${detail.summary.currentStatus}`)}</strong>
+          <strong>{t(`reporting.state.ui.${detail.summary.normalizedState}`)}</strong>
         </article>
         <article style={BOX}>
           <div style={{ color: "var(--muted-color)", fontSize: "12px" }}>{t("reporting.detail.lastIncident")}</div>
@@ -431,7 +433,7 @@ export default async function ReportingTargetPage({
           <ul style={{ margin: 0 }}>
             {detail.derivedCrls.map((crl) => (
               <li key={crl.url}>
-                {crl.url} - {t("reporting.detail.derivedIgnored")} {String(crl.ignored)} - {t("reporting.detail.derivedStatus")} {t(`common.status.${crl.currentStatus}`)}
+                {crl.url} - {t("reporting.detail.derivedIgnored")} {String(crl.ignored)} - {t("reporting.detail.derivedStatus")} {t(`reporting.state.ui.${normalizeUiDerivedState(crl.currentStatus)}`)}
               </li>
             ))}
           </ul>
