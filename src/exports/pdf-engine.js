@@ -77,12 +77,12 @@ function escapePdfText(line) {
   return toWinAnsiBytes(line)
     .map((value) => {
       if (value === 40 || value === 41 || value === 92) {
-        return `\\${String(value).padStart(3, "0")}`;
+        return `\\${value.toString(8).padStart(3, "0")}`;
       }
       if (value >= 32 && value <= 126) {
         return String.fromCharCode(value);
       }
-      return `\\${String(value).padStart(3, "0")}`;
+      return `\\${value.toString(8).padStart(3, "0")}`;
     })
     .join("");
 }

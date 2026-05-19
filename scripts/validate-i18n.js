@@ -53,12 +53,17 @@ function validateExports() {
   const csv = read("src/exports/csv.ts");
   const pdf = read("src/exports/pdf.ts");
   const templates = read("src/exports/pdf-templates.js");
+  const pdfEngine = read("src/exports/pdf-engine.js");
 
   assertIncludes(csv, "getPrincipalTranslator", "CSV exports are not localized");
   assertIncludes(csv, 't("exports.csv.dashboard.rowType")', "Dashboard CSV headers are not localized");
   assertIncludes(pdf, "getPrincipalTranslator", "PDF exports are not localized");
   assertIncludes(pdf, 't("exports.pdf.executive.title")', "Executive PDF labels are not localized");
   assertIncludes(templates, "labels.sections.filters", "PDF templates are not label-driven");
+  assertIncludes(templates, "labels.sections.derivedSourceStatus", "Executive PDF missing derived-source status anchor");
+  assertIncludes(templates, "labels.sections.finalNotes", "Executive PDF missing final-notes anchor");
+  assertIncludes(pdfEngine, "WinAnsiEncoding", "PDF engine is missing explicit WinAnsi encoding for accented text");
+  assertIncludes(pdfEngine, "toWinAnsiBytes", "PDF engine is missing deterministic accent-safe encoding helper");
   console.log("I18n exports ready");
 }
 
