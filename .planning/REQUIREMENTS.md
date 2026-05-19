@@ -102,7 +102,7 @@
 
 ### Dashboard and Reporting
 
-- [ ] **UI-05**: Dashboard and reporting should keep healthy items visible, classify derived-source states clearly, explain timelines and logs, and present actions as consistent controls.
+- [x] **UI-05**: Dashboard and reporting should keep healthy items visible, classify derived-source states clearly, explain timelines and logs, and present actions as consistent controls.
 
 ### Executive PDF
 
