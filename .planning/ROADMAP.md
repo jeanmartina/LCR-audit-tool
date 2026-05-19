@@ -20,7 +20,7 @@
 | 29 | 2/2 | Complete   | 2026-05-10 |
 | 30 | 4/4 | Complete   | 2026-05-13 |
 | 31 | 2/2 | Complete    | 2026-05-19 |
-| 32 | Executive PDF | Make the executive PDF professional, Unicode-safe, and aligned with the web executive read model. | UI-06 |
+| 32 | 1/1 | Complete   | 2026-05-19 |
 | 33 | Global UX Consistency | Apply one modern visual language and navigation pattern across the application. | UI-07 |
 | 34 | Release Clarity | Surface the running version/build identifier in an operator-visible place in the web UI. | UI-08 |
 
