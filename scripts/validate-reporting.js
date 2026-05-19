@@ -56,6 +56,10 @@ function validateDashboard() {
   assertIncludes(dashboard, 't("reporting.filter.trustSource")', "Structured tag filter missing");
   assertIncludes(dashboard, 't("reporting.exportExecutivePdf")', "Executive PDF action missing");
   assertIncludes(dashboard, 't("reporting.settings")', "Settings page link missing");
+  assertIncludes(dashboard, "ActionGroup", "Dashboard global/contextual action hierarchy is missing");
+  assertIncludes(dashboard, "ActionLink", "Dashboard actions are not using shared controls");
+  assertIncludes(dashboard, 't("reporting.empty.title")', "Dashboard empty state title missing");
+  assertIncludes(dashboard, "reporting.state.ui.${row.normalizedState}", "Dashboard is not rendering normalized taxonomy labels");
   assertIncludes(dashboardCsvRoute, "exportDashboardCsv(filters, principal)", "Dashboard CSV route not principal-aware");
   assertIncludes(executivePdfRoute, "buildExecutivePdf(filters, principal)", "Executive PDF route not principal-aware");
   console.log("Reporting dashboard wired");
@@ -81,6 +85,11 @@ function validateDetail() {
   assertIncludes(detail, 't("common.actions.clear")', "Detail Clear action missing");
   assertIncludes(detail, 't(`reporting.tab.${tab.key}`)', "Timeline tab missing");
   assertIncludes(detail, 't("reporting.detail.export.pdf")', "Operational PDF action missing");
+  assertIncludes(detail, "ActionGroup", "Detail page global/contextual action hierarchy is missing");
+  assertIncludes(detail, "ActionLink", "Detail page actions are not using shared controls");
+  assertIncludes(detail, "event.narrative", "Detail timeline is not narrative-first");
+  assertIncludes(detail, "event.technical.map", "Detail timeline technical evidence expansion is missing");
+  assertIncludes(detail, "reporting.state.ui.${detail.summary.normalizedState}", "Detail summary is not using normalized taxonomy label");
   assertIncludes(pollsRoute, "assertCertificatePermission", "Poll export route is not certificate-scoped");
   assertIncludes(coverageRoute, "assertCertificatePermission", "Coverage route is not certificate-scoped");
   assertIncludes(alertsRoute, "assertCertificatePermission", "Alert route is not certificate-scoped");
@@ -122,6 +131,8 @@ function validateExecutive() {
   assertIncludes(executivePage, 't("reporting.executive.breakdowns.title")', "Breakdowns section missing");
   assertIncludes(executivePage, 't("reporting.executive.sources.ocsp")', "OCSP executive card missing");
   assertIncludes(executivePage, 't("reporting.executive.sources.policyDocuments")', "Policy-document executive card missing");
+  assertIncludes(executivePage, "ActionLink", "Executive actions are not using shared controls");
+  assertIncludes(executivePage, "reporting.state.ui.${item.normalizedState}", "Executive risk cards are not using normalized taxonomy labels");
   assertIncludes(executivePage, 't("reporting.derived.status.discovered")', "Discovered derived-source status missing");
   assertIncludes(printButton, 'window.print()', "Executive print support missing");
   assertIncludes(dashboard, 't("reporting.executive.open")', "Operational dashboard is missing executive navigation");
