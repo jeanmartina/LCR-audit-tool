@@ -7,7 +7,13 @@ import { getPrincipalTranslator } from "../../../i18n";
 import {
   buildDetailEvidence,
   buildDetailFilterOptions,
+  type DerivedSourceDisplayStatus,
 } from "../../../reporting/read-models";
+import {
+  getDerivedOperationalLabel,
+  getDerivedOperationalTone,
+  toDerivedOperationalState,
+} from "../../../reporting/derived-state";
 import { buildAuditTimeline } from "../../../reporting/timeline";
 import {
   formatDateInputValue,
@@ -33,14 +39,8 @@ const BOX = {
   padding: "16px",
 } as const;
 
-function getDerivedTone(status: string): "success" | "warning" | "neutral" {
-  if (status === "available") {
-    return "success";
-  }
-  if (status === "unchanged" || status === "not_discovered" || status === "discovered") {
-    return "neutral";
-  }
-  return "warning";
+function getDerivedTone(status: DerivedSourceDisplayStatus): "success" | "warning" | "neutral" {
+  return getDerivedOperationalTone(toDerivedOperationalState(status));
 }
 
 function formatMaybeDate(value: Date | string | null | undefined): string {
@@ -68,44 +68,12 @@ function isDocumentEvidence(
   return Boolean(evidence && "sha256" in evidence);
 }
 
-function getDerivedStatusLabel(status: string, t: (key: string) => string): string {
-  if (status === "discovered") {
-    return t("reporting.derived.status.discovered");
-  }
-  if (status === "available") {
-    return t("reporting.derived.status.available");
-  }
-  if (status === "unavailable") {
-    return t("reporting.derived.status.unavailable");
-  }
-  if (status === "blocked") {
-    return t("reporting.derived.status.blocked");
-  }
-  if (status === "not_discovered") {
-    return t("reporting.derived.status.not_discovered");
-  }
-  if (status === "not_checkable") {
-    return t("reporting.derived.status.not_checkable");
-  }
-  if (status === "changed") {
-    return t("reporting.derived.status.changed");
-  }
-  if (status === "unchanged") {
-    return t("reporting.derived.status.unchanged");
-  }
-  if (status === "oversized") {
-    return t("reporting.derived.status.oversized");
-  }
-  if (status === "malformed") {
-    return t("reporting.derived.status.malformed");
-  }
-  if (status === "extraction_failed") {
-    return t("reporting.derived.status.extraction_failed");
-  }
-  if (status === "disabled") {
-    return t("reporting.derived.status.disabled");
-  }
+function getDerivedStatusLabel(status: DerivedSourceDisplayStatus, t: (key: string) => string): string {
   return t(`reporting.derived.status.${status}`);
+}
+
+function getDerivedOperationalStatusLabel(status: DerivedSourceDisplayStatus): string {
+  return getDerivedOperationalLabel(toDerivedOperationalState(status));
 }
 
 function renderDerivedEvidence(
@@ -160,7 +128,8 @@ function renderDerivedSourceList(
     <article key={detailItem.source.id} id={detailItem.source.sourceKey} style={{ borderTop: "1px solid var(--panel-border)", paddingTop: "12px", display: "grid", gap: "10px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
         <strong>{sourceTypeLabel}</strong>
-        <StatusPill tone={getDerivedTone(detailItem.displayStatus)}>{getDerivedStatusLabel(detailItem.displayStatus, t)}</StatusPill>
+        <StatusPill tone={getDerivedTone(detailItem.displayStatus)}>{getDerivedOperationalStatusLabel(detailItem.displayStatus)}</StatusPill>
+        <span style={{ color: "var(--muted-color)", fontSize: "12px" }}>{getDerivedStatusLabel(detailItem.displayStatus, t)}</span>
       </div>
       <div style={{ display: "grid", gap: "4px" }}>
         <span>
@@ -199,7 +168,8 @@ function renderDerivedSourceHistory(
     <article key={detailItem.source.id} id={detailItem.source.sourceKey} style={{ borderTop: "1px solid var(--panel-border)", paddingTop: "12px", display: "grid", gap: "10px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
         <strong>{sourceTypeLabel}</strong>
-        <StatusPill tone={getDerivedTone(detailItem.displayStatus)}>{getDerivedStatusLabel(detailItem.displayStatus, t)}</StatusPill>
+        <StatusPill tone={getDerivedTone(detailItem.displayStatus)}>{getDerivedOperationalStatusLabel(detailItem.displayStatus)}</StatusPill>
+        <span style={{ color: "var(--muted-color)", fontSize: "12px" }}>{getDerivedStatusLabel(detailItem.displayStatus, t)}</span>
       </div>
       <div style={{ display: "grid", gap: "8px" }}>
         <div>

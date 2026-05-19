@@ -235,7 +235,7 @@ export interface DerivedSourceDetail {
   displayStatus: DerivedSourceDisplayStatus;
 }
 
-type DerivedSourceDisplayStatus =
+export type DerivedSourceDisplayStatus =
   | MonitoringSourceState
   | MonitoringSourceEventStatus
   | OcspCheckEventStatus;
