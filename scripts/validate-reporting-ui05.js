@@ -15,6 +15,7 @@ const i18n = read("src/i18n/index.ts");
 const timeline = read("src/reporting/timeline.ts");
 const dashboardPage = read("src/app/reporting/page.tsx");
 const detailPage = read("src/app/reporting/[targetId]/page.tsx");
+const executivePage = read("src/app/reporting/executive/page.tsx");
 const primitives = read("src/components/ui/primitives.tsx");
 
 assertIncludes(readModels, 'export type UiDerivedState =', "Missing exported six-state UI taxonomy type");
@@ -39,3 +40,8 @@ assertIncludes(detailPage, "ActionLink", "Detail page is not using shared action
 assertIncludes(i18n, '"reporting.empty.title": "No reporting data for the selected filters"', "Missing UI-SPEC empty state heading");
 assertIncludes(i18n, '"reporting.empty.body": "Expand the date range or clear one or more filters, then run the view again."', "Missing UI-SPEC empty state body");
 assertIncludes(i18n, '"reporting.error.body": "We could not load this reporting view. Reload the page; if the problem persists, check authentication/session and selected filters."', "Missing UI-SPEC error state copy");
+
+assertIncludes(detailPage, "event.narrative", "Detail timeline is not narrative-first");
+assertIncludes(detailPage, "event.technical.map", "Detail timeline is missing technical evidence expansion");
+assertIncludes(detailPage, "reporting.state.ui.${detail.summary.normalizedState}", "Detail summary does not render normalized six-state taxonomy");
+assertIncludes(executivePage, "reporting.state.ui.${item.normalizedState}", "Executive risk cards do not use normalized six-state taxonomy");
