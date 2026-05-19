@@ -25,6 +25,32 @@ const PANEL = {
   padding: "16px",
 } as const;
 
+const ACTION_PRIMARY = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "10px 14px",
+  borderRadius: "10px",
+  border: "1px solid #2563eb",
+  background: "#2563eb",
+  color: "#fff",
+  textDecoration: "none",
+  fontWeight: 600,
+} as const;
+
+const ACTION_SECONDARY = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "10px 14px",
+  borderRadius: "10px",
+  border: "1px solid var(--panel-border)",
+  background: "transparent",
+  color: "var(--link-color)",
+  textDecoration: "none",
+  fontWeight: 600,
+} as const;
+
 function formatDate(value: Date | null): string {
   return value ? value.toISOString() : "-";
 }
@@ -170,16 +196,16 @@ export default async function ReportingPage({
           {t("reporting.description")}
         </p>
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <a href={`/reporting/export/dashboard.csv?${query}`} style={{ color: "var(--link-color)" }}>
-            {t("common.actions.exportCsv")}
-          </a>
-          <Link href={`/reporting/executive?${query}`} style={{ color: "var(--link-color)" }}>
+          <Link href={`/reporting/executive?${query}`} style={ACTION_PRIMARY}>
             {t("reporting.executive.open")}
           </Link>
-          <a href={`/reporting/export/executive.pdf?${query}`} style={{ color: "var(--link-color)" }}>
+          <a href={`/reporting/export/dashboard.csv?${query}`} style={ACTION_SECONDARY}>
+            {t("common.actions.exportCsv")}
+          </a>
+          <a href={`/reporting/export/executive.pdf?${query}`} style={ACTION_SECONDARY}>
             {t("reporting.exportExecutivePdf")}
           </a>
-          <Link href="/settings" style={{ color: "var(--link-color)" }}>
+          <Link href="/settings" style={ACTION_SECONDARY}>
             {t("reporting.settings")}
           </Link>
         </div>

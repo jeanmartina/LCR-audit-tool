@@ -39,6 +39,32 @@ const BOX = {
   padding: "16px",
 } as const;
 
+const ACTION_PRIMARY = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "10px 14px",
+  borderRadius: "10px",
+  border: "1px solid #2563eb",
+  background: "#2563eb",
+  color: "#fff",
+  textDecoration: "none",
+  fontWeight: 600,
+} as const;
+
+const ACTION_SECONDARY = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "10px 14px",
+  borderRadius: "10px",
+  border: "1px solid var(--panel-border)",
+  background: "transparent",
+  color: "var(--link-color)",
+  textDecoration: "none",
+  fontWeight: 600,
+} as const;
+
 function getDerivedTone(status: DerivedSourceDisplayStatus): "success" | "warning" | "neutral" {
   return getDerivedOperationalTone(toDerivedOperationalState(status));
 }
@@ -382,7 +408,7 @@ export default async function ReportingTargetPage({
   return (
     <main style={{ padding: "32px", display: "grid", gap: "24px" }}>
       <header style={{ display: "grid", gap: "12px" }}>
-        <Link href={`/reporting?${withFilter(filters, { tab: undefined, httpStatus: undefined, severity: undefined, eventType: undefined, snapshotHash: undefined })}`} style={{ color: "var(--link-color)" }}>
+        <Link href={`/reporting?${withFilter(filters, { tab: undefined, httpStatus: undefined, severity: undefined, eventType: undefined, snapshotHash: undefined })}`} style={ACTION_SECONDARY}>
           {t("reporting.detail.back")}
         </Link>
         <h1 style={{ margin: 0 }}>{detail.certificate.displayName}</h1>
@@ -390,20 +416,20 @@ export default async function ReportingTargetPage({
           {t("reporting.detail.description")}
         </p>
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <a href={`/reporting/${targetId}/export/polls.csv?${exportQuery}`} style={{ color: "var(--link-color)" }}>
+          <a href={`/reporting/${targetId}/export/operational.pdf?${exportQuery}`} style={ACTION_PRIMARY}>
+            {t("reporting.detail.export.pdf")}
+          </a>
+          <a href={`/reporting/${targetId}/export/polls.csv?${exportQuery}`} style={ACTION_SECONDARY}>
             {t("reporting.detail.export.polls")}
           </a>
-          <a href={`/reporting/${targetId}/export/coverage-gaps.csv?${exportQuery}`} style={{ color: "var(--link-color)" }}>
+          <a href={`/reporting/${targetId}/export/coverage-gaps.csv?${exportQuery}`} style={ACTION_SECONDARY}>
             {t("reporting.detail.export.coverage")}
           </a>
-          <a href={`/reporting/${targetId}/export/alerts.csv?${exportQuery}`} style={{ color: "var(--link-color)" }}>
+          <a href={`/reporting/${targetId}/export/alerts.csv?${exportQuery}`} style={ACTION_SECONDARY}>
             {t("reporting.detail.export.alerts")}
           </a>
-          <a href={`/reporting/${targetId}/export/snapshots.csv?${exportQuery}`} style={{ color: "var(--link-color)" }}>
+          <a href={`/reporting/${targetId}/export/snapshots.csv?${exportQuery}`} style={ACTION_SECONDARY}>
             {t("reporting.detail.export.snapshots")}
-          </a>
-          <a href={`/reporting/${targetId}/export/operational.pdf?${exportQuery}`} style={{ color: "var(--link-color)" }}>
-            {t("reporting.detail.export.pdf")}
           </a>
         </div>
       </header>
@@ -523,10 +549,10 @@ export default async function ReportingTargetPage({
               ))}
             </select>
           </label>
-          <button type="submit" style={{ padding: "10px 14px" }}>
+          <button type="submit" style={ACTION_PRIMARY}>
             {t("common.actions.apply")}
           </button>
-          <Link href={`/reporting/${targetId}?tab=${currentTab}`} style={{ padding: "10px 14px", textDecoration: "none", border: "1px solid var(--panel-border)", borderRadius: "10px", textAlign: "center", color: "inherit" }}>
+          <Link href={`/reporting/${targetId}?tab=${currentTab}`} style={ACTION_SECONDARY}>
             {t("common.actions.clear")}
           </Link>
         </div>
