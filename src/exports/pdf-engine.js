@@ -8,6 +8,37 @@ function decodeEntities(html) {
     .replace(/&#39;/g, "'");
 }
 
+const WIN_ANSI_FALLBACK = 63; // '?'
+const WIN_ANSI_MAP = new Map([
+  [0x20ac, 128],
+  [0x201a, 130],
+  [0x0192, 131],
+  [0x201e, 132],
+  [0x2026, 133],
+  [0x2020, 134],
+  [0x2021, 135],
+  [0x02c6, 136],
+  [0x2030, 137],
+  [0x0160, 138],
+  [0x2039, 139],
+  [0x0152, 140],
+  [0x017d, 142],
+  [0x2018, 145],
+  [0x2019, 146],
+  [0x201c, 147],
+  [0x201d, 148],
+  [0x2022, 149],
+  [0x2013, 150],
+  [0x2014, 151],
+  [0x02dc, 152],
+  [0x2122, 153],
+  [0x0161, 154],
+  [0x203a, 155],
+  [0x0153, 156],
+  [0x017e, 158],
+  [0x0178, 159],
+]);
+
 function stripHtmlToText(html) {
   const withBreaks = html
     .replace(/<\/(h1|h2|h3|p|div|section|article|li|tr|ul|ol)>/gi, "\n")
@@ -24,8 +55,36 @@ function stripHtmlToText(html) {
     .join("\n");
 }
 
+function toWinAnsiBytes(text) {
+  const bytes = [];
+  for (const char of text.normalize("NFC")) {
+    const codePoint = char.codePointAt(0);
+    if (codePoint === undefined) {
+      bytes.push(WIN_ANSI_FALLBACK);
+      continue;
+    }
+    if (codePoint <= 0xff) {
+      bytes.push(codePoint);
+      continue;
+    }
+    const mapped = WIN_ANSI_MAP.get(codePoint);
+    bytes.push(mapped ?? WIN_ANSI_FALLBACK);
+  }
+  return bytes;
+}
+
 function escapePdfText(line) {
-  return line.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+  return toWinAnsiBytes(line)
+    .map((value) => {
+      if (value === 40 || value === 41 || value === 92) {
+        return `\\${String(value).padStart(3, "0")}`;
+      }
+      if (value >= 32 && value <= 126) {
+        return String.fromCharCode(value);
+      }
+      return `\\${String(value).padStart(3, "0")}`;
+    })
+    .join("");
 }
 
 function wrapLine(line, limit) {
@@ -99,7 +158,7 @@ function createPdfBytesFromText(text) {
   }
 
   objects[2] = `<< /Type /Pages /Count ${pages.length} /Kids [${pageObjectIds.join(" ")}] >>`;
-  objects[fontObjectId] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>";
+  objects[fontObjectId] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
 
   let output = "%PDF-1.4\n";
   const offsets = [0];
