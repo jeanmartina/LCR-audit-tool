@@ -2,6 +2,15 @@ import type { ReactElement } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { assertAuthenticated } from "../../auth/authorization";
+import {
+  ActionGroup,
+  ActionLink,
+  EmptyState,
+  PageHeader,
+  PageShell,
+  Panel,
+  StatusPill,
+} from "../../components/ui/primitives";
 import { getPrincipalTranslator } from "../../i18n";
 import {
   buildDashboardFilterOptions,
@@ -17,38 +26,13 @@ import {
   type SearchParamLike,
   withFilter,
 } from "../../reporting/query-state";
+import { getDerivedOperationalTone } from "../../reporting/derived-state";
 
 const PANEL = {
   background: "var(--panel-bg)",
   borderRadius: "16px",
   border: "1px solid var(--panel-border)",
   padding: "16px",
-} as const;
-
-const ACTION_PRIMARY = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "10px 14px",
-  borderRadius: "10px",
-  border: "1px solid #2563eb",
-  background: "#2563eb",
-  color: "#fff",
-  textDecoration: "none",
-  fontWeight: 600,
-} as const;
-
-const ACTION_SECONDARY = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "10px 14px",
-  borderRadius: "10px",
-  border: "1px solid var(--panel-border)",
-  background: "transparent",
-  color: "var(--link-color)",
-  textDecoration: "none",
-  fontWeight: 600,
 } as const;
 
 function formatDate(value: Date | null): string {
@@ -188,27 +172,19 @@ export default async function ReportingPage({
   const query = withFilter(filters, {});
 
   return (
-    <main style={{ padding: "32px", display: "grid", gap: "24px" }}>
+    <PageShell>
       <header style={{ display: "grid", gap: "12px" }}>
-        <p style={{ margin: 0, color: "var(--muted-color)" }}>{t("reporting.kicker")}</p>
-        <h1 style={{ margin: 0, fontSize: "32px" }}>{t("reporting.title")}</h1>
-        <p style={{ margin: 0, maxWidth: "960px", color: "var(--muted-color)" }}>
-          {t("reporting.description")}
-        </p>
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <Link href={`/reporting/executive?${query}`} style={ACTION_PRIMARY}>
-            {t("reporting.executive.open")}
-          </Link>
-          <a href={`/reporting/export/dashboard.csv?${query}`} style={ACTION_SECONDARY}>
-            {t("common.actions.exportCsv")}
-          </a>
-          <a href={`/reporting/export/executive.pdf?${query}`} style={ACTION_SECONDARY}>
-            {t("reporting.exportExecutivePdf")}
-          </a>
-          <Link href="/settings" style={ACTION_SECONDARY}>
-            {t("reporting.settings")}
-          </Link>
-        </div>
+        <PageHeader
+          kicker={t("reporting.kicker")}
+          title={t("reporting.title")}
+          description={t("reporting.description")}
+        />
+        <ActionGroup>
+          <ActionLink href={`/reporting/executive?${query}`} tone="primary">{t("reporting.executive.open")}</ActionLink>
+          <ActionLink href={`/reporting/export/dashboard.csv?${query}`}>{t("common.actions.exportCsv")}</ActionLink>
+          <ActionLink href={`/reporting/export/executive.pdf?${query}`}>{t("reporting.exportExecutivePdf")}</ActionLink>
+          <ActionLink href="/settings">{t("reporting.settings")}</ActionLink>
+        </ActionGroup>
       </header>
 
       <section style={{ display: "grid", gap: "12px", gridTemplateColumns: "repeat(6, minmax(0, 1fr))" }}>
@@ -251,64 +227,74 @@ export default async function ReportingPage({
         {renderCustomDateForm(t, filters)}
       </section>
 
-      <section style={{ overflowX: "auto", border: "1px solid var(--panel-border)", borderRadius: "16px" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead style={{ background: "var(--panel-bg)" }}>
-            <tr>
-              {[
-                filters.mode === "crl" ? t("reporting.table.crl") : t("reporting.table.certificate"),
-                t("reporting.table.source"),
-                t("reporting.table.issuer"),
-                t("reporting.table.criticality"),
-                t("reporting.table.status"),
-                t("reporting.table.predictive"),
-                t("reporting.table.latestUnavailability"),
-                t("reporting.table.slaPercent"),
-                t("reporting.table.nextExpiration"),
-                t("reporting.table.openAlerts"),
-                t("reporting.table.trustSource"),
-                t("reporting.table.pki"),
-                t("reporting.table.jurisdiction"),
-              ].map((label) => (
-                <th key={label} style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>
-                  {label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={`${row.rowType}-${row.id}`}>
-                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>
-                  {row.rowType === "certificate" ? (
-                    <Link href={`/reporting/${row.id}?${withFilter(filters, { tab: "timeline", mode: "certificate" })}`} style={{ color: "var(--link-color)" }}>
-                      {row.name}
-                    </Link>
-                  ) : (
-                    row.name
-                  )}
-                </td>
-                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.source}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.issuer ?? "-"}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.criticality}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)", color: getStatusColor(row.currentStatus) }}>{t(`common.status.${row.currentStatus}`)}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>
-                  {row.predictiveSeverity
-                    ? `${row.predictiveSeverity} / ${t(`settings.predictiveType.${row.predictiveType}`)}`
-                    : "-"}
-                </td>
-                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{formatDate(row.latestUnavailabilityAt)}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.slaPercent.toFixed(2)}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.nextExpiration ?? "-"}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.openAlerts}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.structuredTags.trustSource ?? "-"}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.structuredTags.pki ?? "-"}</td>
-                <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.structuredTags.jurisdiction ?? "-"}</td>
+      {rows.length === 0 ? (
+        <EmptyState title={t("reporting.empty.title")}>{t("reporting.empty.body")}</EmptyState>
+      ) : (
+        <section style={{ overflowX: "auto", border: "1px solid var(--panel-border)", borderRadius: "16px" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead style={{ background: "var(--panel-bg)" }}>
+              <tr>
+                {[
+                  filters.mode === "crl" ? t("reporting.table.crl") : t("reporting.table.certificate"),
+                  t("reporting.table.source"),
+                  t("reporting.table.issuer"),
+                  t("reporting.table.criticality"),
+                  t("reporting.table.status"),
+                  t("reporting.table.predictive"),
+                  t("reporting.table.latestUnavailability"),
+                  t("reporting.table.slaPercent"),
+                  t("reporting.table.nextExpiration"),
+                  t("reporting.table.openAlerts"),
+                  t("reporting.table.trustSource"),
+                  t("reporting.table.pki"),
+                  t("reporting.table.jurisdiction"),
+                  t("common.table.actions"),
+                ].map((label) => (
+                  <th key={label} style={{ textAlign: "left", padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>
+                    {label}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-    </main>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={`${row.rowType}-${row.id}`}>
+                  <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.name}</td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.source}</td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.issuer ?? "-"}</td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.criticality}</td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)", color: getStatusColor(row.currentStatus) }}>
+                    <StatusPill tone={getDerivedOperationalTone(row.normalizedState)}>{t(`reporting.state.ui.${row.normalizedState}`)}</StatusPill>
+                  </td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>
+                    {row.predictiveSeverity
+                      ? `${row.predictiveSeverity} / ${t(`settings.predictiveType.${row.predictiveType}`)}`
+                      : "-"}
+                  </td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{formatDate(row.latestUnavailabilityAt)}</td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.slaPercent.toFixed(2)}</td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.nextExpiration ?? "-"}</td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.openAlerts}</td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.structuredTags.trustSource ?? "-"}</td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.structuredTags.pki ?? "-"}</td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>{row.structuredTags.jurisdiction ?? "-"}</td>
+                  <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>
+                    {row.rowType === "certificate" ? (
+                      <ActionGroup>
+                        <ActionLink href={`/reporting/${row.id}?${withFilter(filters, { tab: "timeline", mode: "certificate" })}`} tone="context">
+                          {t("common.actions.open")}
+                        </ActionLink>
+                      </ActionGroup>
+                    ) : (
+                      <span style={{ color: "var(--muted-color)" }}>-</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+    </PageShell>
   );
 }

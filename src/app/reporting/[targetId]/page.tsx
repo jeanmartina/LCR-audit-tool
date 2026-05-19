@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { assertCertificatePermission } from "../../../auth/authorization";
-import { StatusPill } from "../../../components/ui/primitives";
+import { ActionGroup, ActionLink, EmptyState, PageShell, StatusPill } from "../../../components/ui/primitives";
 import { getPrincipalTranslator } from "../../../i18n";
 import {
   buildDetailEvidence,
@@ -37,32 +37,6 @@ const BOX = {
   borderRadius: "16px",
   border: "1px solid var(--panel-border)",
   padding: "16px",
-} as const;
-
-const ACTION_PRIMARY = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "10px 14px",
-  borderRadius: "10px",
-  border: "1px solid #2563eb",
-  background: "#2563eb",
-  color: "#fff",
-  textDecoration: "none",
-  fontWeight: 600,
-} as const;
-
-const ACTION_SECONDARY = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "10px 14px",
-  borderRadius: "10px",
-  border: "1px solid var(--panel-border)",
-  background: "transparent",
-  color: "var(--link-color)",
-  textDecoration: "none",
-  fontWeight: 600,
 } as const;
 
 function getDerivedTone(status: DerivedSourceDisplayStatus): "success" | "warning" | "neutral" {
@@ -393,12 +367,10 @@ export default async function ReportingTargetPage({
 
   if (!detail || !filterOptions) {
     return (
-      <main style={{ padding: "32px" }}>
-        <p>{t("reporting.detail.notFound")}</p>
-        <Link href="/reporting" style={{ color: "var(--link-color)" }}>
-          {t("common.actions.back")}
-        </Link>
-      </main>
+      <PageShell>
+        <EmptyState title={t("reporting.error.title")}>{t("reporting.error.body")}</EmptyState>
+        <ActionLink href="/reporting">{t("common.actions.back")}</ActionLink>
+      </PageShell>
     );
   }
 
@@ -406,32 +378,20 @@ export default async function ReportingTargetPage({
   const exportQuery = withFilter(filters, {});
 
   return (
-    <main style={{ padding: "32px", display: "grid", gap: "24px" }}>
+    <PageShell>
       <header style={{ display: "grid", gap: "12px" }}>
-        <Link href={`/reporting?${withFilter(filters, { tab: undefined, httpStatus: undefined, severity: undefined, eventType: undefined, snapshotHash: undefined })}`} style={ACTION_SECONDARY}>
-          {t("reporting.detail.back")}
-        </Link>
+        <ActionLink href={`/reporting?${withFilter(filters, { tab: undefined, httpStatus: undefined, severity: undefined, eventType: undefined, snapshotHash: undefined })}`}>{t("reporting.detail.back")}</ActionLink>
         <h1 style={{ margin: 0 }}>{detail.certificate.displayName}</h1>
         <p style={{ margin: 0, color: "var(--muted-color)" }}>
           {t("reporting.detail.description")}
         </p>
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <a href={`/reporting/${targetId}/export/operational.pdf?${exportQuery}`} style={ACTION_PRIMARY}>
-            {t("reporting.detail.export.pdf")}
-          </a>
-          <a href={`/reporting/${targetId}/export/polls.csv?${exportQuery}`} style={ACTION_SECONDARY}>
-            {t("reporting.detail.export.polls")}
-          </a>
-          <a href={`/reporting/${targetId}/export/coverage-gaps.csv?${exportQuery}`} style={ACTION_SECONDARY}>
-            {t("reporting.detail.export.coverage")}
-          </a>
-          <a href={`/reporting/${targetId}/export/alerts.csv?${exportQuery}`} style={ACTION_SECONDARY}>
-            {t("reporting.detail.export.alerts")}
-          </a>
-          <a href={`/reporting/${targetId}/export/snapshots.csv?${exportQuery}`} style={ACTION_SECONDARY}>
-            {t("reporting.detail.export.snapshots")}
-          </a>
-        </div>
+        <ActionGroup>
+          <ActionLink href={`/reporting/${targetId}/export/operational.pdf?${exportQuery}`} tone="primary">{t("reporting.detail.export.pdf")}</ActionLink>
+          <ActionLink href={`/reporting/${targetId}/export/polls.csv?${exportQuery}`}>{t("reporting.detail.export.polls")}</ActionLink>
+          <ActionLink href={`/reporting/${targetId}/export/coverage-gaps.csv?${exportQuery}`}>{t("reporting.detail.export.coverage")}</ActionLink>
+          <ActionLink href={`/reporting/${targetId}/export/alerts.csv?${exportQuery}`}>{t("reporting.detail.export.alerts")}</ActionLink>
+          <ActionLink href={`/reporting/${targetId}/export/snapshots.csv?${exportQuery}`}>{t("reporting.detail.export.snapshots")}</ActionLink>
+        </ActionGroup>
       </header>
 
       <section style={{ display: "grid", gap: "12px", gridTemplateColumns: "repeat(7, minmax(0, 1fr))" }}>
@@ -549,12 +509,12 @@ export default async function ReportingTargetPage({
               ))}
             </select>
           </label>
-          <button type="submit" style={ACTION_PRIMARY}>
+          <button type="submit" style={{ minHeight: "44px", padding: "10px 14px", borderRadius: "10px", border: "1px solid #2563eb", background: "#2563eb", color: "#fff", fontWeight: 700 }}>
             {t("common.actions.apply")}
           </button>
-          <Link href={`/reporting/${targetId}?tab=${currentTab}`} style={ACTION_SECONDARY}>
+          <ActionLink href={`/reporting/${targetId}?tab=${currentTab}`}>
             {t("common.actions.clear")}
-          </Link>
+          </ActionLink>
         </div>
       </form>
 
@@ -578,6 +538,6 @@ export default async function ReportingTargetPage({
       </nav>
 
       <section style={BOX}>{renderTabContent(currentTab, detail, timeline, t)}</section>
-    </main>
+    </PageShell>
   );
 }

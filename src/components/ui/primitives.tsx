@@ -101,7 +101,7 @@ export function Field({
   hint,
   example,
   children,
-  }: {
+}: {
   label: string;
   hint?: string;
   example?: string;
@@ -171,6 +171,39 @@ export function ActionButton({ children }: { children: ReactNode }): ReactElemen
     >
       {children}
     </button>
+  );
+}
+
+export function ActionGroup({ children }: { children: ReactNode }): ReactElement {
+  return <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>{children}</div>;
+}
+
+export function ActionLink({ href, children, tone = "secondary" }: { href: string; children: ReactNode; tone?: "primary" | "secondary" | "context" }): ReactElement {
+  const style: CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "44px",
+    padding: tone === "context" ? "6px 10px" : "10px 14px",
+    borderRadius: tone === "context" ? "999px" : "10px",
+    textDecoration: "none",
+    fontWeight: tone === "context" ? 600 : 700,
+  };
+
+  if (tone === "primary") {
+    style.border = "1px solid #2563eb";
+    style.background = "#2563eb";
+    style.color = "#fff";
+  } else {
+    style.border = "1px solid var(--panel-border)";
+    style.background = "transparent";
+    style.color = "var(--link-color)";
+  }
+
+  return (
+    <Link href={href} style={style}>
+      {children}
+    </Link>
   );
 }
 
