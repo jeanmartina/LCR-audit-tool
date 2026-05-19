@@ -7,6 +7,7 @@ import {
   findAuthAccountByProviderAccount,
   findUserByEmail,
   listGroupMembershipsByUser,
+  listGroupInvitesByGroupId,
   markInviteAccepted,
   markInviteRevoked,
   upsertPasswordResetRecord,
@@ -48,6 +49,9 @@ export async function resendInvite(input: {
   inviteCode: string;
 }): Promise<GroupInviteRecord> {
   const invite = await findInviteByCodeOrThrow(input.inviteCode);
+  if (invite.status !== "pending") {
+    throw new Error("invite-not-pending");
+  }
   const updated = await updateGroupInviteRecord(invite.id, {
     expiresAt: getInviteExpiry(),
     status: "pending",
@@ -59,6 +63,36 @@ export async function resendInvite(input: {
     eventType: "invite.resent",
     details: { inviteCode: updated.code },
   });
+  return updated;
+}
+
+export async function editPendingInvite(input: {
+  actorUserId: string;
+  inviteCode: string;
+  email: string;
+  role: GroupRole;
+  expiresAt: Date;
+}): Promise<GroupInviteRecord> {
+  const invite = await findInviteByCodeOrThrow(input.inviteCode);
+  if (invite.status !== "pending") {
+    throw new Error("invite-not-pending");
+  }
+
+  const updated = await updateGroupInviteRecord(invite.id, {
+    email: input.email,
+    role: input.role,
+    expiresAt: input.expiresAt,
+    status: "pending",
+  });
+
+  await createAuditEventRecord({
+    actorUserId: input.actorUserId,
+    groupId: invite.groupId,
+    targetEmail: input.email,
+    eventType: "invite.updated",
+    details: { inviteCode: updated.code, role: input.role, expiresAt: input.expiresAt.toISOString() },
+  });
+
   return updated;
 }
 
@@ -234,4 +268,8 @@ async function findInviteByCodeOrThrow(inviteCode: string): Promise<GroupInviteR
     throw new Error("invite-not-found");
   }
   return invite;
+}
+
+export async function listInvitesForGroup(groupId: string): Promise<GroupInviteRecord[]> {
+  return listGroupInvitesByGroupId(groupId);
 }

@@ -9,6 +9,7 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 ## Current State
 
 - **Shipped version:** `v1.3` on 2026-05-09
+- **Current milestone:** `v1.4` Interface Clarity and UX Modernization
 - **Monitoring runtime:** database-backed inventory, per-target polling with configurable interval/timeout, derived OCSP and CP/CPS/DPC monitoring sources, persisted polls, coverage gaps, snapshots, validation events, alerts, and packaged closure validation
 - **Integrity path:** signature/hash validation, invalid artifact rejection, retained audit evidence, and blocking trust-list XMLDSig validation
 - **Reporting:** dashboard with filters, target drill-down, audit timeline, CSV exports, executive/operational PDFs, predictive views, executive summary route, print support, and group-scoped authorization
@@ -17,17 +18,23 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 - **Trust-list runtime:** persisted trust-list sources, snapshots, sync runs, change detection, certificate projection, provenance, operator preview, timeline visibility, and recovery guidance
 - **Internationalization:** canonical English dictionaries with `pt-BR` and `es` translations, locale-aware auth/reporting/settings/admin surfaces, and localized CSV/PDF exports
 - **Packaging and operations:** Docker packaging for `web` and `worker`, compose topology for `web + worker + postgres + caddy`, HTTPS ingress through Caddy, README/operator docs, and a public-host Google proof runbook
+- **Interface clarity:** the public shell, settings, trust-list, import, reporting, PDF, and global navigation surfaces still need modernization and simplification
 
-## Shipped Milestone: v1.3 Monitoring Source Expansion
+## Current Milestone: v1.4 Interface Clarity and UX Modernization
 
-**Outcome:** expanded monitoring beyond CRL/certificate/trust-list availability into OCSP and CP/CPS/DPC document sources, then closed the packaged runtime with explicit operational limits, safety controls, and proof artifacts for future PKI compliance analysis.
+**Goal:** make the product easier to use and inspect across public shell, settings, trust lists, import review, reporting, PDF, global navigation, and runtime version visibility.
 
-**Delivered scope:**
-- Derived OCSP and CP/CPS/DPC monitoring sources automatically from imported certificates and trust-list-derived certificates, without a new manual-source UI in this milestone.
-- Technical OCSP endpoint checks with persisted response evidence suitable for fuller semantic validation later.
-- Download, snapshot, hash, and extract basic metadata/content from CP/CPS/DPC documents when URLs are discoverable.
-- Historical evidence retention for a future AI-assisted PKI policy/conformance analysis milestone.
-- Operational detail and simple executive aggregate cards for the new monitoring-source categories.
+**Target features:**
+- Public shell, login, and identity visual refresh
+- Settings and administration reorganization
+- Trust lists and operational diagnostics
+- Import review and derived URL safety
+- Dashboard, reporting, and certificate detail clarity
+- Executive PDF and reporting polish
+- Global UX consistency and navigation shell
+- Visible runtime version tag and release clarity
+
+**Decision policy:** the exact requirements inside each target feature were decided with the user and are captured in the active requirements and roadmap.
 
 ## Requirements
 
@@ -92,13 +99,14 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 
 ### Active
 
-- [ ] **AUTH-03**: Invited user can accept access through Microsoft Entra ID login.
-- [ ] **AUTH-04**: Invited user can accept access through a generic OIDC provider.
-- [ ] **SRC-03**: Monitor OCSP availability in addition to CRLs.
-- [ ] **SRC-04**: Monitor the availability of CP/CPS/DPC document URLs referenced by certificates.
-- [ ] **SCL-01**: Scale workers horizontally for high target counts.
-- [ ] **SCL-02**: Run workers from multiple regions/jurisdictions and compare availability by probe location.
-- [ ] **DIF-03**: Expose SLOs, burn rates, and historical error budgets for executive prioritization.
+- [ ] **UI-01**: Public shell and login should feel like the official product entry, with direct login, only enabled identity providers, a compact language selector, modern navigation, and a contemporary visual identity.
+- [ ] **UI-02**: Settings and administration should be organized into clear tabs or sections for personal preferences, group defaults, provider verification, trust lists, groups, and invitations.
+- [ ] **UI-03**: Trust-list screens should show hierarchy, metadata, and clear diagnostics, allow removal of incorrect sources, and explain failure modes precisely.
+- [ ] **UI-04**: Import flows should use review-before-save, allow accept/edit/ignore/reject decisions, revalidate on the server, and preserve provenance across corrections.
+- [ ] **UI-05**: Dashboard and reporting should keep healthy items visible, classify derived-source states clearly, explain timelines and logs, and present actions as consistent controls.
+- [ ] **UI-06**: The executive PDF should read like a professional report, preserve Unicode correctly, use fixed sections, and share the web executive read model.
+- [ ] **UI-07**: The application should use one modern, consistent UX language across all major screens and navigation.
+- [ ] **UI-08**: The web UI should visibly show the running version or build identifier in an operator-facing location.
 
 ### Out of Scope
 
@@ -113,6 +121,7 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 - define worker-scaling and multi-region probe strategies for higher target counts
 - expose SLOs, burn rates, and historical error budgets for derived source categories when the reporting model is ready
 - preserve enough evidence for later AI-assisted PKI compliance analysis while keeping the runtime boundary explicit
+- revisit the interface backlog after v1.4 if further polish is needed
 
 <details>
 <summary>v1.1 shipped milestone snapshot</summary>
@@ -173,6 +182,7 @@ The original scope started from a compliance/engineering dashboard with backgrou
 | Keep derived-source runtime limits explicit in env and compose | Operators need to see the enforced safety boundary without reading code | ✓ Good |
 | Treat evidence retention as the boundary for future AI-assisted PKI policy analysis | v1.3 preserves evidence and provenance without pretending semantic analysis already exists | ✓ Good |
 | Require validator, docs, typecheck, and build parity before closure | Milestone closure should be auditable and repeatable, not implied by code alone | ✓ Good |
+| Expose the running version visibly in the product UI | Operators need to know exactly what build is deployed without inspecting containers or source control | ✓ Good |
 
 ## Evolution
 This document evolves with each phase and milestone transition.
@@ -191,4 +201,4 @@ This document evolves with each phase and milestone transition.
 4. Update context with the current operational state and any active risk signals.
 
 ---
-*Last updated: 2026-05-09 after v1.3 milestone*
+*Last updated: 2026-05-09 after v1.4 milestone definition*

@@ -32,7 +32,7 @@ export async function POST(
       role,
     });
 
-    return Response.json({ invite }, { status: 201 });
+    return new Response(null, { status: 303, headers: { Location: "/settings?tab=invites&saved=invite" } });
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "invite-create-failed" },

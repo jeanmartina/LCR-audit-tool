@@ -19,7 +19,7 @@ export default async function PublicEntryPage({
 
   const { locale, t } = await getRequestTranslator((await searchParams)?.locale);
   const localeOptions = getSupportedLocaleOptions(locale);
-  const providers = getExternalProviderRuntimeConfigs().filter((provider) => provider.enabled);
+  const providers = (await getExternalProviderRuntimeConfigs()).filter((provider) => provider.enabled);
 
   return (
     <PublicShell

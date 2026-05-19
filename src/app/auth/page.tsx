@@ -18,7 +18,7 @@ export default async function AuthLandingPage({
   }
 
   const { locale, t } = await getRequestTranslator((await searchParams)?.locale);
-  const providers = getExternalProviderRuntimeConfigs().filter((provider) => provider.enabled);
+  const providers = (await getExternalProviderRuntimeConfigs()).filter((provider) => provider.enabled);
   const localeOptions = getSupportedLocaleOptions(locale);
 
   return (

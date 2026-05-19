@@ -3,6 +3,7 @@ import {
   createGroupMembershipRecord,
   createGroupRecord,
   createUserRecord,
+  deleteGroupRecord as deleteGroupRecordFromStore,
   findGroupById,
   findMembership,
   findUserByEmail,
@@ -11,6 +12,7 @@ import {
   loadGroups,
   loadUsers,
   recordAuthAccount,
+  updateGroupRecord as updateGroupRecordFromStore,
   updateUserRecord,
   type AuthAccountRecord,
   type AuditEventRecord,
@@ -124,6 +126,38 @@ export async function createGroup(input: {
     details: { groupId: group.id, slug: group.slug },
   });
   return group;
+}
+
+export async function updateGroup(input: {
+  actorUserId: string;
+  groupId: string;
+  name: string;
+  slug: string;
+}): Promise<GroupRecord> {
+  const group = await updateGroupRecordFromStore(input.groupId, {
+    name: input.name,
+    slug: input.slug,
+  });
+  await createAuditEventRecord({
+    actorUserId: input.actorUserId,
+    groupId: input.groupId,
+    eventType: "group.updated",
+    details: { name: input.name, slug: input.slug },
+  });
+  return group;
+}
+
+export async function deleteGroup(input: {
+  actorUserId: string;
+  groupId: string;
+}): Promise<void> {
+  await deleteGroupRecordFromStore(input.groupId);
+  await createAuditEventRecord({
+    actorUserId: input.actorUserId,
+    groupId: input.groupId,
+    eventType: "group.deleted",
+    details: { groupId: input.groupId },
+  });
 }
 
 export async function assignGroupRole(input: {

@@ -28,7 +28,7 @@ export async function POST(request: Request): Promise<Response> {
       role: "group-admin",
     });
 
-    return Response.json({ group }, { status: 201 });
+    return new Response(null, { status: 303, headers: { Location: "/settings?tab=groups&saved=group" } });
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "group-create-failed" },
