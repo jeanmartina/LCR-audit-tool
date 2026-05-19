@@ -20,7 +20,7 @@ function renderFilters(filtersApplied, labels) {
 function renderSection(title, body) {
   return `
     <section>
-      <h2>${title}</h2>
+      <h2>${escapeHtml(title)}</h2>
       ${body}
     </section>
   `;
@@ -31,48 +31,41 @@ function renderExecutiveList(items) {
 }
 
 function renderExecutiveReportHtml(input) {
-  const {
-    generatedAt,
-    filtersApplied,
-    summary,
-    labels,
-  } = input;
+  const { generatedAt, filtersApplied, summary, labels } = input;
+
+  const derivedSourceRows = [
+    `${labels.derivedSources?.ocsp ?? "OCSP"}: ${summary.derivedSourceHealth?.ocsp ?? "-"}`,
+    `${labels.derivedSources?.policyDocuments ?? "Policy documents"}: ${summary.derivedSourceHealth?.policyDocuments ?? "-"}`,
+  ];
 
   return `
     <html>
       <body>
-        <h1>${labels.title}</h1>
-        <p>${labels.generatedAt}: ${generatedAt}</p>
-        <p>${labels.scope}</p>
-        <p>${labels.period}: ${summary.dateRange.from} -> ${summary.dateRange.to}</p>
-        ${renderSection(labels.sections.filters, renderFilters(filtersApplied, labels))}
+        <h1>${escapeHtml(labels.title)}</h1>
+        ${renderSection(
+          labels.sections.scope ?? labels.scope,
+          `<p>${escapeHtml(labels.scope)}</p>
+           <p><strong>${escapeHtml(labels.generatedAt)}:</strong> ${escapeHtml(generatedAt)}</p>
+           <p><strong>${escapeHtml(labels.period)}:</strong> ${escapeHtml(summary.dateRange.from)} -> ${escapeHtml(summary.dateRange.to)}</p>
+           <div><strong>${escapeHtml(labels.sections.filters)}:</strong>${renderFilters(filtersApplied, labels)}</div>`
+        )}
         ${renderSection(
           labels.sections.summary,
           `<ul>
-            <li>${labels.metrics.targets}: ${summary.totalTargets}</li>
-            <li>${labels.metrics.healthy}: ${summary.healthyTargets}</li>
-            <li>${labels.metrics.degraded}: ${summary.degradedTargets}</li>
-            <li>${labels.metrics.offline}: ${summary.offlineTargets}</li>
-            <li>${labels.metrics.atRisk}: ${summary.atRiskTargets}</li>
+            <li>${escapeHtml(labels.metrics.targets)}: ${summary.totalTargets}</li>
+            <li>${escapeHtml(labels.metrics.healthy)}: ${summary.healthyTargets}</li>
+            <li>${escapeHtml(labels.metrics.degraded)}: ${summary.degradedTargets}</li>
+            <li>${escapeHtml(labels.metrics.offline)}: ${summary.offlineTargets}</li>
+            <li>${escapeHtml(labels.metrics.atRisk)}: ${summary.atRiskTargets}</li>
+            <li>${escapeHtml(labels.metrics.averageSla)}: ${escapeHtml(summary.averageSlaPercent)}</li>
+            <li>${escapeHtml(labels.metrics.openAlerts)}: ${summary.openAlerts}</li>
+            <li>${escapeHtml(labels.metrics.upcomingExpirations)}: ${summary.upcomingExpirations}</li>
           </ul>`
         )}
-        ${renderSection(
-          labels.sections.posture,
-          `<ul>
-            <li>${labels.metrics.averageSla}: ${summary.averageSlaPercent}</li>
-            <li>${labels.metrics.openAlerts}: ${summary.openAlerts}</li>
-            <li>${labels.metrics.upcomingExpirations}: ${summary.upcomingExpirations}</li>
-          </ul>`
-        )}
+        ${renderSection(labels.sections.derivedSourceStatus ?? "Derived source status", renderExecutiveList(derivedSourceRows))}
         ${renderSection(labels.sections.topRisks, renderExecutiveList(summary.topRisks))}
-        ${renderSection(labels.sections.upcomingRisks, renderExecutiveList(summary.upcomingRisks))}
         ${renderSection(labels.sections.trend, renderExecutiveList(summary.trend))}
-        ${renderSection(
-          labels.sections.breakdowns,
-          `${renderSection(labels.sections.trustSources, renderExecutiveList(summary.breakdowns.trustSources))}
-           ${renderSection(labels.sections.pkis, renderExecutiveList(summary.breakdowns.pkis))}
-           ${renderSection(labels.sections.jurisdictions, renderExecutiveList(summary.breakdowns.jurisdictions))}`
-        )}
+        ${renderSection(labels.sections.finalNotes ?? "Final notes", `<p>${escapeHtml(labels.finalNotesBody ?? "This report is generated from executive summary data.")}</p>`)}
       </body>
     </html>
   `;

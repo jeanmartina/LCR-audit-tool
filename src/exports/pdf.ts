@@ -134,10 +134,9 @@ export async function buildExecutivePdf(
       topRisks: summary.topRisks.map((item) => `${item.name} | ${item.currentStatus} | alerts:${item.openAlerts} | sla:${item.slaPercent.toFixed(2)}`),
       upcomingRisks: summary.upcomingRisks.map((item) => `${item.name} | ${item.nextExpiration ?? "-"} | ${item.predictiveType ?? "none"}`),
       trend: summary.trend.map((point) => `${point.label} | H:${point.healthy} D:${point.degraded} O:${point.offline} R:${point.atRisk}`),
-      breakdowns: {
-        trustSources: summary.breakdowns.trustSources.map((item) => `${item.label} | total:${item.total} | risk:${item.atRisk}`),
-        pkis: summary.breakdowns.pkis.map((item) => `${item.label} | total:${item.total} | risk:${item.atRisk}`),
-        jurisdictions: summary.breakdowns.jurisdictions.map((item) => `${item.label} | total:${item.total} | risk:${item.atRisk}`),
+      derivedSourceHealth: {
+        ocsp: `ok:${summary.derivedSourceHealth.ocsp.ok} degraded:${summary.derivedSourceHealth.ocsp.degraded} failed:${summary.derivedSourceHealth.ocsp.failed} blocked:${summary.derivedSourceHealth.ocsp.blockedUi}`,
+        policyDocuments: `ok:${summary.derivedSourceHealth.policyDocuments.ok} degraded:${summary.derivedSourceHealth.policyDocuments.degraded} failed:${summary.derivedSourceHealth.policyDocuments.failed} blocked:${summary.derivedSourceHealth.policyDocuments.blockedUi}`,
       },
     },
     labels: {
@@ -160,16 +159,13 @@ export async function buildExecutivePdf(
         preset: t("reporting.filter.period"),
       },
       sections: {
+        scope: t("exports.pdf.executive.scope"),
         filters: t("exports.pdf.section.filters"),
         summary: t("exports.pdf.section.summary"),
-        posture: t("exports.pdf.section.posture"),
+        derivedSourceStatus: "Derived source status",
         topRisks: t("exports.pdf.section.topRisks"),
-        upcomingRisks: t("exports.pdf.section.upcomingRisks"),
         trend: t("exports.pdf.section.trend"),
-        breakdowns: t("exports.pdf.section.breakdowns"),
-        trustSources: t("exports.pdf.section.trustSources"),
-        pkis: t("exports.pdf.section.pkis"),
-        jurisdictions: t("exports.pdf.section.jurisdictions"),
+        finalNotes: "Final notes",
       },
       metrics: {
         targets: t("exports.pdf.summary.targets"),
@@ -181,6 +177,11 @@ export async function buildExecutivePdf(
         openAlerts: t("exports.pdf.summary.openAlerts"),
         upcomingExpirations: t("exports.pdf.summary.upcomingExpirations"),
       },
+      derivedSources: {
+        ocsp: t("reporting.executive.sources.ocsp"),
+        policyDocuments: t("reporting.executive.sources.policyDocuments"),
+      },
+      finalNotesBody: "This report is generated from the same executive read model used in the web view and should be reviewed alongside operational evidence when follow-up is required.",
     },
   });
   const bytes = createPdfBytesFromHtml(html);
