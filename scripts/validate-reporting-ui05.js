@@ -13,6 +13,9 @@ function assertIncludes(content, fragment, message) {
 const readModels = read("src/reporting/read-models.ts");
 const i18n = read("src/i18n/index.ts");
 const timeline = read("src/reporting/timeline.ts");
+const dashboardPage = read("src/app/reporting/page.tsx");
+const detailPage = read("src/app/reporting/[targetId]/page.tsx");
+const primitives = read("src/components/ui/primitives.tsx");
 
 assertIncludes(readModels, 'export type UiDerivedState =', "Missing exported six-state UI taxonomy type");
 assertIncludes(readModels, 'export function normalizeUiDerivedState(', "Missing exported UI taxonomy normalization helper");
@@ -26,3 +29,13 @@ console.log("UI-05 state contract anchors present");
 assertIncludes(timeline, "narrative: string", "TimelineEvent narrative summary is missing");
 assertIncludes(timeline, "technical: string[]", "TimelineEvent technical payload is missing");
 assertIncludes(i18n, "\"reporting.timeline.narrative.poll\"", "Missing timeline narrative i18n key");
+
+assertIncludes(primitives, "export function ActionLink(", "Missing shared action link primitive");
+assertIncludes(primitives, "export function ActionGroup(", "Missing shared action group primitive");
+assertIncludes(dashboardPage, "ActionGroup", "Dashboard is not using shared action grouping");
+assertIncludes(dashboardPage, "ActionLink", "Dashboard is not using shared action links");
+assertIncludes(detailPage, "ActionGroup", "Detail page is not using shared action grouping");
+assertIncludes(detailPage, "ActionLink", "Detail page is not using shared action links");
+assertIncludes(i18n, '"reporting.empty.title": "No reporting data for the selected filters"', "Missing UI-SPEC empty state heading");
+assertIncludes(i18n, '"reporting.empty.body": "Expand the date range or clear one or more filters, then run the view again."', "Missing UI-SPEC empty state body");
+assertIncludes(i18n, '"reporting.error.body": "We could not load this reporting view. Reload the page; if the problem persists, check authentication/session and selected filters."', "Missing UI-SPEC error state copy");
