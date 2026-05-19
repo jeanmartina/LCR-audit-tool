@@ -14,7 +14,7 @@ import {
   getDerivedOperationalTone,
   toDerivedOperationalState,
 } from "../../../reporting/derived-state";
-import { buildAuditTimeline } from "../../../reporting/timeline";
+import { buildAuditTimeline, type TimelineEvent } from "../../../reporting/timeline";
 import {
   formatDateInputValue,
   parseReportFilters,
@@ -209,6 +209,48 @@ function renderDerivedSourceHistory(
   );
 }
 
+
+function getTimelineHeadline(event: TimelineEvent, t: (key: string) => string): string {
+  if (event.type === "alert") {
+    return t("reporting.timeline.headline.alert");
+  }
+  if (event.type === "validation") {
+    return t("reporting.timeline.headline.validation");
+  }
+  if (event.type === "coverage-gap") {
+    return t("reporting.timeline.headline.coverageGap");
+  }
+  if (event.type === "expiration") {
+    return t("reporting.timeline.headline.expiration");
+  }
+  if (event.type === "predictive") {
+    return t("reporting.timeline.headline.predictive");
+  }
+  if (event.type === "recovery") {
+    return t("reporting.timeline.headline.recovery");
+  }
+  return t("reporting.timeline.headline.poll");
+}
+
+function renderTimelineEvent(event: TimelineEvent, t: (key: string) => string): ReactElement {
+  return (
+    <article key={`${event.type}-${event.at.toISOString()}-${event.title}`} style={{ borderTop: "1px solid var(--panel-border)", paddingTop: "12px", display: "grid", gap: "8px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+        <strong>{getTimelineHeadline(event, t)}</strong>
+        <span style={{ color: "var(--muted-color)", fontSize: "12px" }}>{event.at.toISOString()}</span>
+      </div>
+      <p style={{ margin: 0 }}>{event.title}</p>
+      <details>
+        <summary style={{ cursor: "pointer", color: "var(--link-color)" }}>{t("reporting.timeline.technicalDetails")}</summary>
+        <div style={{ marginTop: "8px", color: "var(--muted-color)", fontSize: "12px" }}>
+          <div>{t("reporting.timeline.type")}: {event.type}</div>
+          <div>{t("reporting.timeline.rawTitle")}: {event.title}</div>
+          <div>{t("reporting.timeline.rawDetail")}: {event.detail}</div>
+        </div>
+      </details>
+    </article>
+  );
+}
 function renderTabContent(
   tab: string,
   detail: NonNullable<Awaited<ReturnType<typeof buildDetailEvidence>>>,
@@ -290,13 +332,13 @@ function renderTabContent(
   }
 
   return (
-    <ul>
-      {timeline.map((event) => (
-        <li key={`${event.type}-${event.at.toISOString()}-${event.title}`}>
-          {event.at.toISOString()} - {event.type} - {event.title} - {event.detail}
-        </li>
-      ))}
-    </ul>
+    <div style={{ display: "grid", gap: "12px" }}>
+      {timeline.length > 0 ? (
+        timeline.map((event) => renderTimelineEvent(event, t))
+      ) : (
+        <p style={{ margin: 0, color: "var(--muted-color)" }}>{t("reporting.timeline.empty")}</p>
+      )}
+    </div>
   );
 }
 
