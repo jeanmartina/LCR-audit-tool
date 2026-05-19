@@ -12,6 +12,7 @@ function assertIncludes(content, fragment, message) {
 
 const readModels = read("src/reporting/read-models.ts");
 const i18n = read("src/i18n/index.ts");
+const timeline = read("src/reporting/timeline.ts");
 
 assertIncludes(readModels, 'export type UiDerivedState =', "Missing exported six-state UI taxonomy type");
 assertIncludes(readModels, 'export function normalizeUiDerivedState(', "Missing exported UI taxonomy normalization helper");
@@ -21,3 +22,7 @@ assertIncludes(i18n, '"reporting.state.ui.not-checkable"', "Missing UI state tra
 assertIncludes(i18n, '"reporting.state.ui.description.unknown"', "Missing UI state description translation key: unknown");
 
 console.log("UI-05 state contract anchors present");
+
+assertIncludes(timeline, "narrative: string", "TimelineEvent narrative summary is missing");
+assertIncludes(timeline, "technical: string[]", "TimelineEvent technical payload is missing");
+assertIncludes(i18n, "\"reporting.timeline.narrative.poll\"", "Missing timeline narrative i18n key");
