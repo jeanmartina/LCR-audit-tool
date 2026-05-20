@@ -1,5 +1,4 @@
 import type { ReactElement } from "react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { assertAuthenticated } from "../../auth/authorization";
 import { getProviderRuntimeConfigs, listProviderStatusEntries } from "../../auth/providers";
@@ -7,6 +6,8 @@ import { listAllGroups } from "../../auth/models";
 import { listInvitesForGroup } from "../../auth/invitations";
 import { listTrustListSourcesForAdmin } from "../../trust-lists/admin";
 import {
+  ActionLink,
+  LocalSubnav,
   Notice,
   PageHeader,
   PageShell,
@@ -68,30 +69,20 @@ function SettingsTabNav({
   t: SettingsTranslator;
 }): ReactElement {
   return (
-    <nav aria-label={t("settings.tabs.label")} style={{ display: "flex", flexWrap: "wrap", gap: "8px", padding: "8px", border: "1px solid var(--panel-border)", borderRadius: "18px", background: "var(--panel-bg)" }}>
+    <LocalSubnav label={t("settings.tabs.label")}>
       {SETTINGS_TABS.map((tab) => {
         const isActive = tab.key === activeTab;
         return (
-          <Link
+          <ActionLink
             key={tab.key}
             href={getTabHref(tab.key)}
-            aria-current={isActive ? "page" : undefined}
-            style={{
-              padding: "10px 14px",
-              borderRadius: "999px",
-              textDecoration: "none",
-              border: `1px solid ${isActive ? "var(--button-border)" : "transparent"}`,
-              background: isActive ? "var(--button-bg)" : "transparent",
-              color: isActive ? "var(--button-fg)" : "inherit",
-              fontWeight: isActive ? 700 : 600,
-              whiteSpace: "nowrap",
-            }}
+            tone={isActive ? "primary" : "secondary"}
           >
             {t(tab.labelKey)}
-          </Link>
+          </ActionLink>
         );
       })}
-    </nav>
+    </LocalSubnav>
   );
 }
 

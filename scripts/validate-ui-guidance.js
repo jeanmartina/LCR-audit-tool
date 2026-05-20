@@ -135,3 +135,42 @@ const validateAll = read("scripts/validate-all.js");
 assertIncludes(validateAll, "scripts/validate-ui-guidance.js", "validate-all");
 
 console.log("UI guidance validation passed");
+
+
+const majorRoutes = [
+  "src/app/page.tsx",
+  "src/app/auth/page.tsx",
+  "src/app/reporting/page.tsx",
+  "src/app/reporting/[targetId]/page.tsx",
+  "src/app/admin/certificates/page.tsx",
+  "src/app/settings/settings-page.tsx",
+  "src/app/admin/trust-lists/page.tsx",
+];
+
+for (const routePath of majorRoutes) {
+  const route = read(routePath);
+  assertIncludes(route, "ActionLink", `${routePath} must use shared action hierarchy`);
+}
+
+for (const navPath of [
+  "src/app/reporting/page.tsx",
+  "src/app/reporting/[targetId]/page.tsx",
+  "src/app/admin/certificates/page.tsx",
+  "src/app/settings/settings-page.tsx",
+]) {
+  const route = read(navPath);
+  assertIncludes(route, "LocalSubnav", `${navPath} must expose local sub-navigation`);
+}
+
+for (const emptyPath of [
+  "src/app/page.tsx",
+  "src/app/auth/page.tsx",
+  "src/app/reporting/page.tsx",
+  "src/app/reporting/[targetId]/page.tsx",
+  "src/app/admin/certificates/page.tsx",
+]) {
+  const route = read(emptyPath);
+  if (route.includes("EmptyState")) {
+    assertIncludes(route, "EmptyStateWithActions", `${emptyPath} empty state must include recovery composition`);
+  }
+}

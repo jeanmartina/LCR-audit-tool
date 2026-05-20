@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { redirect } from "next/navigation";
 import { assertAuthenticated } from "../../../auth/authorization";
-import { Notice, PageHeader, PageShell } from "../../../components/ui/primitives";
+import { ActionLink, LocalSubnav, Notice, PageHeader, PageShell } from "../../../components/ui/primitives";
 import { getPrincipalTranslator } from "../../../i18n";
 import { listTrustListSourcesForAdmin } from "../../../trust-lists/admin";
 import { TrustListAdminPanel } from "./trust-list-admin-panel";
@@ -40,6 +40,11 @@ export default async function TrustListsPage({
         title={t("admin.trustLists.title")}
         description={t("admin.trustLists.description")}
       />
+
+      <LocalSubnav label={t("common.ui.localSubnav")}>
+        <ActionLink href="/settings?tab=trust-lists" tone="secondary">{t("admin.trustLists.backToSettings")}</ActionLink>
+        <ActionLink href="/reporting" tone="context">{t("common.actions.back")}</ActionLink>
+      </LocalSubnav>
 
       {created ? <Notice tone="success" title={t("admin.trustLists.created.title")}>{t("admin.trustLists.created.body")}</Notice> : null}
       {updated ? <Notice tone="success" title={t("common.actions.save")}>{t("admin.trustLists.created.body")}</Notice> : null}

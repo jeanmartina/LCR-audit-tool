@@ -58,6 +58,8 @@ function validateDashboard() {
   assertIncludes(dashboard, 't("reporting.settings")', "Settings page link missing");
   assertIncludes(dashboard, "ActionGroup", "Dashboard global/contextual action hierarchy is missing");
   assertIncludes(dashboard, "ActionLink", "Dashboard actions are not using shared controls");
+  assertIncludes(dashboard, "LocalSubnav", "Dashboard local sub-navigation anchor missing");
+  assertIncludes(dashboard, "EmptyStateWithActions", "Dashboard empty-state recovery composition missing");
   assertIncludes(dashboard, 't("reporting.empty.title")', "Dashboard empty state title missing");
   assertIncludes(dashboard, "reporting.state.ui.${row.normalizedState}", "Dashboard is not rendering normalized taxonomy labels");
   assertIncludes(dashboardCsvRoute, "exportDashboardCsv(filters, principal)", "Dashboard CSV route not principal-aware");
@@ -87,6 +89,8 @@ function validateDetail() {
   assertIncludes(detail, 't("reporting.detail.export.pdf")', "Operational PDF action missing");
   assertIncludes(detail, "ActionGroup", "Detail page global/contextual action hierarchy is missing");
   assertIncludes(detail, "ActionLink", "Detail page actions are not using shared controls");
+  assertIncludes(detail, "LocalSubnav", "Detail local sub-navigation anchor missing");
+  assertIncludes(detail, "EmptyStateWithActions", "Detail empty/error recovery composition missing");
   assertIncludes(detail, "event.narrative", "Detail timeline is not narrative-first");
   assertIncludes(detail, "event.technical.map", "Detail timeline technical evidence expansion is missing");
   assertIncludes(detail, "reporting.state.ui.${detail.summary.normalizedState}", "Detail summary is not using normalized taxonomy label");
