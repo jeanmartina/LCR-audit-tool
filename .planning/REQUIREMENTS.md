@@ -86,15 +86,15 @@
 
 ### Public Shell and Identity
 
-- [ ] **UI-01**: The public landing page should look like the official product entry, with a modern identity, visible login form, only enabled identity providers, a compact top-left language selector, modern navigation, and a contemporary visual brand.
+- [x] **UI-01**: The public landing page should look like the official product entry, with a modern identity, visible login form, only enabled identity providers, a compact top-left language selector, modern navigation, and a contemporary visual brand.
 
 ### Settings and Administration
 
-- [ ] **UI-02**: Settings and administration should be organized into clear tabs or sections for personal preferences, group defaults, provider verification, trust-list administration, groups, and invitations, with contextual hints for technical fields.
+- [x] **UI-02**: Settings and administration should be organized into clear tabs or sections for personal preferences, group defaults, provider verification, trust-list administration, groups, and invitations, with contextual hints for technical fields.
 
 ### Trust Lists
 
-- [ ] **UI-03**: Trust-list screens should show hierarchy, metadata, and clear diagnostics, allow removal of incorrect sources, and explain failure modes precisely.
+- [x] **UI-03**: Trust-list screens should show hierarchy, metadata, and clear diagnostics, allow removal of incorrect sources, and explain failure modes precisely.
 
 ### Import Review and Safety
 
@@ -153,9 +153,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UI-01 | Phase 35 | Pending |
-| UI-02 | Phase 35 | Pending |
-| UI-03 | Phase 35 | Pending |
+| UI-01 | Phase 35 | Complete |
+| UI-02 | Phase 35 | Complete |
+| UI-03 | Phase 35 | Complete |
 | UI-04 | Phase 30 | Planned |
 | UI-05 | Phase 31 | Planned |
 | UI-06 | Phase 32 | Planned |

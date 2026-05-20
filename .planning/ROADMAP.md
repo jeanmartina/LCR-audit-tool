@@ -23,7 +23,7 @@
 | 32 | 1/1 | Complete    | 2026-05-19 |
 | 33 | 2/2 | Complete    | 2026-05-20 |
 | 34 | 1/1 | Complete    | 2026-05-20 |
-| 35 | Verification Backfill | Close missing verification evidence for UI-01, UI-02, and UI-03. | UI-01, UI-02, UI-03 |
+| 35 | 2/2 | Complete    | 2026-05-20 |
 | 36 | Traceability Governance Sync | Synchronize REQUIREMENTS traceability/checkbox status with verified implementation outcomes. | UI-01, UI-02, UI-03 |
 | 37 | Nyquist Validation Backfill | Add/complete Nyquist validation contracts for early v1.4 phases. | UI-01, UI-02, UI-03 |
 
@@ -162,7 +162,7 @@ Plans:
 
 **Requirements:** UI-01, UI-02, UI-03
 
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] `35-01-PLAN.md` — Backfill 27/28 verification artifacts with deterministic evidence coverage for UI-01 and UI-02.
