@@ -242,6 +242,7 @@ function validateReleaseClarity() {
   assertIncludes(resolver, "return null", "Runtime resolver must return null for missing/invalid metadata");
   assertIncludes(route, "resolveRuntimeVersion", "Version API route must use shared runtime resolver");
   assertIncludes(route, "Response.json", "Version API route must return JSON payload");
+  assertIncludes(route, "export async function GET", "Version API route must expose read-only GET handler");
   assertIncludes(route, "version", "Version API payload must include version field");
   assertIncludes(layout, "resolveRuntimeVersion", "Layout must consume shared runtime resolver");
   assertIncludes(layout, "StatusPill", "Layout must render version indicator with shared primitive");

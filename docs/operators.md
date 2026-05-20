@@ -373,3 +373,16 @@ After `docker compose up --build`:
 3. confirm the print action opens the browser print flow with a readable summary layout
 4. confirm `https://<host>/reporting/export/executive.pdf` returns a real PDF under the same authorized scope
 5. confirm the evidence links still return to the operational reporting surface without authorization drift
+
+## Packaged runtime release clarity verification
+
+Use this checklist to verify UI-08 in a packaged runtime without developer tools.
+
+1. Ensure compose runtime exports `APP_VERSION` with a semantic value (example: `APP_VERSION=1.4.0`).
+2. Start or restart the stack: `docker compose up --build -d`.
+3. Sign in and open an authenticated operator surface (for example `/reporting` or `/reporting/executive`).
+4. Confirm the global topbar shows exactly one version chip in the form `vX.Y.Z`.
+5. Query the runtime API from the same deployment origin: `curl -s https://<host>/api/version`.
+6. Confirm the JSON contains only the public version value (example: `{"version":"v1.4.0"}`) and no commit/build internals.
+7. Confirm the value returned by `/api/version` matches the topbar value exactly.
+8. If `APP_VERSION` is absent or invalid, confirm the topbar indicator is hidden and `/api/version` returns `{"version":null}`.

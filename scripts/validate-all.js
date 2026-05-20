@@ -15,6 +15,7 @@ const commands = [
   ["node", ["scripts/validate-reporting.js", "pdf-bytes"]],
   ["node", ["scripts/validate-reporting.js", "pdf-routes"]],
   ["node", ["scripts/validate-reporting.js", "pdf-audit"]],
+  ["node", ["scripts/validate-reporting.js", "release-clarity"]],
   ["node", ["scripts/validate-auth-foundation.js", "schema"]],
   ["node", ["scripts/validate-auth-foundation.js", "auth"]],
   ["node", ["scripts/validate-auth-foundation.js", "permissions"]],
