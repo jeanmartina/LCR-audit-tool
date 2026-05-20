@@ -34,6 +34,57 @@ for (const exportName of [
   assertIncludes(primitives, `export function ${exportName}`, "UI primitives");
 }
 
+// Phase 33 D-01: compact density tokens must stay centralized.
+for (const token of [
+  "export const UX_DENSITY",
+  "shellPadding",
+  "sectionGap",
+  "controlHeight",
+  "controlPadding",
+]) {
+  assertIncludes(primitives, token, "D-01 compact density contract");
+}
+
+// Phase 33 D-02: explicit action hierarchy mapping.
+assertIncludes(primitives, "tone?: \"primary\" | \"secondary\" | \"context\"", "D-02 action hierarchy type");
+assertIncludes(primitives, "if (tone === \"primary\")", "D-02 primary action mapping");
+assertIncludes(primitives, "else if (tone === \"secondary\")", "D-02 secondary action mapping");
+assertIncludes(primitives, "style.textDecoration = \"underline\"", "D-02 tertiary/context link mapping");
+
+// Phase 33 D-04: empty/error composition helper must provide primary + recovery actions.
+for (const marker of [
+  "export function EmptyStateWithActions",
+  "primaryHref",
+  "recoveryHref",
+  "tone=\"primary\"",
+  "tone=\"context\"",
+]) {
+  assertIncludes(primitives, marker, "D-04 empty/error action contract");
+}
+
+const shell = read("src/components/public-shell.tsx");
+// Phase 33 D-03: global top navigation + local sub-navigation hooks.
+for (const marker of [
+  "actions: PublicShellAction[]",
+  "localSubnavLabel?: string",
+  "localSubnav?: ReactNode",
+  "<nav style={{ display: \"flex\", alignItems: \"center\", gap: \"10px\", flexWrap: \"wrap\" }}>",
+  "<LocalSubnav label={localSubnavLabel ?? \"Local navigation\"}",
+]) {
+  assertIncludes(shell, marker, "D-03 hybrid navigation contract");
+}
+
+const layout = read("src/app/layout.tsx");
+for (const marker of [
+  "[\"--density-shell-padding\" as string]",
+  "[\"--density-section-gap\" as string]",
+  "[\"--density-control-height\" as string]",
+  "[\"--nav-global-gap\" as string]",
+  "[\"--nav-local-gap\" as string]",
+]) {
+  assertIncludes(layout, marker, "D-01/D-03 layout tokens");
+}
+
 const settingsPage = read("src/app/settings/page.tsx");
 for (const required of [
   "../../components/ui/primitives",
@@ -59,8 +110,11 @@ for (const requiredKey of [
   "settings.group.windowDays.hint",
   "settings.platform.enabled.hint",
   "settings.providers.notes.example",
+  "common.ui.recovery",
+  "common.ui.tryAgain",
+  "common.ui.localSubnav",
 ]) {
-  const count = (i18n.match(new RegExp(`"${escapeRegExp(requiredKey)}"`, "g")) || []).length;
+  const count = (i18n.match(new RegExp(`\"${escapeRegExp(requiredKey)}\"`, "g")) || []).length;
   if (count !== 3) {
     throw new Error(`${requiredKey} must exist exactly once per locale; found ${count}`);
   }
