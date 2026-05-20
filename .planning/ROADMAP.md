@@ -21,7 +21,7 @@
 | 30 | 4/4 | Complete   | 2026-05-13 |
 | 31 | 2/2 | Complete    | 2026-05-19 |
 | 32 | 1/1 | Complete    | 2026-05-19 |
-| 33 | 2/2 | Complete   | 2026-05-20 |
+| 33 | 2/2 | Complete    | 2026-05-20 |
 | 34 | Release Clarity | Surface the running version/build identifier in an operator-visible place in the web UI. | UI-08 |
 
 ## Phase Details
@@ -142,6 +142,11 @@ Plans:
 **Goal:** Surface the running version/build identifier in an operator-visible place in the web UI.
 
 **Requirements:** UI-08
+
+**Plans:** 1/1 plans complete
+
+Plans:
+- [ ] `34-01-PLAN.md` — Add global topbar `vX.Y.Z` visibility with shared resolver, `/api/version`, and packaged-runtime verification anchors.
 
 **Success criteria:**
 1. The running version/build is visible without developer tools.
