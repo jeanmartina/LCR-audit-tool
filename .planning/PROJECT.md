@@ -8,8 +8,8 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 
 ## Current State
 
-- **Shipped version:** `v1.3` on 2026-05-09
-- **Current milestone:** `v1.4` Interface Clarity and UX Modernization
+- **Shipped version:** `v1.4` on 2026-05-20
+- **Current milestone:** none (ready for next milestone)
 - **Monitoring runtime:** database-backed inventory, per-target polling with configurable interval/timeout, derived OCSP and CP/CPS/DPC monitoring sources, persisted polls, coverage gaps, snapshots, validation events, alerts, and packaged closure validation
 - **Integrity path:** signature/hash validation, invalid artifact rejection, retained audit evidence, and blocking trust-list XMLDSig validation
 - **Reporting:** dashboard with filters, target drill-down, audit timeline, CSV exports, executive/operational PDFs, predictive views, executive summary route, print support, and group-scoped authorization
@@ -18,11 +18,11 @@ Never allow a trusted certificate to operate without valid revocation coverage. 
 - **Trust-list runtime:** persisted trust-list sources, snapshots, sync runs, change detection, certificate projection, provenance, operator preview, timeline visibility, and recovery guidance
 - **Internationalization:** canonical English dictionaries with `pt-BR` and `es` translations, locale-aware auth/reporting/settings/admin surfaces, and localized CSV/PDF exports
 - **Packaging and operations:** Docker packaging for `web` and `worker`, compose topology for `web + worker + postgres + caddy`, HTTPS ingress through Caddy, README/operator docs, and a public-host Google proof runbook
-- **Interface clarity:** the public shell, settings, trust-list, import, reporting, PDF, and global navigation surfaces still need modernization and simplification
+- **Interface clarity:** public shell, settings, trust-list, import, reporting, PDF, global navigation, and runtime version visibility modernization shipped in v1.4
 
-## Current Milestone: v1.4 Interface Clarity and UX Modernization
+## Next Milestone Preparation
 
-**Goal:** make the product easier to use and inspect across public shell, settings, trust lists, import review, reporting, PDF, global navigation, and runtime version visibility.
+**Goal:** define post-v1.4 priorities from production feedback and close deferred human-UAT debt.
 
 **Target features:**
 - Public shell, login, and identity visual refresh
@@ -201,4 +201,4 @@ This document evolves with each phase and milestone transition.
 4. Update context with the current operational state and any active risk signals.
 
 ---
-*Last updated: 2026-05-09 after v1.4 milestone definition*
+*Last updated: 2026-05-20 after v1.4 milestone completion*
