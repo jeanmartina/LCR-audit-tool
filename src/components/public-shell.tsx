@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactElement, ReactNode } from "react";
-import Link from "next/link";
-import { ActionButton, Panel, SelectInput } from "./ui/primitives";
+import { ActionButton, ActionLink, LocalSubnav, Panel, SelectInput, UX_DENSITY } from "./ui/primitives";
 
 export interface PublicShellAction {
   href: string;
@@ -24,36 +23,23 @@ export interface PublicShellProps {
   description: string;
   asideText: string;
   actions: PublicShellAction[];
+  localSubnavLabel?: string;
+  localSubnav?: ReactNode;
   children: ReactNode;
 }
-
-const shellActionStyle = (tone: PublicShellAction["tone"] = "secondary"): CSSProperties => ({
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  minHeight: "44px",
-  padding: "0 16px",
-  borderRadius: "999px",
-  border: tone === "primary" ? "1px solid var(--button-border)" : "1px solid var(--panel-border)",
-  background: tone === "primary" ? "var(--button-bg)" : "var(--subtle-bg)",
-  color: tone === "primary" ? "var(--button-fg)" : "inherit",
-  textDecoration: "none",
-  fontWeight: 700,
-  boxShadow: tone === "primary" ? "0 14px 32px var(--shadow-color)" : "none",
-});
 
 const shellLayout: CSSProperties = {
   position: "relative",
   minHeight: "100vh",
   overflow: "hidden",
-  padding: "28px 24px 40px",
+  padding: "24px 20px 32px",
 };
 
 const shellFrame: CSSProperties = {
   position: "relative",
   zIndex: 1,
   display: "grid",
-  gap: "24px",
+  gap: UX_DENSITY.sectionGap,
   maxWidth: "1240px",
   margin: "0 auto",
 };
@@ -101,6 +87,8 @@ export function PublicShell({
   description,
   asideText,
   actions,
+  localSubnavLabel,
+  localSubnav,
   children,
 }: PublicShellProps): ReactElement {
   return (
@@ -132,7 +120,7 @@ export function PublicShell({
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "10px",
-                padding: "10px 12px",
+                padding: "8px 10px",
                 borderRadius: "999px",
                 border: "1px solid var(--panel-border)",
                 background: "var(--panel-bg)",
@@ -149,7 +137,7 @@ export function PublicShell({
                   style={{
                     width: "auto",
                     minWidth: "172px",
-                    padding: "8px 10px",
+                    padding: "6px 10px",
                     borderRadius: "999px",
                   }}
                 >
@@ -188,12 +176,14 @@ export function PublicShell({
 
           <nav style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
             {actions.map((action) => (
-              <Link key={action.href} href={action.href} style={shellActionStyle(action.tone)}>
+              <ActionLink key={action.href} href={action.href} tone={action.tone === "primary" ? "primary" : "secondary"}>
                 {action.label}
-              </Link>
+              </ActionLink>
             ))}
           </nav>
         </header>
+
+        {localSubnav ? <LocalSubnav label={localSubnavLabel ?? "Local navigation"}>{localSubnav}</LocalSubnav> : null}
 
         <Panel>
           <div
@@ -243,7 +233,7 @@ export function PublicShell({
                   display: "grid",
                   gap: "10px",
                   alignContent: "start",
-                  padding: "18px",
+                  padding: "16px",
                   borderRadius: "16px",
                   border: "1px solid var(--panel-border)",
                   background: "var(--subtle-bg)",

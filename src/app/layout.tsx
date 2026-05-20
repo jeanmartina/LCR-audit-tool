@@ -53,7 +53,12 @@ export default async function RootLayout({
       <body
         style={{
           margin: 0,
-          fontFamily: "Arial, sans-serif",
+          fontFamily: "Segoe UI, Roboto, Helvetica Neue, sans-serif",
+          ["--density-shell-padding" as string]: "24px",
+          ["--density-section-gap" as string]: "16px",
+          ["--density-control-height" as string]: "40px",
+          ["--nav-global-gap" as string]: "10px",
+          ["--nav-local-gap" as string]: "8px",
           background: theme.background,
           color: theme.foreground,
           ["--panel-bg" as string]: theme.panelBackground,

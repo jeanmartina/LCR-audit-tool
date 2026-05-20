@@ -1,12 +1,22 @@
 import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode } from "react";
 import Link from "next/link";
 
+export const UX_DENSITY = {
+  shellPadding: "24px",
+  sectionGap: "16px",
+  panelPadding: "16px",
+  panelPaddingLoose: "20px",
+  controlHeight: "40px",
+  controlPadding: "8px 12px",
+} as const;
+
 export const stackStyle = (gap = "16px"): CSSProperties => ({ display: "grid", gap });
 
 const inputBase: CSSProperties = {
   width: "100%",
   boxSizing: "border-box",
-  padding: "11px 12px",
+  minHeight: UX_DENSITY.controlHeight,
+  padding: UX_DENSITY.controlPadding,
   borderRadius: "10px",
   border: "1px solid var(--input-border)",
   background: "var(--input-bg)",
@@ -31,7 +41,7 @@ const hintChipStyle: CSSProperties = {
 
 export function PageShell({ children }: { children: ReactNode }): ReactElement {
   return (
-    <main style={{ padding: "32px", display: "grid", gap: "24px", maxWidth: "1280px", margin: "0 auto" }}>
+    <main style={{ padding: UX_DENSITY.shellPadding, display: "grid", gap: UX_DENSITY.sectionGap, maxWidth: "1280px", margin: "0 auto" }}>
       {children}
     </main>
   );
@@ -61,7 +71,7 @@ export function PageHeader({
         {kicker}
       </p>
       <h1 style={{ margin: 0, fontSize: "clamp(2rem, 5vw, 3.25rem)", lineHeight: 1 }}>{title}</h1>
-      <p style={{ margin: 0, color: "var(--muted-color)", maxWidth: "840px", fontSize: "16px", lineHeight: 1.55 }}>
+      <p style={{ margin: 0, color: "var(--muted-color)", maxWidth: "840px", fontSize: "15px", lineHeight: 1.5 }}>
         {description}
       </p>
     </header>
@@ -84,7 +94,7 @@ export function Panel({
       style={{
         border: "1px solid var(--panel-border)",
         borderRadius: "18px",
-        padding: compact ? "16px" : "20px",
+        padding: compact ? UX_DENSITY.panelPadding : UX_DENSITY.panelPaddingLoose,
         background: "var(--panel-bg)",
         boxShadow: "0 18px 48px var(--shadow-color)",
       }}
@@ -160,7 +170,8 @@ export function ActionButton({ children }: { children: ReactNode }): ReactElemen
       type="submit"
       style={{
         width: "fit-content",
-        padding: "10px 14px",
+        minHeight: UX_DENSITY.controlHeight,
+        padding: "8px 14px",
         borderRadius: "10px",
         border: "1px solid var(--button-border)",
         background: "var(--button-bg)",
@@ -179,25 +190,32 @@ export function ActionGroup({ children }: { children: ReactNode }): ReactElement
 }
 
 export function ActionLink({ href, children, tone = "secondary" }: { href: string; children: ReactNode; tone?: "primary" | "secondary" | "context" }): ReactElement {
+  const isContext = tone === "context";
   const style: CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: "44px",
-    padding: tone === "context" ? "6px 10px" : "10px 14px",
-    borderRadius: tone === "context" ? "999px" : "10px",
+    minHeight: isContext ? "auto" : UX_DENSITY.controlHeight,
+    padding: isContext ? "0" : "8px 14px",
+    borderRadius: isContext ? "0" : "10px",
     textDecoration: "none",
-    fontWeight: tone === "context" ? 600 : 700,
+    fontWeight: isContext ? 600 : 700,
   };
 
   if (tone === "primary") {
     style.border = "1px solid #2563eb";
     style.background = "#2563eb";
     style.color = "#fff";
-  } else {
+  } else if (tone === "secondary") {
     style.border = "1px solid var(--panel-border)";
     style.background = "transparent";
     style.color = "var(--link-color)";
+  } else {
+    style.border = "none";
+    style.background = "transparent";
+    style.color = "var(--link-color)";
+    style.textDecoration = "underline";
+    style.textUnderlineOffset = "2px";
   }
 
   return (
@@ -240,15 +258,67 @@ export function EmptyState({ title, children }: { title: string; children: React
       style={{
         border: "1px dashed var(--panel-border)",
         borderRadius: "14px",
-        padding: "18px",
+        padding: UX_DENSITY.panelPadding,
         background: "var(--subtle-bg)",
         display: "grid",
-        gap: "6px",
+        gap: "8px",
       }}
     >
       <strong>{title}</strong>
       <span style={{ color: "var(--muted-color)", lineHeight: 1.45 }}>{children}</span>
     </section>
+  );
+}
+
+export function EmptyStateWithActions({
+  title,
+  message,
+  primaryHref,
+  primaryLabel,
+  recoveryHref,
+  recoveryLabel,
+}: {
+  title: string;
+  message: string;
+  primaryHref: string;
+  primaryLabel: string;
+  recoveryHref: string;
+  recoveryLabel: string;
+}): ReactElement {
+  return (
+    <EmptyState title={title}>
+      <span>{message}</span>
+      <ActionGroup>
+        <ActionLink href={primaryHref} tone="primary">
+          {primaryLabel}
+        </ActionLink>
+        <ActionLink href={recoveryHref} tone="context">
+          {recoveryLabel}
+        </ActionLink>
+      </ActionGroup>
+    </EmptyState>
+  );
+}
+
+export function LocalSubnav({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}): ReactElement {
+  return (
+    <nav
+      aria-label={label}
+      style={{
+        display: "flex",
+        gap: "8px",
+        flexWrap: "wrap",
+        alignItems: "center",
+      }}
+    >
+      {children}
+    </nav>
   );
 }
 
