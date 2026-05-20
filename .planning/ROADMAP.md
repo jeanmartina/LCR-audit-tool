@@ -20,8 +20,8 @@
 | 29 | 2/2 | Complete   | 2026-05-10 |
 | 30 | 4/4 | Complete   | 2026-05-13 |
 | 31 | 2/2 | Complete    | 2026-05-19 |
-| 32 | 1/1 | Complete   | 2026-05-19 |
-| 33 | Global UX Consistency | Apply one modern visual language and navigation pattern across the application. | UI-07 |
+| 32 | 1/1 | Complete    | 2026-05-19 |
+| 33 | 2/2 | Complete   | 2026-05-20 |
 | 34 | Release Clarity | Surface the running version/build identifier in an operator-visible place in the web UI. | UI-08 |
 
 ## Phase Details
@@ -124,6 +124,12 @@ Plans:
 **Goal:** Apply one modern visual language and navigation pattern across the application.
 
 **Requirements:** UI-07
+
+**Plans:** 2/2 plans complete
+
+Plans:
+- [ ] `33-01-PLAN.md` — Define and validate shared UX contracts for density, action hierarchy, hybrid navigation, and empty/error composition.
+- [ ] `33-02-PLAN.md` — Roll out shared UX contracts across public/reporting/settings/admin surfaces and enforce route-level regression anchors.
 
 **Success criteria:**
 1. The application feels like one coherent product across all major screens.

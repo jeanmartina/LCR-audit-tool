@@ -106,7 +106,7 @@
 
 ### Executive PDF
 
-- [ ] **UI-06**: The executive PDF should read like a professional report, preserve Unicode correctly, use fixed sections, and share the web executive read model.
+- [x] **UI-06**: The executive PDF should read like a professional report, preserve Unicode correctly, use fixed sections, and share the web executive read model.
 
 ### Global UX
 
