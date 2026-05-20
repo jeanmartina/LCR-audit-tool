@@ -22,7 +22,10 @@
 | 31 | 2/2 | Complete    | 2026-05-19 |
 | 32 | 1/1 | Complete    | 2026-05-19 |
 | 33 | 2/2 | Complete    | 2026-05-20 |
-| 34 | 1/1 | Complete   | 2026-05-20 |
+| 34 | 1/1 | Complete    | 2026-05-20 |
+| 35 | Verification Backfill | Close missing verification evidence for UI-01, UI-02, and UI-03. | UI-01, UI-02, UI-03 |
+| 36 | Traceability Governance Sync | Synchronize REQUIREMENTS traceability/checkbox status with verified implementation outcomes. | UI-01, UI-02, UI-03 |
+| 37 | Nyquist Validation Backfill | Add/complete Nyquist validation contracts for early v1.4 phases. | UI-01, UI-02, UI-03 |
 
 ## Phase Details
 
@@ -152,6 +155,30 @@ Plans:
 1. The running version/build is visible without developer tools.
 2. The placement is stable and operator-facing.
 3. The displayed value can be verified in the packaged runtime.
+
+### Phase 35: Verification Backfill
+
+**Goal:** Create missing verification artifacts for phases 27-29 and close requirement-evidence gaps for UI-01, UI-02, and UI-03.
+
+**Requirements:** UI-01, UI-02, UI-03
+
+**Gap Closure:** Closes requirement verification gaps identified in `v1.4-MILESTONE-AUDIT.md`.
+
+### Phase 36: Traceability Governance Sync
+
+**Goal:** Align REQUIREMENTS.md status/traceability with verified phase outcomes and prevent future drift.
+
+**Requirements:** UI-01, UI-02, UI-03
+
+**Gap Closure:** Closes integration/flow governance gaps (`REQ-TRACE-01`, `FLOW-GOV-01`) from the milestone audit.
+
+### Phase 37: Nyquist Validation Backfill
+
+**Goal:** Backfill missing/partial Nyquist validation contracts for phases 27-29 so audit gates are consistently enforceable.
+
+**Requirements:** UI-01, UI-02, UI-03
+
+**Gap Closure:** Closes Nyquist coverage gaps reported in `v1.4-MILESTONE-AUDIT.md`.
 
 ## Current Status
 

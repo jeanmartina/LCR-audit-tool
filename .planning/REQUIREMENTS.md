@@ -90,11 +90,11 @@
 
 ### Settings and Administration
 
-- [x] **UI-02**: Settings and administration should be organized into clear tabs or sections for personal preferences, group defaults, provider verification, trust-list administration, groups, and invitations, with contextual hints for technical fields.
+- [ ] **UI-02**: Settings and administration should be organized into clear tabs or sections for personal preferences, group defaults, provider verification, trust-list administration, groups, and invitations, with contextual hints for technical fields.
 
 ### Trust Lists
 
-- [x] **UI-03**: Trust-list screens should show hierarchy, metadata, and clear diagnostics, allow removal of incorrect sources, and explain failure modes precisely.
+- [ ] **UI-03**: Trust-list screens should show hierarchy, metadata, and clear diagnostics, allow removal of incorrect sources, and explain failure modes precisely.
 
 ### Import Review and Safety
 
@@ -114,7 +114,7 @@
 
 ### Release Clarity
 
-- [ ] **UI-08**: The web UI should visibly show the running version or build identifier in an operator-facing location.
+- [x] **UI-08**: The web UI should visibly show the running version or build identifier in an operator-facing location.
 
 ## Future Requirements
 
@@ -153,9 +153,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UI-01 | Phase 27 | Planned |
-| UI-02 | Phase 28 | Planned |
-| UI-03 | Phase 29 | Planned |
+| UI-01 | Phase 35 | Pending |
+| UI-02 | Phase 35 | Pending |
+| UI-03 | Phase 35 | Pending |
 | UI-04 | Phase 30 | Planned |
 | UI-05 | Phase 31 | Planned |
 | UI-06 | Phase 32 | Planned |
@@ -169,4 +169,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-05-09*
-*Last updated: 2026-05-09 after v1.4 requirements finalized*
+*Last updated: 2026-05-20 after v1.4 gap-closure planning*
