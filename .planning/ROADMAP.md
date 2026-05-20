@@ -162,6 +162,12 @@ Plans:
 
 **Requirements:** UI-01, UI-02, UI-03
 
+**Plans:** 2 plans
+
+Plans:
+- [ ] `35-01-PLAN.md` — Backfill 27/28 verification artifacts with deterministic evidence coverage for UI-01 and UI-02.
+- [ ] `35-02-PLAN.md` — Backfill 29 verification artifact and create consolidated UI-01/UI-02/UI-03 evidence trace index.
+
 **Gap Closure:** Closes requirement verification gaps identified in `v1.4-MILESTONE-AUDIT.md`.
 
 ### Phase 36: Traceability Governance Sync
