@@ -156,11 +156,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UI-01 | Phase 35 | Complete |
 | UI-02 | Phase 35 | Complete |
 | UI-03 | Phase 35 | Complete |
-| UI-04 | Phase 30 | Planned |
-| UI-05 | Phase 31 | Planned |
-| UI-06 | Phase 32 | Planned |
-| UI-07 | Phase 33 | Planned |
-| UI-08 | Phase 34 | Planned |
+| UI-04 | Phase 30 | Complete |
+| UI-05 | Phase 31 | Complete |
+| UI-06 | Phase 32 | Complete |
+| UI-07 | Phase 33 | Complete |
+| UI-08 | Phase 34 | Complete |
 
 **Coverage:**
 - v1.4 requirements: 8 total
