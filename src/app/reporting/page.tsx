@@ -5,7 +5,8 @@ import { assertAuthenticated } from "../../auth/authorization";
 import {
   ActionGroup,
   ActionLink,
-  EmptyState,
+  EmptyStateWithActions,
+  LocalSubnav,
   PageHeader,
   PageShell,
   Panel,
@@ -197,6 +198,10 @@ export default async function ReportingPage({
       </section>
 
       <section style={{ display: "grid", gap: "16px", gridTemplateColumns: "2fr 1fr" }}>
+      <LocalSubnav label={t("common.ui.localSubnav")}>
+        <ActionLink href={`/reporting?${withFilter(filters, { mode: "certificate" })}`} tone={filters.mode !== "crl" ? "primary" : "secondary"}>{t("reporting.mode.certificate")}</ActionLink>
+        <ActionLink href={`/reporting?${withFilter(filters, { mode: "crl" })}`} tone={filters.mode === "crl" ? "primary" : "secondary"}>{t("reporting.mode.crl")}</ActionLink>
+      </LocalSubnav>
         <div style={{ ...PANEL, display: "grid", gap: "16px" }}>
           <div>
             <div style={{ color: "var(--muted-color)", fontSize: "12px", marginBottom: "6px" }}>{t("reporting.mode")}</div>
@@ -228,7 +233,14 @@ export default async function ReportingPage({
       </section>
 
       {rows.length === 0 ? (
-        <EmptyState title={t("reporting.empty.title")}>{t("reporting.empty.body")}</EmptyState>
+        <EmptyStateWithActions
+          title={t("reporting.empty.title")}
+          message={t("reporting.empty.body")}
+          primaryHref="/admin/certificates/new"
+          primaryLabel={t("admin.certificates.importSingle")}
+          recoveryHref="/settings"
+          recoveryLabel={t("common.ui.recovery")}
+        />
       ) : (
         <section style={{ overflowX: "auto", border: "1px solid var(--panel-border)", borderRadius: "16px" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>

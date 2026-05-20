@@ -1,12 +1,14 @@
 import type { ReactElement } from "react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { assertAuthenticated } from "../../../auth/authorization";
 import { getPrincipalTranslator } from "../../../i18n";
 import { listVisibleCertificates } from "../../../inventory/certificate-admin";
 import {
   ActionButton,
-  EmptyState,
+  ActionGroup,
+  ActionLink,
+  EmptyStateWithActions,
+  LocalSubnav,
   PageHeader,
   PageShell,
   Panel,
@@ -54,14 +56,14 @@ export default async function CertificatesAdminPage({
         description={t("admin.certificates.description")}
       />
 
-      <section style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-        <Link href="/admin/certificates/new" style={{ color: "var(--link-color)", fontWeight: 700 }}>
+      <LocalSubnav label={t("common.ui.localSubnav")}>
+        <ActionLink href="/admin/certificates/new" tone="primary">
           {t("admin.certificates.importSingle")}
-        </Link>
-        <Link href="/admin/certificates/batch" style={{ color: "var(--link-color)", fontWeight: 700 }}>
+        </ActionLink>
+        <ActionLink href="/admin/certificates/batch">
           {t("admin.certificates.importBatch")}
-        </Link>
-      </section>
+        </ActionLink>
+      </LocalSubnav>
 
       <Panel>
         <form action="/admin/certificates" method="get" style={{ display: "grid", gap: "12px", gridTemplateColumns: "2fr 1fr auto" }}>
@@ -99,9 +101,11 @@ export default async function CertificatesAdminPage({
                 {certificates.map((item) => (
                   <tr key={item.certificate.id}>
                     <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>
-                      <Link href={`/admin/certificates/${item.certificate.id}`} style={{ color: "var(--link-color)" }}>
-                        {item.certificate.displayName}
-                      </Link>
+                      <ActionGroup>
+                        <ActionLink href={`/admin/certificates/${item.certificate.id}`} tone="context">
+                          {item.certificate.displayName}
+                        </ActionLink>
+                      </ActionGroup>
                     </td>
                     <td style={{ padding: "12px", borderBottom: "1px solid var(--panel-border)" }}>
                       {t(`common.status.${item.certificate.status}`)}
@@ -124,9 +128,14 @@ export default async function CertificatesAdminPage({
             </table>
           </div>
         ) : (
-          <EmptyState title={t("admin.certificates.empty.title")}>
-            {t("admin.certificates.empty")}
-          </EmptyState>
+          <EmptyStateWithActions
+            title={t("admin.certificates.empty.title")}
+            message={t("admin.certificates.empty")}
+            primaryHref="/admin/certificates/new"
+            primaryLabel={t("admin.certificates.importSingle")}
+            recoveryHref="/reporting"
+            recoveryLabel={t("common.ui.recovery")}
+          />
         )}
       </Panel>
     </PageShell>

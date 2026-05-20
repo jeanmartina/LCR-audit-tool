@@ -1,10 +1,9 @@
 import type { ReactElement } from "react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentPrincipal } from "../../auth/authorization";
 import { getExternalProviderRuntimeConfigs } from "../../auth/providers";
 import { getRequestTranslator, getSupportedLocaleOptions } from "../../i18n";
-import { ActionButton, EmptyState, Field, Panel, StatusPill, TextInput } from "../../components/ui/primitives";
+import { ActionButton, ActionLink, EmptyStateWithActions, Field, Panel, StatusPill, TextInput } from "../../components/ui/primitives";
 import { PublicShell } from "../../components/public-shell";
 
 export default async function AuthLandingPage({
@@ -72,24 +71,21 @@ export default async function AuthLandingPage({
                     <strong>{t(`auth.provider.${provider.id}`)}</strong>
                     <StatusPill tone="success">{t("auth.landing.providerConfigured")}</StatusPill>
                   </div>
-                  <Link
-                    href={`/auth/accept-invite?locale=${encodeURIComponent(locale)}#provider-${provider.id}`}
-                    style={{
-                      width: "fit-content",
-                      color: "var(--link-color)",
-                      textDecoration: "none",
-                      fontWeight: 700,
-                    }}
-                  >
+                  <ActionLink href={`/auth/accept-invite?locale=${encodeURIComponent(locale)}#provider-${provider.id}`} tone="context">
                     {t("auth.landing.providerAction", { provider: t(`auth.provider.${provider.id}`) })}
-                  </Link>
+                  </ActionLink>
                 </div>
               ))}
             </div>
           ) : (
-            <EmptyState title={t("auth.entry.providerUnavailable")}>
-              {t("auth.entry.noEnabledProviders")}
-            </EmptyState>
+            <EmptyStateWithActions
+              title={t("auth.entry.providerUnavailable")}
+              message={t("auth.entry.noEnabledProviders")}
+              primaryHref={`/auth?locale=${encodeURIComponent(locale)}`}
+              primaryLabel={t("common.ui.tryAgain")}
+              recoveryHref={`/auth/accept-invite?locale=${encodeURIComponent(locale)}`}
+              recoveryLabel={t("common.ui.recovery")}
+            />
           )}
         </Panel>
       </div>

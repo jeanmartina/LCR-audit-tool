@@ -1,8 +1,9 @@
 import type { ReactElement } from "react";
 import Link from "next/link";
+
 import { redirect } from "next/navigation";
 import { assertCertificatePermission } from "../../../auth/authorization";
-import { ActionGroup, ActionLink, EmptyState, PageShell, StatusPill } from "../../../components/ui/primitives";
+import { ActionGroup, ActionLink, EmptyStateWithActions, LocalSubnav, PageShell, StatusPill } from "../../../components/ui/primitives";
 import { getPrincipalTranslator } from "../../../i18n";
 import {
   buildDetailEvidence,
@@ -370,8 +371,14 @@ export default async function ReportingTargetPage({
   if (!detail || !filterOptions) {
     return (
       <PageShell>
-        <EmptyState title={t("reporting.error.title")}>{t("reporting.error.body")}</EmptyState>
-        <ActionLink href="/reporting">{t("common.actions.back")}</ActionLink>
+        <EmptyStateWithActions
+          title={t("reporting.error.title")}
+          message={t("reporting.error.body")}
+          primaryHref="/reporting"
+          primaryLabel={t("common.ui.tryAgain")}
+          recoveryHref="/settings"
+          recoveryLabel={t("common.ui.recovery")}
+        />
       </PageShell>
     );
   }
@@ -520,24 +527,17 @@ export default async function ReportingTargetPage({
         </div>
       </form>
 
-      <nav style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+      <LocalSubnav label={t("common.ui.localSubnav")}>
         {TABS.map((tab) => (
-          <Link
+          <ActionLink
             key={tab.key}
             href={`/reporting/${targetId}?${withFilter(filters, { tab: tab.key })}`}
-            style={{
-              padding: "8px 12px",
-              borderRadius: "999px",
-              border: "1px solid var(--panel-border)",
-              textDecoration: "none",
-              color: currentTab === tab.key ? "#fff" : "var(--link-color)",
-              background: currentTab === tab.key ? "#2563eb" : "transparent",
-            }}
+            tone={currentTab === tab.key ? "primary" : "secondary"}
           >
             {t(`reporting.tab.${tab.key}`)}
-          </Link>
+          </ActionLink>
         ))}
-      </nav>
+      </LocalSubnav>
 
       <section style={BOX}>{renderTabContent(currentTab, detail, timeline, t)}</section>
     </PageShell>

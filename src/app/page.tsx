@@ -1,10 +1,9 @@
 import type { ReactElement } from "react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentPrincipal } from "../auth/authorization";
 import { getExternalProviderRuntimeConfigs } from "../auth/providers";
 import { getRequestTranslator, getSupportedLocaleOptions } from "../i18n";
-import { EmptyState, Panel, StatusPill } from "../components/ui/primitives";
+import { ActionGroup, ActionLink, EmptyStateWithActions, Panel, StatusPill } from "../components/ui/primitives";
 import { PublicShell } from "../components/public-shell";
 
 export default async function PublicEntryPage({
@@ -49,44 +48,14 @@ export default async function PublicEntryPage({
             <p style={{ margin: 0, color: "var(--muted-color)", lineHeight: 1.55 }}>
               {t("auth.entry.publicNote")}
             </p>
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              <Link
-                href={`/auth?locale=${encodeURIComponent(locale)}`}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minHeight: "42px",
-                  padding: "0 16px",
-                  borderRadius: "999px",
-                  background: "var(--button-bg)",
-                  border: "1px solid var(--button-border)",
-                  color: "var(--button-fg)",
-                  textDecoration: "none",
-                  fontWeight: 700,
-                }}
-              >
+            <ActionGroup>
+              <ActionLink href={`/auth?locale=${encodeURIComponent(locale)}`} tone="primary">
                 {t("auth.entry.primaryAction")}
-              </Link>
-              <Link
-                href={`/auth/accept-invite?locale=${encodeURIComponent(locale)}`}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minHeight: "42px",
-                  padding: "0 16px",
-                  borderRadius: "999px",
-                  border: "1px solid var(--panel-border)",
-                  background: "var(--subtle-bg)",
-                  color: "inherit",
-                  textDecoration: "none",
-                  fontWeight: 700,
-                }}
-              >
+              </ActionLink>
+              <ActionLink href={`/auth/accept-invite?locale=${encodeURIComponent(locale)}`}>
                 {t("auth.entry.secondaryAction")}
-              </Link>
-            </div>
+              </ActionLink>
+            </ActionGroup>
           </div>
         </Panel>
 
@@ -109,24 +78,21 @@ export default async function PublicEntryPage({
                     <strong>{t(`auth.provider.${provider.id}`)}</strong>
                     <StatusPill tone="success">{t("auth.landing.providerConfigured")}</StatusPill>
                   </div>
-                  <Link
-                    href={`/auth/accept-invite?locale=${encodeURIComponent(locale)}#provider-${provider.id}`}
-                    style={{
-                      width: "fit-content",
-                      color: "var(--link-color)",
-                      textDecoration: "none",
-                      fontWeight: 700,
-                    }}
-                  >
+                  <ActionLink href={`/auth/accept-invite?locale=${encodeURIComponent(locale)}#provider-${provider.id}`} tone="context">
                     {t("auth.entry.providerAction", { provider: t(`auth.provider.${provider.id}`) })}
-                  </Link>
+                  </ActionLink>
                 </div>
               ))}
             </div>
           ) : (
-            <EmptyState title={t("auth.entry.providerUnavailable")}>
-              {t("auth.entry.noEnabledProviders")}
-            </EmptyState>
+            <EmptyStateWithActions
+              title={t("auth.entry.providerUnavailable")}
+              message={t("auth.entry.noEnabledProviders")}
+              primaryHref={`/auth?locale=${encodeURIComponent(locale)}`}
+              primaryLabel={t("common.ui.tryAgain")}
+              recoveryHref={`/auth/accept-invite?locale=${encodeURIComponent(locale)}`}
+              recoveryLabel={t("common.ui.recovery")}
+            />
           )}
         </Panel>
       </div>
