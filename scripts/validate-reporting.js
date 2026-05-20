@@ -230,6 +230,21 @@ function validatePdfRoutes() {
   console.log("Reporting PDF routes wired");
 }
 
+
+function validateReleaseClarity() {
+  const resolver = read("src/lib/runtime-version.ts");
+  const route = read("src/app/api/version/route.ts");
+
+  assertIncludes(resolver, "export function resolveRuntimeVersion", "Missing runtime version resolver export");
+  assertIncludes(resolver, "APP_VERSION", "Runtime resolver must prefer APP_VERSION");
+  assertIncludes(resolver, "v${", "Runtime resolver must normalize to vX.Y.Z format");
+  assertIncludes(resolver, "return null", "Runtime resolver must return null for missing/invalid metadata");
+  assertIncludes(route, "resolveRuntimeVersion", "Version API route must use shared runtime resolver");
+  assertIncludes(route, "Response.json", "Version API route must return JSON payload");
+  assertIncludes(route, "version", "Version API payload must include version field");
+  console.log("Release clarity contracts wired");
+}
+
 function validatePdfAudit() {
   const pdfModule = read("src/exports/pdf.ts");
   const executiveText = stripHtmlToText(
@@ -386,6 +401,8 @@ if (mode === "read-models") {
   validatePdfRoutes();
 } else if (mode === "pdf-audit") {
   validatePdfAudit();
+} else if (mode === "release-clarity") {
+  validateReleaseClarity();
 } else {
   throw new Error(`Unknown validation mode: ${mode}`);
 }
