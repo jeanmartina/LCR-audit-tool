@@ -234,6 +234,7 @@ function validatePdfRoutes() {
 function validateReleaseClarity() {
   const resolver = read("src/lib/runtime-version.ts");
   const route = read("src/app/api/version/route.ts");
+  const layout = read("src/app/layout.tsx");
 
   assertIncludes(resolver, "export function resolveRuntimeVersion", "Missing runtime version resolver export");
   assertIncludes(resolver, "APP_VERSION", "Runtime resolver must prefer APP_VERSION");
@@ -242,6 +243,9 @@ function validateReleaseClarity() {
   assertIncludes(route, "resolveRuntimeVersion", "Version API route must use shared runtime resolver");
   assertIncludes(route, "Response.json", "Version API route must return JSON payload");
   assertIncludes(route, "version", "Version API payload must include version field");
+  assertIncludes(layout, "resolveRuntimeVersion", "Layout must consume shared runtime resolver");
+  assertIncludes(layout, "StatusPill", "Layout must render version indicator with shared primitive");
+  assertIncludes(layout, "runtimeVersion ?", "Layout must hide indicator when version is unavailable");
   console.log("Release clarity contracts wired");
 }
 
