@@ -2,6 +2,8 @@ import type { ReactElement, ReactNode } from "react";
 import { getCurrentPrincipal } from "../auth/authorization";
 import { resolvePrincipalLocale } from "../i18n";
 import { getUserSettings } from "../settings/preferences";
+import { StatusPill } from "../components/ui/primitives";
+import { resolveRuntimeVersion } from "../lib/runtime-version";
 
 const THEMES = {
   dark: {
@@ -47,6 +49,7 @@ export default async function RootLayout({
   const preferredTheme = principal ? (await getUserSettings(principal.userId)).preferredTheme : "dark";
   const locale = await resolvePrincipalLocale(principal);
   const theme = THEMES[preferredTheme];
+  const runtimeVersion = resolveRuntimeVersion();
 
   return (
     <html lang={locale}>
@@ -87,6 +90,20 @@ export default async function RootLayout({
           ["--pill-warning-border" as string]: "rgba(251, 191, 36, 0.55)",
         }}
       >
+        <div
+          style={{
+            padding: "8px 24px",
+            borderBottom: "1px solid var(--panel-border)",
+            background: "var(--subtle-bg)",
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            minHeight: "36px",
+            boxSizing: "border-box",
+          }}
+        >
+          {runtimeVersion ? <StatusPill tone="neutral">{runtimeVersion}</StatusPill> : null}
+        </div>
         {children}
       </body>
     </html>
