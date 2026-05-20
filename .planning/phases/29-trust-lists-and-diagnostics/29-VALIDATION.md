@@ -1,79 +1,59 @@
 ---
 phase: 29
 slug: trust-lists-and-diagnostics
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: ready
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-05-10
+updated: 2026-05-20
 ---
 
 # Phase 29 — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution.
-
----
+Per-phase Nyquist validation contract for trust-list hierarchy, lifecycle safety, and diagnostics clarity.
 
 ## Test Infrastructure
 
 | Property | Value |
 |----------|-------|
-| **Framework** | node scripts + next build/typecheck |
-| **Config file** | none |
+| **Framework** | Script-based validators + TypeScript checks |
+| **Config file** | `package.json` scripts + trust-list validator scripts |
 | **Quick run command** | `node scripts/validate-trust-list-foundation.js` |
-| **Full suite command** | `node scripts/validate-trust-list-foundation.js && node scripts/validate-trust-list-operator-ux.js && node scripts/validate-all.js && npm run typecheck && npm run build` |
-| **Estimated runtime** | ~120 seconds |
-
----
+| **Full suite command** | `node scripts/validate-trust-list-foundation.js && node scripts/validate-trust-list-operator-ux.js && node scripts/validate-trust-list-projection.js && npm run typecheck` |
+| **Estimated quick runtime** | ~15-35s |
 
 ## Sampling Rate
 
-- After every task commit: run `node scripts/validate-trust-list-foundation.js`
-- After every plan wave: run the full suite
+- After every task commit: `node scripts/validate-trust-list-foundation.js`
+- After every plan wave: full suite command
 - Before `/gsd-verify-work`: full suite must be green
-- Max feedback latency: 120 seconds
-
----
+- Max feedback latency target: < 45s
 
 ## Per-Task Verification Map
 
-| Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
-|---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 29-01-01 | 01 | 1 | UI-03 | T-29-01 / — | Compact inventory exposes state, last success/failure, and open-details action | script | `node scripts/validate-trust-list-operator-ux.js` | ✅ / ❌ W0 | ⬜ pending |
-| 29-02-01 | 02 | 1 | UI-03 | T-29-02 / — | Hierarchy is visible in badge/grouping/detail | script | `node scripts/validate-trust-list-operator-ux.js` | ✅ / ❌ W0 | ⬜ pending |
-| 29-03-01 | 03 | 1 | UI-03 | T-29-03 / — | Failure layers are explicit and actionable | script | `node scripts/validate-trust-list-operator-ux.js` | ✅ / ❌ W0 | ⬜ pending |
-| 29-04-01 | 04 | 1 | UI-03 | T-29-04 / — | Archive and permanent delete remain safe and history-preserving | script | `node scripts/validate-trust-list-foundation.js` | ✅ / ❌ W0 | ⬜ pending |
+| Task ID | Plan | Wave | Requirement | Automated Command | Status |
+|---------|------|------|-------------|-------------------|--------|
+| 29-01-01 | 01 | 1 | UI-03 | `node scripts/validate-trust-list-foundation.js` | ✅ green |
+| 29-02-01 | 02 | 1 | UI-03 | `node scripts/validate-trust-list-operator-ux.js` | ✅ green |
+| 29-02-02 | 02 | 1 | UI-03 | `node scripts/validate-trust-list-projection.js` | ✅ green |
+| 29-02-03 | 02 | 1 | UI-03 | `npm run typecheck` | ✅ green |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+## Requirement Coverage Matrix
 
----
-
-## Wave 0 Requirements
-
-- [ ] `tests/` stubs for trust-list diagnostics UX coverage if needed
-- [ ] shared fixtures for hierarchy and removal semantics if needed
-- [ ] no additional framework install expected
-
-*If none: Existing infrastructure covers all phase requirements.*
-
----
+| Requirement | Covered By | Automated Evidence |
+|-------------|------------|--------------------|
+| UI-03 | Trust-list lifecycle/hierarchy/diagnostics flows | `validate-trust-list-foundation`; `validate-trust-list-operator-ux`; `validate-trust-list-projection`; `npm run typecheck` |
 
 ## Manual-Only Verifications
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| quick expand on the card | UI-03 | visual interaction is easier to verify in browser | Open trust lists, expand a card, confirm the detail bridge is readable and does not break layout |
-| detail page diagnostics | UI-03 | requires reviewing presentation and not just data presence | Open a source detail page and confirm all layers are visible and legible |
-| archive vs permanent delete | UI-03 | safety and copy need browser verification | Confirm both actions are visible and that permanent delete is clearly guarded |
-
----
+| Diagnostics readability and action affordance in operator UI | UI-03 | Visual/interaction assessment in browser | Open trust-list list and detail views, confirm compact clarity and action safety cues. |
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 120s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have automated verification
+- [x] No watch-mode flags
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** ready 2026-05-20

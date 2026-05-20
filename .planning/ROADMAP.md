@@ -25,7 +25,7 @@
 | 34 | 1/1 | Complete    | 2026-05-20 |
 | 35 | 2/2 | Complete    | 2026-05-20 |
 | 36 | 1/1 | Complete    | 2026-05-20 |
-| 37 | Nyquist Validation Backfill | Add/complete Nyquist validation contracts for early v1.4 phases. | UI-01, UI-02, UI-03 |
+| 37 | 2/2 | Complete    | 2026-05-20 |
 
 ## Phase Details
 
