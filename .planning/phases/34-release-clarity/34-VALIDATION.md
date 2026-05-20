@@ -1,15 +1,16 @@
 ---
 phase: 34
 slug: release-clarity
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: ready
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-05-19
+updated: 2026-05-20
 ---
 
 # Phase 34 — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution.
+Per-phase Nyquist validation contract for Phase 34 execution.
 
 ---
 
@@ -17,20 +18,20 @@ created: 2026-05-19
 
 | Property | Value |
 |----------|-------|
-| **Framework** | {pytest 7.x / jest 29.x / vitest / go test / other} |
-| **Config file** | {path or "none — Wave 0 installs"} |
-| **Quick run command** | `{quick command}` |
-| **Full suite command** | `{full command}` |
-| **Estimated runtime** | ~34 seconds |
+| **Framework** | Script-based validators + TypeScript compiler checks |
+| **Config file** | `package.json` scripts + `scripts/validate-reporting.js` |
+| **Quick run command** | `npm run typecheck` |
+| **Full suite command** | `npm run validate && npm run typecheck && npm run build` |
+| **Estimated quick runtime** | ~10-20s (machine-dependent) |
 
 ---
 
 ## Sampling Rate
 
-- **After every task commit:** Run `{quick run command}`
-- **After every plan wave:** Run `{full suite command}`
-- **Before `/gsd-verify-work`:** Full suite must be green
-- **Max feedback latency:** 34 seconds
+- **After every task commit:** Run `npm run typecheck`
+- **After every plan wave:** Run `npm run validate && npm run typecheck`
+- **Before `/gsd-verify-work`:** Run `npm run validate && npm run typecheck && npm run build`
+- **Max feedback latency (task loop):** target < 30s
 
 ---
 
@@ -38,19 +39,29 @@ created: 2026-05-19
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 34-01-01 | 01 | 1 | REQ-{XX} | T-34-01 / — | {expected secure behavior or "N/A"} | unit | `{command}` | ✅ / ❌ W0 | ⬜ pending |
+| 34-01-01 | 01 | 1 | UI-08 | T-34-02, T-34-03 | `/api/version` uses shared resolver and returns only minimal version contract (no extended metadata). | type/contract | `npm run typecheck` | ✅ | ⬜ pending |
+| 34-01-02 | 01 | 1 | UI-08 | T-34-01, T-34-03 | Global topbar renders `vX.Y.Z` only; hides indicator when resolver returns null. | type/integration | `npm run typecheck` | ✅ | ⬜ pending |
+| 34-01-03 | 01 | 1 | UI-08 | T-34-03, T-34-04 | Validator anchors and operator docs enforce UI/API parity and packaged-runtime verification steps. | validator/docs-contract | `node scripts/validate-reporting.js && npm run validate` | ✅ | ⬜ pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+Status legend: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky
+
+---
+
+## Requirement Coverage Matrix
+
+| Requirement | Covered By Task(s) | Automated Evidence |
+|-------------|--------------------|--------------------|
+| UI-08 | 34-01-01, 34-01-02, 34-01-03 | `npm run typecheck`; `node scripts/validate-reporting.js && npm run validate`; phase gate build |
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `{tests/test_file.py}` — stubs for REQ-{XX}
-- [ ] `{tests/conftest.py}` — shared fixtures
-- [ ] `{framework install}` — if no framework detected
+Existing infrastructure covers all phase requirements.
 
-*If none: "Existing infrastructure covers all phase requirements."*
+- Existing script validation framework in `scripts/`
+- Existing `typecheck`, `validate`, `build` scripts in `package.json`
+- No missing `<automated>` verify entries in plan tasks
 
 ---
 
@@ -58,19 +69,18 @@ created: 2026-05-19
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| {behavior} | REQ-{XX} | {reason} | {steps} |
-
-*If none: "All phase behaviors have automated verification."*
+| Operator confirms topbar version visibility in packaged runtime UI | UI-08 | Visual confirmation in running packaged environment is user-facing and environment-specific | Start packaged runtime, open operator/reporting flow, confirm visible topbar label `vX.Y.Z`; if runtime metadata is missing, confirm indicator is absent. |
+| Operator compares UI label to `/api/version` response | UI-08 | Runtime parity check across UI and endpoint in deployed package | Query `GET /api/version`, compare returned version value with topbar label, confirm exact match and no extra metadata fields used for operator-visible label. |
 
 ---
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 34s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency target for task loop is < 30s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** {pending / approved YYYY-MM-DD}
+**Approval:** ready 2026-05-20

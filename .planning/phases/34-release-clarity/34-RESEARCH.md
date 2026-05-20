@@ -182,12 +182,12 @@ Source: [src/components/ui/primitives.tsx](../../src/components/ui/primitives.ts
 | A2 | Shared shell insertion point for authenticated flows can be added without route-group refactor. | Architecture Patterns | Could expand phase scope if current layout split is stricter than assumed. |
 | A3 | Validator should extend `scripts/validate-reporting.js` instead of adding a dedicated `validate-release-clarity.js`. | Validation Architecture | Minor maintainability tradeoff only. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Authoritative runtime version source**
-   - What we know: `package.json` has version and UI wants `vX.Y.Z`. [VERIFIED: package.json]
-   - What's unclear: packaged container runtime may or may not expose `npm_package_version`.
-   - Recommendation: enforce explicit `APP_VERSION` env in compose as fallback if absent, while still formatting as `vX.Y.Z`. [ASSUMED]
+   - **Resolution:** Use `APP_VERSION` as the authoritative runtime source for both UI topbar display and `/api/version` payload; treat `package.json` version as build-time/default fallback only. This removes ambiguity in packaged/container runtime where `npm_package_version` may be unavailable.
+   - **Implementation contract:** shared resolver order is `APP_VERSION` -> `package.json` version -> `null`; output must be normalized to `vX.Y.Z` per D-02, and indicator hidden when resolution returns `null` per D-03.
+   - **Operational requirement:** packaged deployment/compose must inject `APP_VERSION` for deterministic runtime verification (D-04). [VERIFIED: package.json] [VERIFIED: .planning/phases/34-release-clarity/34-CONTEXT.md]
 
 ## Environment Availability
 
