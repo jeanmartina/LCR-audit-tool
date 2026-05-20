@@ -110,7 +110,7 @@
 
 ### Global UX
 
-- [ ] **UI-07**: The application should use one modern, consistent UX language across all major screens and navigation.
+- [x] **UI-07**: The application should use one modern, consistent UX language across all major screens and navigation.
 
 ### Release Clarity
 

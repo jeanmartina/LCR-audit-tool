@@ -22,7 +22,7 @@
 | 31 | 2/2 | Complete    | 2026-05-19 |
 | 32 | 1/1 | Complete    | 2026-05-19 |
 | 33 | 2/2 | Complete    | 2026-05-20 |
-| 34 | Release Clarity | Surface the running version/build identifier in an operator-visible place in the web UI. | UI-08 |
+| 34 | 1/1 | Complete   | 2026-05-20 |
 
 ## Phase Details
 
