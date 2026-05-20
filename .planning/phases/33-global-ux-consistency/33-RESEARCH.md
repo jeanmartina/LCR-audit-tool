@@ -167,12 +167,12 @@ Source pattern: `src/app/settings/settings-page.tsx`. [VERIFIED: codebase]
 |---|-------|---------|---------------|
 | A1 | Compact density can remain usable with stricter min control sizes | Common Pitfalls | Could create touch/scanability regressions if not validated with real screens |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should Phase 33 include public auth entry (`/` and `/auth`) in the same pass as reporting/settings/admin?**
-   - What we know: UI-07 says “all major screens”, and public shell exists. [VERIFIED: REQUIREMENTS.md, src/components/public-shell.tsx]
-   - What's unclear: whether phase plan should treat public shell as mandatory in this phase or defer to UI-01 follow-up polish.
-   - Recommendation: treat public shell as in-scope for consistency checks at minimum.
+   - Resolution: **Yes** — public entry and auth entry are **in scope in this phase**. [RESOLVED]
+   - Basis: UI-07 requires one consistent UX language across major screens, and `PublicShell` is a canonical shared surface in current architecture. [VERIFIED: .planning/REQUIREMENTS.md, src/components/public-shell.tsx, .planning/phases/33-global-ux-consistency/33-CONTEXT.md]
+   - Planning impact: both `33-01-PLAN.md` and `33-02-PLAN.md` already include `/` and `/auth` coverage, so no replan is required.
 
 ## Environment Availability
 
